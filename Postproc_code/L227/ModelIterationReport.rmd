@@ -1,0 +1,419 @@
+---
+output: 
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    number_sections: yes
+    citation_package: natbib
+    template: C:/Users/meglarse/Dropbox (Personal)/Consulting/Salk_Kateri/modIteration-report/doc-setup/svm-latex-ms-mod.tex
+title: Fe-ELA Model Iteration Comparison Report [Iteration Number]
+author: 
+- name: Dr. Kateri Salk
+  affiliation: University of Waterloo
+geometry: margin=0.5in
+fontsize: 11pt
+fontfamily: mathpazo
+biblio-style: apsr
+---
+
+<Information in these brackets is used for annotating the RMarkdown file. They will not appear in the final PDF version of the document>
+
+<Setup the global options for the R chunks in your document>
+```{r setup, include=FALSE}
+
+setwd("/Users/krsalkgu/Documents/MATLAB/MyLake_v2_Vansjo-master/Postproc_code/L227")
+
+# Install packages for the document
+
+## install.packages("ggplot2")
+library(ggplot2)
+
+# Package options
+library(knitr)
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+
+## ggplot theme and figure parameters
+theme_std <- function (base_size = 16, base_family = "") {
+    theme_grey(base_size = base_size, base_family = base_family) %+replace% 
+        theme(axis.ticks = element_line(colour = "black", size = 1), 
+              legend.key = element_rect(colour = "white"), 
+              panel.background = element_rect(fill = "white", colour = NA), 
+              panel.border = element_rect(fill = NA, colour = NA),
+              axis.line = element_line(size = 0.5, colour = "black"),
+              panel.grid.major = element_line(NA), 
+              panel.grid.minor = element_line(NA), 
+              strip.background = element_rect(fill = "grey80", colour = "grey50", size = 0.2),
+              axis.text  = element_text(size=rel(0.9)),
+              axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size=rel(1)),
+              axis.title.y = element_text(margin = unit(c(0, 3, 0, 0), "mm"),size=rel(1), angle = 90),
+              strip.text = element_text(size = rel(1.15), colour = "black", face = "bold"),
+              plot.margin=unit(c(10,10,10,10),"pt")
+        )
+}
+
+theme_set(theme_std())
+
+```
+
+# Summary of Major Findings
+
+1. **Model overlay** was ok...(\autoref{ModelOverlay}) <we can use the function autoref to automatically pull labeled graphics>
+    + Sublists can be made like this
+
+2. **Model regression** was ok...(\autoref{ModelRegression}) <we can use the function autoref to automatically pull labeled graphics>
+    + Sublists can be made like this
+
+<Add the text for each of your sections. Check out the [RMarkdown cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) and [Markdown cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#lists) for more information about text formatting.>
+
+\newpage
+
+# Model Overlay
+
+<Perform the required functions to match the model output and observational data>
+```{r data-reduction, echo = FALSE}
+# Read in the data and add colnames
+obs <- read.csv("Observed_IntegratedEpi_icefree.csv", header = T)
+attach(obs)
+colnames(obs) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP")
+
+obs_temp <- read.csv("Observed_Temperature.csv")
+attach(obs_temp)
+
+obs_O2 <- read.csv("Observed_Oxygen.csv")
+attach(obs_O2)
+
+mod <- read.csv("Output_IntegratedEpi.csv", header = F)
+colnames(mod) <- c("Year", "Month", "Day", "mod.chla", "mod.cyano", "mod.TDP", "mod.TP")
+
+mod2 <- read.csv("Output_Depths.csv", header = F)
+colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy1m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy5m", "mod.Oxy6m", "mod.Oxy7m", "mod.Oxy8m", "mod.Oxy9m", "mod.Oxy10m")
+
+#Let's tidy! - part 1
+library(tidyr)
+library(magrittr)
+obs <- obs %>% 
+  unite(date, Year, Month, Day, sep = '-') #%>%
+  #filter(!is.na(obs.TP))
+obs <- data.frame(obs, Month, Year)
+obs <- na.omit(obs)
+obs <- obs[,-1]
+
+mod <- mod %>% unite(date, Year, Month, Day, sep = '-')
+mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
+
+# Convert time object
+obs$date <- as.Date(obs$date, format = "%Y-%m-%d") #Converts data to date structure
+obs_temp$date <- as.Date(obs_temp$date) #, format = "%Y-%m-%d") #Converts data to date structure
+mod$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
+mod2$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
+
+
+# tidy! - part 2: match model time and observational time
+library(dplyr)
+mod.match <- inner_join(obs,mod, by = "date") 
+mod2.match <- inner_join(obs_temp, mod2, by = "date")
+obs.totaltempa <- data.frame(cbind(mod2.match$obs.Temp1m, mod2.match$obs.Temp4m, mod2.match$obs.Temp9m))
+obs.totaltemp <- stack(obs.totaltempa)
+mod.totaltempa <- data.frame(cbind(mod2.match$mod.Temp1m, mod2.match$mod.Temp4m, mod2.match$mod.Temp9m))
+mod.totaltemp <- stack(mod.totaltempa)
+totaltemp <- data.frame(cbind(obs.totaltemp[,1], mod.totaltemp[,1]))
+colnames(totaltemp) <- c("TempObs","TempMod")
+
+#write data for later use
+#write.csv(filename = paste0("./example-data/processed/", format(Sys.time(), "%Y%m%d-%H%M"), "_modelcomp-output.csv"))
+```
+
+<Figure 1>
+```{r model-overlay, fig.cap="Overlay of observed (red) and modeled data (black). \\label{ModelOverlay}", echo = FALSE, fig.height = 7}
+
+p <- ggplot(mod.match, aes(x = date)) +
+  geom_point(aes(y = obs.TP, col = "Observed"), pch = 19, size = 1) +
+  geom_line(aes(y = mod.TP, col = "Modeled"), size = 0.5) +
+  ylim(0,150) +
+  ylab(expression(Total ~ Phosphorus ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", 
+                      breaks = c("Observed", "Modeled"),
+                      values = c("black", "red")) +
+  theme(legend.position = c(0.9,0.9))
+#print(p)
+
+
+p2 <- ggplot(mod.match, aes(x = date)) +
+  geom_point(aes(y = obs.TDP, col = "Observed"), pch = 19, size = 1) +
+  geom_line(aes(y = mod.TDP, col = "Modeled"), size = 0.5) +
+  ylim(0,50) +
+  ylab(expression(TDP ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", 
+                      breaks = c("Observed", "Modeled"),
+                      values = c("black", "red")) +
+  theme(legend.position = c(0.9,0.9))
+#print(p2)
+
+p3 <- ggplot(mod.match, aes(x = date)) +
+  geom_point(aes(y = obs.chla, col = "Observed"), pch = 19, size = 1) +
+  geom_line(aes(y = mod.chla, col = "Modeled"), size = 0.5) +
+  ylim(0,100) +
+  ylab(expression(Chlorophyll ~ a ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", 
+                      breaks = c("Observed", "Modeled"),
+                      values = c("black", "red")) +
+  theme(legend.position = c(0.9,0.9))
+#print(p3)
+
+p4 <- ggplot(mod2.match, aes(x = date)) +
+  geom_point(aes(y = obs.Temp1m, col = "Observed"), pch = 19, size = 1) +
+  geom_line(aes(y = mod.Temp1m, col = "Modeled"), size = 0.5) +
+  ylim(0,30) +
+  ylab(expression("Temperature " ( degree*C))) +
+  xlab(" ") +
+  scale_colour_manual("", 
+                      breaks = c("Observed", "Modeled"),
+                      values = c("black", "red")) +
+  theme(legend.position = c(0.9,0.9))
+
+p5 <- ggplot(mod2.match, aes(x = date)) +
+  geom_point(aes(y = obs.Temp4m, col = "Observed"), pch = 19, size = 1) +
+  geom_line(aes(y = mod.Temp4m, col = "Modeled"), size = 0.5) +
+  ylim(0,30) +
+  ylab(expression("Temperature " ( degree*C))) +
+  xlab(" ") +
+  scale_colour_manual("", 
+                      breaks = c("Observed", "Modeled"),
+                      values = c("black", "red")) +
+  theme(legend.position = c(0.9,0.9))
+  
+p6 <- ggplot(mod2.match, aes(x = date)) +
+  geom_point(aes(y = obs.Temp9m, col = "Observed"), pch = 19, size = 1) +
+  geom_line(aes(y = mod.Temp9m, col = "Modeled"), size = 0.5) +
+  ylim(0,10) +
+  ylab(expression("Temperature " ( degree*C))) +
+  xlab(" ") +
+  scale_colour_manual("", 
+                      breaks = c("Observed", "Modeled"),
+                      values = c("black", "red")) +
+  theme(legend.position = c(0.9,0.9))
+
+p7 <- ggplot(mod2.match, aes(x = date)) +
+  geom_point(aes(y = obs.Temp1m, col = "1m"), pch = 19, size = 1) +
+  geom_point(aes(y = obs.Temp4m, col = "4m"), pch = 19, size = 1) +
+  geom_point(aes(y = obs.Temp9m, col = "9m"), pch = 19, size = 1) +
+  geom_line(aes(y = mod.Temp1m, col = "1m"), size = 0.5) +
+  geom_line(aes(y = mod.Temp4m, col = "4m"), size = 0.5) +
+  geom_line(aes(y = mod.Temp9m, col = "9m"), size = 0.5) +
+  ylim(0,30) +
+  ylab(expression("Temperature " ( degree*C))) +
+  xlab(" ") +
+  scale_colour_manual("", 
+                      breaks = c("1m", "4m", "9m"),
+                      values = c("#6baed6", "#3182bd", "#08519c")) +
+  theme(legend.position = c(0.9,0.9))
+
+require(gridExtra)
+grid.arrange(p, p2, p3, ncol = 1)
+
+```
+
+\newpage
+
+# Model regression
+
+```{r model-reg, fig.cap="Data regression for observed against modeled data. \\label{ModelRegression}", echo = FALSE, fig.height = 5}
+
+p <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Month)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(Total ~ Phosphorus ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Total ~ Phosphorus ~ Modeled ~ (mu*g / L))) +
+
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+#print(p)
+
+p2 <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Month)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+   scale_x_continuous(limits=c(0,50)) + scale_y_continuous(limits=c(0,50)) +
+  xlab(expression(TDP ~ Observed ~ (mu*g / L))) +
+  ylab(expression(TDP ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+#print(p2)
+
+p3 <- ggplot(mod.match, aes(x = obs.chla, y = mod.chla, color=Month)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + #(intercept = mod.lm[[1]][[1]], slope = mod.lm[[1]][[2]]) +
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(Chlorophyll ~ a ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Chlorophyll ~ a ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+#print(p3)
+
+p4 <- ggplot(mod.match, aes(x = obs.chla, y = mod.chla, color=Year)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(Chlorophyll ~ a ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Chlorophyll ~ a ~ Modeled ~ (mu*g / L))) +
+
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+p5 <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Year)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(TP ~ Observed ~ (mu*g / L))) +
+  ylab(expression(TP ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+p6 <- ggplot(totaltemp, aes(x = TempObs, y = TempMod)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,30)) + scale_y_continuous(limits=c(0,30)) +
+  xlab(expression("Temperature Observed " ( degree*C))) +
+  ylab(expression("Temperature Modeled " ( degree*C))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+library(gridExtra)
+grid.arrange(p, p2, p3, ncol = 2)
+
+
+tempregression <- lm(mod2.match$obs.Temp1m ~ mod2.match$mod.Temp1m)
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+#[1:138]
+
+tempregression <- lm(mod2.match$obs.Temp4m ~ mod2.match$mod.Temp4m)
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+#[1:138]
+
+tempregression <- lm(mod2.match$obs.Temp9m ~ mod2.match$mod.Temp9m)
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+#[1:138]
+
+tempregression <- lm(mod.match.temp$obs.Temp1m[139:340] ~ mod.match.temp$mod.Temp1m[139:340])
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+tempregression <- lm(mod.match.temp$obs.Temp4m[139:340] ~ mod.match.temp$mod.Temp4m[139:340])
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+tempregression <- lm(mod.match.temp$obs.Temp9m[139:340] ~ mod.match.temp$mod.Temp9m[139:340])
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+tempregression <- lm(mod.match.temp$obs.Temp1m[341:610] ~ mod.match.temp$mod.Temp1m[341:610])
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+tempregression <- lm(mod.match.temp$obs.Temp4m[341:610] ~ mod.match.temp$mod.Temp4m[341:610])
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+tempregression <- lm(mod.match.temp$obs.Temp9m[341:610] ~ mod.match.temp$mod.Temp9m[341:610])
+summary(tempregression)
+mse <- mean(residuals(tempregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+chlaregression <- lm (mod.match$obs.chla[1:127] ~ mod.match$mod.chla[1:127])
+summary(chlaregression)
+mse <- mean(residuals(chlaregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+chlaregression <- lm (mod.match$obs.chla[128:470] ~ mod.match$mod.chla[128:470])
+summary(chlaregression)
+mse <- mean(residuals(chlaregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+chlaregression <- lm (mod.match$obs.chla[471:756] ~ mod.match$mod.chla[471:756])
+summary(chlaregression)
+mse <- mean(residuals(chlaregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+TDPregression <- lm (mod.match$obs.TDP[1:127] ~ mod.match$mod.TDP[1:127])
+summary(TDPregression)
+mse <- mean(residuals(TDPregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+TDPregression <- lm (mod.match$obs.TDP[128:470] ~ mod.match$mod.TDP[128:470])
+summary(TDPregression)
+mse <- mean(residuals(TDPregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+TDPregression <- lm (mod.match$obs.TDP[471:756] ~ mod.match$mod.TDP[471:756])
+summary(TDPregression)
+mse <- mean(residuals(TDPregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+TPregression <- lm (mod.match$obs.TP[1:127] ~ mod.match$mod.TP[1:127])
+summary(TPregression)
+mse <- mean(residuals(TDPregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+TPregression <- lm (mod.match$obs.TP[128:470] ~ mod.match$mod.TP[128:470])
+summary(TPregression)
+mse <- mean(residuals(TPregression)^2)
+rmse <- sqrt(mse)
+rmse
+
+TPregression <- lm (mod.match$obs.TP[471:756] ~ mod.match$mod.TP[471:756])
+summary(TPregression)
+mse <- mean(residuals(TPregression)^2)
+rmse <- sqrt(mse)
+rmse
+```
+
+
+\newpage
+
+# Additional information
+## Model Parameters
+```{r}
+parms <- read.csv("./example-data/L227_para_all.csv", header = F)
+colnames(parms) <- c("Parameter","Value","Min","Max","Unit")
+parms <- parms[-c(1:2),]
+
+require(pander)
+row.names(parms) <- NULL
+panderOptions("graph.fontsize", 8)
+pander(parms, include.rownames=FALSE)
+```
+
+\newpage
+
+# Next steps and follow-up questions
+1. Let's change the vmax in the next interation.
+
