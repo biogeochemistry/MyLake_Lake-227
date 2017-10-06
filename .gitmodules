@@ -1,0 +1,6 @@
+[submodule "Sediment-v2.0"]
+	path = Sediment-v2.0
+	url = ../Sediment-v2.0.git
+[submodule "MyLake-v2.0"]
+	path = MyLake-v2.0
+	url = ../MyLake-v2.0.git
