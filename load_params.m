@@ -3,22 +3,22 @@ function [lake_params, sediment_params] = load_params()
 
 lake_params = {
     % PhysPar
-    0.5, 'dz',                 % 1
-    44.2401e-003, 'Kz_K1',     % 2     open water diffusion parameter (-)
+    1, 'dz',                 % 1
+    NaN, 'Kz_K1',     % 2     open water diffusion parameter (-)
     0.000898, 'Kz_K1_ice',     % 3     under ice diffusion parameter (-)
     7E-05, 'Kz_N0',            % 4     min. stability frequency (s-2)
-    0.5, 'C_shelter',         % 5     wind shelter parameter (-)
-    59.40, 'lat',              % 6     latitude (decimal degrees)
-    10.80, 'lon',              % 7     longitude (decimal degrees)
+    NaN, 'C_shelter',         % 5     wind shelter parameter (-)
+    49.661944, 'lat',              % 6     latitude (decimal degrees)
+    93.721944, 'lon',              % 7     longitude (decimal degrees)
     0.3, 'alb_melt_ice',       % 8     albedo of melting ice (-)
-    0.77, 'alb_melt_snow',     % 9     albedo of melting snow (-)
-    14.4699e-006, 'PAR_sat',       % 10    PAR saturation level for phytoplankton growth (mol(quanta) m-2 s-1)
+    0.4, 'alb_melt_snow',     % 9     albedo of melting snow (-)
+    3e-005, 'PAR_sat',       % 10    PAR saturation level for phytoplankton growth (mol(quanta) m-2 s-1)
     0.45, 'f_par',             % 11    Fraction of PAR in incoming solar radiation (-)
-    37.9560e-003, 'beta_chl',         % 12    Optical cross_section of chlorophyll (m2 mg-1)
+    0.015, 'beta_chl',         % 12    Optical cross_section of chlorophyll (m2 mg-1)
     5, 'lambda_i',             % 13    PAR light attenuation coefficient for ice (m-1)
     15, 'lambda_s',            % 14    PAR light attenuation coefficient for snow (m-1)
     0.36, 'F_sed_sld',         % 15    volume fraction of solids in sediment (= 1-porosity)
-    1, 'I_scV',                % 16    scaling factor for inflow volume (-)
+    0.7359, 'I_scV',                % 16    scaling factor for inflow volume (-)
     0, 'I_scT',                % 17    adjusting delta for inflow temperature (-)
     1, 'I_scC',                % 18    scaling factor for inflow concentration of C (-)
     1, 'I_scPOC',              % 19    scaling factor for inflow concentration of POC (-)
@@ -36,7 +36,7 @@ lake_params = {
     1,  'I_scCa2',             % 31    Scaling factor for inflow concentration of Ca2 (-)
     1,  'I_scpH',              % 32    Scaling factor for inflow concentration of pH (-)
     1,  'I_scCH4',             % 33    Scaling factor for inflow concentration of CH4 (-)
-    50,  'I_scFe3',             % 34    Scaling factor for inflow concentration of Fe3 (-)
+    1,  'I_scFe3',             % 34    Scaling factor for inflow concentration of Fe3 (-)
     1,  'I_scAl3',             % 35    Scaling factor for inflow concentration of Al3 (-)
     1,  'I_scFeS',             % 36    Scaling factor for inflow concentration of FeS (-)
     1,  'I_scCaCO3',           % 37    Scaling factor for inflow concentration of CaCO3 (-)
@@ -46,22 +46,22 @@ lake_params = {
     3.30E-07, 'S_res_epi',     % 41     Particle resuspension mass transfer coefficient, epilimnion (m day-1, dry)
     3.30E-08, 'S_res_hypo',    % 42     Particle resuspension mass transfer coefficient, hypolimnion (m day-1, dry)
     0.03, 'H_sed',             % 43     height of active sediment layer (m, wet mass)
-    15, 'Psat_L',              % 44     NOTE: NOT USED: Half saturation parameter for Langmuir isotherm
-    30, 'Fmax_L',              % 45     NOTE: NOT USED: Scaling parameter for Langmuir isotherm !!!!!!!!!!!!
-    31.3665e-003, 'w_s',                % 46     settling velocity for S (m day-1)
-    58.3842e-003, 'w_chl',             % 47     settling velocity for Chl a (m day-1)
+    2500, 'Psat_L',              % 44     NOTE: NOT USED: Half saturation parameter for Langmuir isotherm
+    8000, 'Fmax_L',              % 45     NOTE: NOT USED: Scaling parameter for Langmuir isotherm !!!!!!!!!!!!
+    0.1, 'w_s',                % 46     settling velocity for S (m day-1)
+    0.1, 'w_chl',             % 47     settling velocity for Chl a (m day-1)
     1, 'Y_cp',                 % 48     NOTE: NOT USED:  yield coefficient (chlorophyll to carbon) * (carbon to phosphorus) ratio (-)   1/55*112/1 = 1
-    128.2949e-003, 'm_twty',             % 49    loss rate (1/day) at 20 deg C
-    1.4988e+000, 'g_twty',             % 50    specific growth rate (1/day) at 20 deg C
+    0.03, 'm_twty',             % 49    loss rate (1/day) at 20 deg C
+    0.6, 'g_twty',             % 50    specific growth rate (1/day) at 20 deg C
     2.00E-04, 'k_twty',        % 51    NOTE: NOT USED: specific Chl a to P transformation rate (1/day) at 20 deg C
     0, 'dop_twty',             % 52    NOTE: NOT USED: specific DOP to P transformation rate (day-1) at 20 deg C
-    1.6945e+000, 'P_half',             % 53    Half saturation growth P level (mg/m3)
-    30.5827e-006, 'PAR_sat_2',     % 54    PAR saturation level for phytoplankton growth (mol(quanta) m-2 s-1)
-    34.7141e-003, 'beta_chl_2',       % 55    Optical cross_section of chlorophyll (m2 mg-1)
-    208.3324e-003, 'w_chl_2',           % 56    Settling velocity for Chl a (m day-1)
-    201.6135e-003, 'm_twty_2',           % 57    Loss rate (1/day) at 20 deg C
-    1.2687e+000, 'g_twty_2',           % 58    Specific growth rate (1/day) at 20 deg C
-    1.6142e+000, 'P_half_2',         % 59    Half saturation growth P level (mg/m3)
+    0.483, 'P_half',             % 53    Half saturation growth P level (mg/m3)
+    3e-005, 'PAR_sat_2',     % 54    PAR saturation level for phytoplankton growth (mol(quanta) m-2 s-1)
+    0.015, 'beta_chl_2',       % 55    Optical cross_section of chlorophyll (m2 mg-1)
+    0.1, 'w_chl_2',           % 56    Settling velocity for Chl a (m day-1)
+    0.03, 'm_twty_2',           % 57    Loss rate (1/day) at 20 deg C
+    0.6, 'g_twty_2',           % 58    Specific growth rate (1/day) at 20 deg C
+    0.483, 'P_half_2',         % 59    Half saturation growth P level (mg/m3)
     0.01, 'oc_DOC',            % 60    Optical cross-section of DOC (m2/mg DOC)
     0.1, 'qy_DOC',             % 61    Quantum yield (mg DOC degraded/mol quanta)
     0.1, 'k_BOD',              % 62    NOTE: NOT USED: Organic decomposition rate (1/d)
