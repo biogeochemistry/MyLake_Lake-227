@@ -1,16 +1,47 @@
 setwd("/Users/krsalkgu/Documents/SourceTree/L227/Postproc_code/L227")
 
-NtoP <- read.csv("NP_Stoichiometry.csv")
-attach(NtoP)
-head(NtoP)
+NtoPLake <- read.csv("NP_Stoichiometry_L227.csv")
+attach(NtoPLake)
+head(NtoPLake)
+NtoPInflow <- read.csv("NP_Stoichiometry_Inflow.csv")
+attach(NtoPInflow)
+head(NtoPInflow)
 
-#Change Ratios from mass to molar
-TNtoTP <- TN.TP.1*30.97/14.01
-PNtoPP <- PN.PP.1*30.97/14.01
-DINtoTDP <- DIN.TDP.1*30.97/14.01
-TDNtoTDP <- TDN.TDP.1*30.97/14.01
+#Change concentrations from mass (ug/L) to molar (umol/L)
+Fert_TP_molar <- Fert_TP/30.97
+Inflow_TP_molar <- Inflow_TP/30.97
+Fert_TN_molar <- Fert_TN/14.01
+Inflow_TN_molar <- Inflow_TN/14.01
+NO3_molar <- NO3/14.01
+NH4_molar <- NH4/14.01
+DIN_molar <- NO3_molar + NH4_molar
+PN_molar <- PN/14.01
+TDN_molar <- TDN/14.01
+PP_molar <- PP/30.97
+TDP_molar <- TDP/30.97
+TN_molar <- TDN_molar + PN_molar
+TP_molar <- TDP_molar + PP_molar
 
-NtoPmolar <- data.frame(Start.Date, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP)
+#Combine inflows + fertilization
+Input_TN_molar <- Fert_TN_molar + Inflow_TN_molar
+Input_TP_molar <- Fert_TP_molar + Inflow_TP_molar
+
+#Create N:P stoichiometric ratios in lake and inputs
+Fert_NtoP <- Fert_TN_molar/Fert_TP_molar
+Inflow_NtoP <- Inflow_TN_molar/Inflow_TP_molar
+Input_NtoP <- Input_TN_molar/Input_TP_molar
+DINtoTDP <- DIN_molar/TDP_molar
+TDNtoTDP <- TDN_molar/TDP_molar
+PNtoPP <- PN_molar/PP_molar
+TNtoTP <- TN_molar/TP_molar
+
+#Convert dates from factor to date format
+Datelake <- as.Date(NtoPLake$Date, "%m/%d/%y")
+Dateinflow <- as.Date(NtoPInflow$Date, "%m/%d/%Y")
+
+#Create data frames for N:P stoichiometry in lake and inflows
+NtoPinsitu <- data.frame(Datelake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP)
+NtoPinput <- data.frame(Dateinflow, Fert_NtoP, Inflow_NtoP, Input_NtoP)
 
 library(ggplot2)
 theme_std <- function (base_size = 16, base_family = "") {
@@ -30,11 +61,57 @@ theme_std <- function (base_size = 16, base_family = "") {
           plot.margin=unit(c(10,10,10,10),"pt"))}
 theme_set(theme_std())
 
-ggplot(NtoPmolar, aes(x = Start.Date)) +
-  geom_point(aes(y = TNtoTP, col="Total"), size = 0.5) +
-  geom_point(aes(y = TDNtoTDP, col="Dissolved"), size = 0.5) +
+# library(strucchange)
+# a = breakpoints (TNtoTP ~ Datelake, data = NtoPinsitu)
+# breakdates(a, format.times=T)
+# TNtoTPbydate <- lm(TNtoTP ~ Datelake)
+
+
+
+ggplot(NtoPinsitu, aes(x = Datelake)) +
+  geom_point(aes(y = TNtoTP), size = 0.5) +
   ylim(0,200) +
   ylab(expression(TN:TP)) +
   xlab(" ") +
-  theme(legend.position = c(0.9,0.9)) +
-  scale_colour_manual("", breaks = c("Total", "Dissolved"), values = c("black", "red"))
+  theme(legend.position = c(0.9,0.9))
+
+ggplot(NtoPinsitu, aes(x = Datelake)) +
+  geom_point(aes(y = TDNtoTDP), size = 0.5) +
+  ylim(0,500) +
+  ylab(expression(TDN:TDP)) +
+  xlab(" ") +
+  theme(legend.position = c(0.9,0.9)) 
+
+ggplot(NtoPinsitu, aes(x = Datelake)) +
+  geom_point(aes(y = DINtoTDP), size = 0.5) +
+  ylim(0,500) +
+  ylab(expression(DIN:TDP)) +
+  xlab(" ") +
+  theme(legend.position = c(0.9,0.9)) 
+
+ggplot(NtoPinsitu, aes(x = Datelake)) +
+  geom_point(aes(y = PNtoPP), size = 0.5) +
+  ylim(0,200) +
+  ylab(expression(PN:PP)) +
+  xlab(" ") +
+  theme(legend.position = c(0.9,0.9)) 
+
+ggplot(NtoPinput, aes(x = Dateinflow)) +
+  geom_point(aes(y = Fert_NtoP), size = 0.5) +
+  ylim(0,50) +
+  ylab(expression(FertN:FertP)) +
+  xlab(" ") +
+  theme(legend.position = c(0.9,0.9)) 
+
+ggplot(NtoPinput, aes(x = Dateinflow)) +
+  geom_point(aes(y = Inflow_NtoP), size = 0.5) +
+  ylab(expression(InflowN:InflowP)) +
+  xlab(" ") +
+  theme(legend.position = c(0.9,0.9)) 
+
+ggplot(NtoPinput, aes(x = Dateinflow)) +
+  geom_point(aes(y = Input_NtoP), size = 0.5) +
+  ylim(0,50) +
+  ylab(expression(InputN:InputP)) +
+  xlab(" ") +
+  theme(legend.position = c(0.9,0.9)) 
