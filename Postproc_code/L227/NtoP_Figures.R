@@ -61,10 +61,10 @@ theme_std <- function (base_size = 16, base_family = "") {
           plot.margin=unit(c(10,10,10,10),"pt"))}
 theme_set(theme_std())
 
-# library(strucchange)
-# a = breakpoints (TNtoTP ~ Datelake, data = NtoPinsitu)
-# breakdates(a, format.times=T)
-# TNtoTPbydate <- lm(TNtoTP ~ Datelake)
+library(strucchange)
+a = breakpoints (Input_NtoP ~ Dateinflow, data = NtoPinput)
+breakdates(a, format.times=T)
+TNtoTPbydate <- lm(TNtoTP ~ Datelake)
 
 
 
