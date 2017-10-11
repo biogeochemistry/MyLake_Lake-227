@@ -6,8 +6,8 @@ disp(datetime('now'));
 run_INCA = 0; % 1- MyLake will run INCA, 0- No run
 use_INCA = 0; % 1- MyLake will take written INCA input, either written just now or saved before, and prepare inputs from them. 0- MyLake uses hand-made input files
 
-m_start=[1980, 1, 1]; %
-m_stop=[1989, 12, 31]; %
+m_start=[1969, 6, 27]; %
+m_stop=[2009, 12, 31]; %
 
 save_initial_conditions = false; % save final concentrations as initial for the next run
 
@@ -20,7 +20,7 @@ clim_ID = 0;
 
 
 disp('Saving results...')
-save('IO/MyLakeResults.mat', 'MyLake_results', 'Sediment_results')
+save('IO/MyLakeResults_sediment.mat', 'MyLake_results', 'Sediment_results')
 disp('Finished at:')
 disp(datetime('now'));
 
