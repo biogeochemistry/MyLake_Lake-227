@@ -75,7 +75,7 @@ end
 
 Deposition = 0;
 
-disp('Storefjorden ...')
+disp('Lake 227 ...')
 
 [MyLake_results_basin1, sediment_results_basin1] ...
     = solvemodel_v2(m_start,m_stop,initfile,'lake',inputfile,'timeseries', parafile,'lake');
