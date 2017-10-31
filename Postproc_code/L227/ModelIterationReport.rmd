@@ -21,7 +21,7 @@ biblio-style: apsr
 <Setup the global options for the R chunks in your document>
 ```{r setup, include=FALSE}
 
-setwd("/Users/krsalkgu/Documents/SourceTree/L227/Postproc_code/L227")
+setwd("/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227")
 
 # Install packages for the document
 
@@ -82,6 +82,9 @@ attach(obs_temp)
 obs_O2 <- read.csv("Observed_Oxygen.csv")
 attach(obs_O2)
 
+obs_Fe <- read.csv("Observed_Fe.csv")
+attach(obs_Fe)
+
 mod <- read.csv("Output_IntegratedEpi.csv", header = F)
 colnames(mod) <- c("Year", "Month", "Day", "mod.chla", "mod.cyano", "mod.TDP", "mod.TP")
 
@@ -104,6 +107,7 @@ mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
 # Convert time object
 obs$date <- as.Date(obs$date, format = "%Y-%m-%d") #Converts data to date structure
 obs_temp$date <- as.Date(obs_temp$date) #, format = "%Y-%m-%d") #Converts data to date structure
+obs_O2$date <- as.Date(obs_O2$date, format = "%d/%m/%y") #Converts data to date structure
 mod$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
 mod2$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
 
@@ -112,6 +116,7 @@ mod2$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date struc
 library(dplyr)
 mod.match <- inner_join(obs,mod, by = "date") 
 mod2.match <- inner_join(obs_temp, mod2, by = "date")
+mod3.match <-inner_join(obs_O2, mod2, by = "date")
 obs.totaltempa <- data.frame(cbind(mod2.match$obs.Temp1m, mod2.match$obs.Temp4m, mod2.match$obs.Temp9m))
 obs.totaltemp <- stack(obs.totaltempa)
 mod.totaltempa <- data.frame(cbind(mod2.match$mod.Temp1m, mod2.match$mod.Temp4m, mod2.match$mod.Temp9m))
