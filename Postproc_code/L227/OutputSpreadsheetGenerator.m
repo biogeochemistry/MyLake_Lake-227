@@ -3,15 +3,15 @@ datechar=datestr(MyLake_results.basin1.days);
 dates=datevec(datechar);
 
 Totalchl = (MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C)/0.42;
-Chlintegratedepi = transpose(mean(Totalchl(1:8,1:3840)));
+Chlintegratedepi = transpose(mean(Totalchl(1:8,1:14798)));
 cyano = rdivide(MyLake_results.basin1.concentrations.C/0.42,Totalchl);
-cyanointegratedepi = transpose(mean(cyano(1:8,1:3840)));
+cyanointegratedepi = transpose(mean(cyano(1:8,1:14798)));
 
 TDP = MyLake_results.basin1.concentrations.P + MyLake_results.basin1.concentrations.DOP;
-TDPintegratedepi = transpose(mean(TDP(1:8,1:3840)));
+TDPintegratedepi = transpose(mean(TDP(1:8,1:14798)));
 
 TP = Totalchl + TDP + MyLake_results.basin1.concentrations.PP;
-TPintegratedepi = transpose(mean(TP(1:8,1:3840)));
+TPintegratedepi = transpose(mean(TP(1:8,1:14798)));
 
 filename='Postproc_code/L227/Output_IntegratedEpi.csv';
 M = [dates(:,1:3), Chlintegratedepi, cyanointegratedepi, TDPintegratedepi, TPintegratedepi];
@@ -29,9 +29,13 @@ Oxy8m = transpose(MyLake_results.basin1.concentrations.O2(16,:)/1000);
 Oxy10m = transpose(MyLake_results.basin1.concentrations.O2(20,:)/1000);
 
 TFe = MyLake_results.basin1.concentrations.Fe2 + MyLake_results.basin1.concentrations.Fe3;
+Fe4m = transpose(TFe(8,:)/1000);
+Fe6m = transpose(TFe(12,:)/1000);
+Fe8m = transpose(TFe(16,:)/1000);
+Fe10m = transpose(TFe(20,:)/1000);
 
 filename='Postproc_code/L227/Output_Depths.csv';
-M1 = [dates(:,1:3), Temp1m, Temp4m, Temp9m, Oxy2m, Oxy3m, Oxy4m, Oxy6m, Oxy8m, Oxy10m];
+M1 = [dates(:,1:3), Temp1m, Temp4m, Temp9m, Oxy2m, Oxy3m, Oxy4m, Oxy6m, Oxy8m, Oxy10m, Fe4m, Fe6m, Fe8m, Fe10m];
 csvwrite(filename,M1);
 
 
