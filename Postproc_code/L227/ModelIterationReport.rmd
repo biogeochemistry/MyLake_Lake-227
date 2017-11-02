@@ -33,6 +33,7 @@ library(knitr)
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 
 ## ggplot theme and figure parameters
+# set the theme ####
 theme_std <- function (base_size = 16, base_family = "") {
     theme_grey(base_size = base_size, base_family = base_family) %+replace% 
         theme(axis.ticks = element_line(colour = "black", size = 1), 
@@ -51,6 +52,7 @@ theme_std <- function (base_size = 16, base_family = "") {
         )
 }
 theme_set(theme_std())
+#
 
 ```
 

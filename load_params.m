@@ -64,7 +64,7 @@ lake_params = {
     90.0948, 'P_half_2',         % 59    Half saturation growth P level (mg/m3)
     0.01, 'oc_DOC',            % 60    Optical cross-section of DOC (m2/mg DOC)
     0.1, 'qy_DOC',             % 61    Quantum yield (mg DOC degraded/mol quanta)
-    0.01, 'k_BOD',              % 62    NOTE: NOT USED: Organic decomposition rate (1/d)
+    0.1, 'k_BOD',              % 62    NOTE: NOT USED: Organic decomposition rate (1/d)
     5, 'w_CH4',                % 63    Methane gas rising velocity (m/d)
     1.047, 'theta_bod',        % 64    NOTE: NOT USED: Temperature adjustment coefficient for BOD, T ? 10 °C
     1.13, 'theta_bod_ice',     % 65    NOTE: NOT USED: Temperature adjustment coefficient for BOD, T < 10 °C
@@ -82,7 +82,7 @@ sediment_params = {
     0.04,  'k_POP',                 % 2       % 1
     0.02, 'k_POC',                  % 3       % 0.01
     0.04,  'k_DOP',                 % 4       % 1
-    0.002, 'k_DOC',                  % 5       % 1
+    0.02, 'k_DOC',                  % 5       % 1
     0.008, 'Km_O2',                 % 6       % Canavan, R. W (2006) rho=2.5
     0.01,  'Km_NO3',                % 7       % Canavan, R. W (2006) rho=2.5
     0.2/2.5,  'Km_Fe(OH)3',         % 8       % Canavan, R. W (2006) rho=2.5
