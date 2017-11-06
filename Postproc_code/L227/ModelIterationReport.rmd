@@ -423,94 +423,138 @@ rmse <- sqrt(mse)
 rmse
 #[1:138]
 
-tempregression <- lm(mod.match.temp$obs.Temp1m[139:340] ~ mod.match.temp$mod.Temp1m[139:340])
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
+# tempregression <- lm(mod.match.temp$obs.Temp1m[139:340] ~ mod.match.temp$mod.Temp1m[139:340])
+# summary(tempregression)
+# mse <- mean(residuals(tempregression)^2)
+# rmse <- sqrt(mse)
+# rmse
+# 
+# tempregression <- lm(mod.match.temp$obs.Temp4m[139:340] ~ mod.match.temp$mod.Temp4m[139:340])
+# summary(tempregression)
+# mse <- mean(residuals(tempregression)^2)
+# rmse <- sqrt(mse)
+# rmse
+# 
+# tempregression <- lm(mod.match.temp$obs.Temp9m[139:340] ~ mod.match.temp$mod.Temp9m[139:340])
+# summary(tempregression)
+# mse <- mean(residuals(tempregression)^2)
+# rmse <- sqrt(mse)
+# rmse
+# tempregression <- lm(mod.match.temp$obs.Temp1m[341:610] ~ mod.match.temp$mod.Temp1m[341:610])
+# summary(tempregression)
+# mse <- mean(residuals(tempregression)^2)
+# rmse <- sqrt(mse)
+# rmse
+# 
+# tempregression <- lm(mod.match.temp$obs.Temp4m[341:610] ~ mod.match.temp$mod.Temp4m[341:610])
+# summary(tempregression)
+# mse <- mean(residuals(tempregression)^2)
+# rmse <- sqrt(mse)
+# rmse
+# 
+# tempregression <- lm(mod.match.temp$obs.Temp9m[341:610] ~ mod.match.temp$mod.Temp9m[341:610])
+# summary(tempregression)
+# mse <- mean(residuals(tempregression)^2)
+# rmse <- sqrt(mse)
+# rmse
 
-tempregression <- lm(mod.match.temp$obs.Temp4m[139:340] ~ mod.match.temp$mod.Temp4m[139:340])
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
-
-tempregression <- lm(mod.match.temp$obs.Temp9m[139:340] ~ mod.match.temp$mod.Temp9m[139:340])
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
-tempregression <- lm(mod.match.temp$obs.Temp1m[341:610] ~ mod.match.temp$mod.Temp1m[341:610])
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
-
-tempregression <- lm(mod.match.temp$obs.Temp4m[341:610] ~ mod.match.temp$mod.Temp4m[341:610])
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
-
-tempregression <- lm(mod.match.temp$obs.Temp9m[341:610] ~ mod.match.temp$mod.Temp9m[341:610])
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
-
-chlaregression <- lm (mod.match$obs.chla[1:127] ~ mod.match$mod.chla[1:127])
+chlaregression <- lm (mod.match$obs.chla ~ mod.match$mod.chla)
 summary(chlaregression)
 mse <- mean(residuals(chlaregression)^2)
 rmse <- sqrt(mse)
 rmse
+#[1:127]
 
-chlaregression <- lm (mod.match$obs.chla[128:470] ~ mod.match$mod.chla[128:470])
-summary(chlaregression)
-mse <- mean(residuals(chlaregression)^2)
-rmse <- sqrt(mse)
-rmse
+# chlaregression <- lm (mod.match$obs.chla[128:470] ~ mod.match$mod.chla[128:470])
+# summary(chlaregression)
+# mse <- mean(residuals(chlaregression)^2)
+# rmse <- sqrt(mse)
+# rmse
+# 
+# chlaregression <- lm (mod.match$obs.chla[471:756] ~ mod.match$mod.chla[471:756])
+# summary(chlaregression)
+# mse <- mean(residuals(chlaregression)^2)
+# rmse <- sqrt(mse)
+# rmse
 
-chlaregression <- lm (mod.match$obs.chla[471:756] ~ mod.match$mod.chla[471:756])
-summary(chlaregression)
-mse <- mean(residuals(chlaregression)^2)
-rmse <- sqrt(mse)
-rmse
-
-TDPregression <- lm (mod.match$obs.TDP[1:127] ~ mod.match$mod.TDP[1:127])
+TDPregression <- lm (mod.match$obs.TDP ~ mod.match$mod.TDP)
 summary(TDPregression)
 mse <- mean(residuals(TDPregression)^2)
 rmse <- sqrt(mse)
 rmse
+#[1:127]
 
-TDPregression <- lm (mod.match$obs.TDP[128:470] ~ mod.match$mod.TDP[128:470])
-summary(TDPregression)
-mse <- mean(residuals(TDPregression)^2)
-rmse <- sqrt(mse)
-rmse
+# TDPregression <- lm (mod.match$obs.TDP[128:470] ~ mod.match$mod.TDP[128:470])
+# summary(TDPregression)
+# mse <- mean(residuals(TDPregression)^2)
+# rmse <- sqrt(mse)
+# rmse
+# 
+# TDPregression <- lm (mod.match$obs.TDP[471:756] ~ mod.match$mod.TDP[471:756])
+# summary(TDPregression)
+# mse <- mean(residuals(TDPregression)^2)
+# rmse <- sqrt(mse)
+# rmse
 
-TDPregression <- lm (mod.match$obs.TDP[471:756] ~ mod.match$mod.TDP[471:756])
-summary(TDPregression)
-mse <- mean(residuals(TDPregression)^2)
-rmse <- sqrt(mse)
-rmse
-
-TPregression <- lm (mod.match$obs.TP[1:127] ~ mod.match$mod.TP[1:127])
+TPregression <- lm (mod.match$obs.TP ~ mod.match$mod.TP)
 summary(TPregression)
 mse <- mean(residuals(TDPregression)^2)
 rmse <- sqrt(mse)
 rmse
+#[1:127]
 
-TPregression <- lm (mod.match$obs.TP[128:470] ~ mod.match$mod.TP[128:470])
-summary(TPregression)
-mse <- mean(residuals(TPregression)^2)
-rmse <- sqrt(mse)
-rmse
+# TPregression <- lm (mod.match$obs.TP[128:470] ~ mod.match$mod.TP[128:470])
+# summary(TPregression)
+# mse <- mean(residuals(TPregression)^2)
+# rmse <- sqrt(mse)
+# rmse
+# 
+# TPregression <- lm (mod.match$obs.TP[471:756] ~ mod.match$mod.TP[471:756])
+# summary(TPregression)
+# mse <- mean(residuals(TPregression)^2)
+# rmse <- sqrt(mse)
+# rmse
 
-TPregression <- lm (mod.match$obs.TP[471:756] ~ mod.match$mod.TP[471:756])
-summary(TPregression)
-mse <- mean(residuals(TPregression)^2)
-rmse <- sqrt(mse)
-rmse
+O2regression2m <- lm(mod3.match$obs.O2.2m ~ mod3.match$mod.Oxy2m)
+summary(O2regression2m)
+mse <- mean(residuals(O2regression2m)^2); rmse <- sqrt(mse); rmse
+
+O2regression3m <- lm(mod3.match$obs.O2.3m ~ mod3.match$mod.Oxy3m)
+summary(O2regression3m)
+mse <- mean(residuals(O2regression3m)^2); rmse <- sqrt(mse); rmse
+
+O2regression4m <- lm(mod3.match$obs.O2.4m ~ mod3.match$mod.Oxy4m)
+summary(O2regression4m)
+mse <- mean(residuals(O2regression4m)^2); rmse <- sqrt(mse); rmse
+
+O2regression6m <- lm(mod3.match$obs.O2.6m ~ mod3.match$mod.Oxy6m)
+summary(O2regression6m)
+mse <- mean(residuals(O2regression6m)^2); rmse <- sqrt(mse); rmse
+
+O2regression8m <- lm(mod3.match$obs.O2.8m ~ mod3.match$mod.Oxy8m)
+summary(O2regression8m)
+mse <- mean(residuals(O2regression8m)^2); rmse <- sqrt(mse); rmse
+
+O2regression10m <- lm(mod3.match$obs.O2.10m ~ mod3.match$mod.Oxy10m)
+summary(O2regression10m)
+mse <- mean(residuals(O2regression10m)^2); rmse <- sqrt(mse); rmse
+
+Feregression4m <- lm(mod4.match$obs.Fe.4m ~ mod4.match$mod.Fe4m)
+summary(Feregression4m)
+mse <- mean(residuals(Feregression4m)^2); rmse <- sqrt(mse); rmse
+
+Feregression6m <- lm(mod4.match$obs.Fe.6m ~ mod4.match$mod.Fe6m)
+summary(Feregression6m)
+mse <- mean(residuals(Feregression6m)^2); rmse <- sqrt(mse); rmse
+
+Feregression8m <- lm(mod4.match$obs.Fe.8m ~ mod4.match$mod.Fe8m)
+summary(Feregression8m)
+mse <- mean(residuals(Feregression8m)^2); rmse <- sqrt(mse); rmse
+
+Feregression10m <- lm(mod4.match$obs.Fe.10m ~ mod4.match$mod.Fe10m)
+summary(Feregression10m)
+mse <- mean(residuals(Feregression10m)^2); rmse <- sqrt(mse); rmse
+
 ```
 
 

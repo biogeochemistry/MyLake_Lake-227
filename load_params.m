@@ -17,7 +17,7 @@ lake_params = {
     0.015, 'beta_chl',         % 12    Optical cross_section of chlorophyll (m2 mg-1)
     5, 'lambda_i',             % 13    PAR light attenuation coefficient for ice (m-1)
     15, 'lambda_s',            % 14    PAR light attenuation coefficient for snow (m-1)
-    0.36, 'F_sed_sld',         % 15    volume fraction of solids in sediment (= 1-porosity)
+    0.05, 'F_sed_sld',         % 15    volume fraction of solids in sediment (= 1-porosity)
     0.7359, 'I_scV',                % 16    scaling factor for inflow volume (-)
     0, 'I_scT',                % 17    adjusting delta for inflow temperature (-)
     1, 'I_scC',                % 18    scaling factor for inflow concentration of C (-)
@@ -64,7 +64,7 @@ lake_params = {
     90.0948, 'P_half_2',         % 59    Half saturation growth P level (mg/m3)
     0.01, 'oc_DOC',            % 60    Optical cross-section of DOC (m2/mg DOC)
     0.1, 'qy_DOC',             % 61    Quantum yield (mg DOC degraded/mol quanta)
-    0.1, 'k_BOD',              % 62    NOTE: NOT USED: Organic decomposition rate (1/d)
+    0.01, 'k_BOD',              % 62    NOTE: NOT USED: Organic decomposition rate (1/d)
     5, 'w_CH4',                % 63    Methane gas rising velocity (m/d)
     1.047, 'theta_bod',        % 64    NOTE: NOT USED: Temperature adjustment coefficient for BOD, T ? 10 °C
     1.13, 'theta_bod_ice',     % 65    NOTE: NOT USED: Temperature adjustment coefficient for BOD, T < 10 °C
@@ -80,9 +80,9 @@ lake_params = {
 sediment_params = {
     0.4,   'k_Chl',                 % 1       % 1
     0.04,  'k_POP',                 % 2       % 1
-    0.02, 'k_POC',                  % 3       % 0.01
+    0.2, 'k_POC',                  % 3       % 0.01
     0.04,  'k_DOP',                 % 4       % 1
-    0.02, 'k_DOC',                  % 5       % 1
+    0.002, 'k_DOC',                  % 5       % 1
     0.008, 'Km_O2',                 % 6       % Canavan, R. W (2006) rho=2.5
     0.01,  'Km_NO3',                % 7       % Canavan, R. W (2006) rho=2.5
     0.2/2.5,  'Km_Fe(OH)3',         % 8       % Canavan, R. W (2006) rho=2.5
@@ -140,10 +140,10 @@ sediment_params = {
     300,    'n',                    % 60
     30,     'depth',                % 61
     14.4/2,   'alfa0',                % 62
-    106,    'Cx1',                  % 63           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
-    16,     'Ny1',                  % 64           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
+    236,    'Cx1',                  % 63           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
+    20,     'Ny1',                  % 64           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
     1,      'Pz1',                  % 65           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
-    200,    'Cx2',                  % 66           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
+    236,    'Cx2',                  % 66           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
     20,     'Ny2',                  % 67           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
     1,      'Pz2',                  % 68           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
     1,      'Cx3',                  % 69           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
@@ -151,5 +151,5 @@ sediment_params = {
     0,      'Pz3',                  % 71           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
     9,     'effective_depth',     % 72           % depth below which the lake is affected by sediments, [m], if -1 (experimental) , then sediments below pycnocline
     48,     'n_ts',                 % 73           % (48 is the minimum, 24 for calibration) number of time steps during 1 day (fixed time step of MyLake) for chemical and sediment module (the modules should be in sync)
-    0,      'pH algorithm',         % 74           % 0. Disabled  % 1. Phreeqc  % 2. Electro-neutrality Equation
+    1,      'pH algorithm',         % 74           % 0. Disabled  % 1. Phreeqc  % 2. Electro-neutrality Equation
     };
