@@ -83,31 +83,31 @@ sediment_params = {
     0.2, 'k_POC',                  % 3       % 0.01
     0.04,  'k_DOP',                 % 4       % 1
     0.002, 'k_DOC',                  % 5       % 1
-    0.008, 'Km_O2',                 % 6       % Canavan, R. W (2006) rho=2.5
+    1.23, 'Km_O2',                 % 6       % Canavan, R. W (2006) rho=2.5
     0.01,  'Km_NO3',                % 7       % Canavan, R. W (2006) rho=2.5
-    0.2/2.5,  'Km_Fe(OH)3',         % 8       % Canavan, R. W (2006) rho=2.5
-    0.2/2.5,  'Km_FeOOH',           % 9       % Canavan, R. W (2006) rho=2.5
-    0.1,  'Km_SO4',                 % 10       % Canavan, R. W (2006 rho=2.5
+    3.92,  'Km_Fe(OH)3',         % 8       % Canavan, R. W (2006) rho=2.5
+    2415,  'Km_FeOOH',           % 9       % Canavan, R. W (2006) rho=2.5
+    0.0293,  'Km_SO4',                 % 10       % Canavan, R. W (2006 rho=2.5
     0.001,'Km_oxao',                % 11       % the same as Km rho=2.5
     0.1,  'Km_amao',                % 12       % the same as Km rho=2.5
-    0.008, 'Kin_O2',                % 13       % the same as Km rho=2.5
+    0.3292, 'Kin_O2',                % 13       % the same as Km rho=2.5
     0.01,  'Kin_NO3',               % 14       % the same as Km rho=2.5
-    0.2/2.5,   'Kin_FeOH3',         % 15       % the same as Km rho=2.5
-    0.2/2.5,   'Kin_FeOOH',         % 16       % the same as Km rho=2.5
-    20,    'k_amox',                % 17       % Canavan, R. W (2006)
-    50e3,  'k_Feox',                % 18       % Canavan, R. W (2006)
+    0.1,   'Kin_FeOH3',         % 15       % the same as Km rho=2.5
+    0.1,   'Kin_FeOOH',         % 16       % the same as Km rho=2.5
+    20000,    'k_amox',                % 17       % Canavan, R. W (2006)
+    87000,  'k_Feox',                % 18       % Canavan, R. W (2006)
     0.1,   'k_Sdis',                % 19       %
     2500,  'k_Spre',                % 20       %
-    3.3,   'k_FeS2pre',             % 21       % Canavan (2006)
+    3.17,   'k_FeS2pre',             % 21       % Canavan (2006)
     0.1,   'k_alum',                % 22
-    0.3,     'k_pdesorb_a',         % 23
-    0.3,     'k_pdesorb_b',         % 24
+    1.35,     'k_pdesorb_a',         % 23
+    1.35,     'k_pdesorb_b',         % 24
     20000,  'k_fesox',              % 25        % R23 %Canava
     1000,   'k_fes2ox',             % 26        % R23 % Katsev (2013)
     8,      'k_tS_Fe',              % 27      % Cappellen (1996) in Canavan, R. W (2006) the reaction is different
-    9600,  'Ks_FeS',                % 28      % Canavan, R. W (2006)
+    2510,  'Ks_FeS',                % 28      % Canavan, R. W (2006)
     0.001, 'k_Fe_dis',              % 29      % Canavan, R. W (2006), Katsev, R. W (2013)
-    0.1/2.5,'k_Fe_pre',             % 30         % Katsev, R. W (2013)
+    21.3,'k_Fe_pre',             % 30         % Katsev, R. W (2013)
     0.37e-3,  'k_apa_pre',          % 31
     0.37,     'k_apa_dis',          % 32
     10^(-4.2249),  'K_apa',         % 33      % linl.dat PHREEQC
@@ -122,7 +122,7 @@ sediment_params = {
     10^(-4.7237), 'K_viv',          % 42     % linl.dat PHREEQC
     1e-6,  'k_oms',                 % 43
     1e4,   'k_tsox',                % 44     % Canavan, R. W (2006)
-    0.3/2.5, 'k_FeSpre',            % 45     % from "Non-steady state diagenesis of organic and inorganic sulfur in lake sediments Raoul-Marie Couture, Rachele Fischer b, Philippe Van Cappellen b, Charles Gobeil c
+    0.001, 'k_FeSpre',            % 45     % from "Non-steady state diagenesis of organic and inorganic sulfur in lake sediments Raoul-Marie Couture, Rachele Fischer b, Philippe Van Cappellen b, Charles Gobeil c
     1e7,   'k_ch4_o2',              % 46     % Canavan, R. W (2006)
     1e-1,  'k_ch4_so4',             % 47     % Canavan, R. W (2006)
     0.0015,  'Kh_CH4',              % 48     % Henry cobstant M/atm
