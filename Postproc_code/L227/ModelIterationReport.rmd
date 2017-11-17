@@ -498,7 +498,7 @@ rmse
 
 TPregression <- lm (mod.match$obs.TP ~ mod.match$mod.TP)
 summary(TPregression)
-mse <- mean(residuals(TDPregression)^2)
+mse <- mean(residuals(TPregression)^2)
 rmse <- sqrt(mse)
 rmse
 #[1:127]
