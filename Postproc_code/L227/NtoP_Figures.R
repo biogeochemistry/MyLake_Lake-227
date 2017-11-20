@@ -1,4 +1,4 @@
-setwd("/Users/krsalkgu/Documents/SourceTree/L227/Postproc_code/L227")
+setwd("/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227")
 
 NtoPLake <- read.csv("NP_Stoichiometry_L227.csv")
 attach(NtoPLake)
@@ -7,11 +7,11 @@ NtoPInflow <- read.csv("NP_Stoichiometry_Inflow.csv")
 attach(NtoPInflow)
 head(NtoPInflow)
 
-#Change concentrations from mass (ug/L) to molar (umol/L)
-Fert_TP_molar <- Fert_TP/30.97
-Inflow_TP_molar <- Inflow_TP/30.97
-Fert_TN_molar <- Fert_TN/14.01
-Inflow_TN_molar <- Inflow_TN/14.01
+#Change concentrations from mass (ug/L or mg/d) to molar (umol/L or mmol/d)
+Fert_TP_molar <- Fert_TP_mg.d/30.97
+Inflow_TP_molar <- Inflow_TP_mg.d/30.97
+Fert_TN_molar <- Fert_TN_mg.d/14.01
+Inflow_TN_molar <- Inflow_TN_mg.d/14.01
 NO3_molar <- NO3/14.01
 NH4_molar <- NH4/14.01
 DIN_molar <- NO3_molar + NH4_molar
@@ -37,7 +37,7 @@ TNtoTP <- TN_molar/TP_molar
 
 #Convert dates from factor to date format
 Datelake <- as.Date(NtoPLake$Date, "%m/%d/%y")
-Dateinflow <- as.Date(NtoPInflow$Date, "%m/%d/%Y")
+Dateinflow <- as.Date(NtoPInflow$Date, "%m/%d/%y")
 
 #Create data frames for N:P stoichiometry in lake and inflows
 NtoPinsitu <- data.frame(Datelake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP)
@@ -62,8 +62,8 @@ theme_std <- function (base_size = 16, base_family = "") {
 theme_set(theme_std())
 
 library(strucchange)
-a = breakpoints (Input_NtoP ~ Dateinflow, data = NtoPinput)
-breakdates(a, format.times=T)
+a = breakpoints (Input_NtoP ~ Dateinflow, h = 20, data = NtoPinput, breaks=2)
+summary(a)
 TNtoTPbydate <- lm(TNtoTP ~ Datelake)
 
 
@@ -96,8 +96,8 @@ ggplot(NtoPinsitu, aes(x = Datelake)) +
   xlab(" ") +
   theme(legend.position = c(0.9,0.9)) 
 
-ggplot(NtoPinput, aes(x = Dateinflow)) +
-  geom_point(aes(y = Fert_NtoP), size = 0.5) +
+ggplot(NtoPinput, aes(x = Dateinflow, y = Fert_NtoP)) +
+  geom_point(size = 0.5) +
   ylim(0,50) +
   ylab(expression(FertN:FertP)) +
   xlab(" ") +

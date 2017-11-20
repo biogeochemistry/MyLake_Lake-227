@@ -222,7 +222,7 @@ p8 <- ggplot(mod3.match, aes(x = date)) +
   geom_point(aes(y = obs.O2.2m, col = "Observed"), pch = 19, size = 1) +
   geom_line(aes(y = mod.Oxy2m, col = "Modeled"), size = 0.5) +
   #ylim(0,10) +
-  ylab(expression(Oxygen ~ (mg / L))) +
+ylab(expression(Oxygen ~ 2 ~ m ~ (mg / L))) +
   xlab(" ") +
   scale_colour_manual("", 
                       breaks = c("Observed", "Modeled"),
@@ -244,7 +244,7 @@ p10 <- ggplot(mod3.match, aes(x = date)) +
   geom_point(aes(y = obs.O2.4m, col = "Observed"), pch = 19, size = 1) +
   geom_line(aes(y = mod.Oxy4m, col = "Modeled"), size = 0.5) +
   #ylim(0,10) +
-  ylab(expression(Oxygen ~ (mg / L))) +
+  ylab(expression(Oxygen ~ 4 ~ m ~ (mg / L))) +
   xlab(" ") +
   scale_colour_manual("", 
                       breaks = c("Observed", "Modeled"),
@@ -277,18 +277,33 @@ p13 <- ggplot(mod3.match, aes(x = date)) +
   geom_point(aes(y = obs.O2.10m, col = "Observed"), pch = 19, size = 1) +
   geom_line(aes(y = mod.Oxy10m, col = "Modeled"), size = 0.5) +
   #ylim(0,10) +
-  ylab(expression(Oxygen ~ (mg / L))) +
+  ylab(expression(Oxygen ~ 10 ~ m ~ (mg / L))) +
   xlab(" ") +
   scale_colour_manual("", 
                       breaks = c("Observed", "Modeled"),
                       values = c("black", "red")) +
   theme(legend.position = c(0.9,0.9)) #O2 10m by time
 
+p18 <- ggplot(mod3.match, aes(x = date)) +
+  geom_point(aes(y = obs.O2.2m, col = "2m"), pch = 19, size = 1) +
+  geom_point(aes(y = obs.O2.4m, col = "4m"), pch = 19, size = 1) +
+  geom_point(aes(y = obs.O2.10m, col = "10m"), pch = 19, size = 1) +
+  geom_line(aes(y = mod.Oxy2m, col = "2m"), size = 0.5) +
+  geom_line(aes(y = mod.Oxy4m, col = "4m"), size = 0.5) +
+  geom_line(aes(y = mod.Oxy10m, col = "10m"), size = 0.5) +
+  ylim(0,12) +
+  ylab(expression(Oxygen ~ (mg / L))) +
+  xlab(" ") +
+  scale_colour_manual("", 
+                      breaks = c("2m", "4m", "10m"),
+                      values = c("#6baed6", "#3182bd", "#08519c")) +
+  theme(legend.position = c(0.9,0.9)) #all temp by time
+
 p14 <- ggplot(mod4.match, aes(x = date)) +
   geom_point(aes(y = obs.Fe.4m, col = "Observed"), pch = 19, size = 1) +
   geom_line(aes(y = mod.Fe4m, col = "Modeled"), size = 0.5) +
   #ylim(0,10) +
-  ylab(expression(Fe ~ (mg / L))) +
+  ylab(expression(Fe ~ 4 ~ m ~ (mg / L))) +
   xlab(" ") +
   scale_colour_manual("", 
                       breaks = c("Observed", "Modeled"),
@@ -321,7 +336,7 @@ p17 <- ggplot(mod4.match, aes(x = date)) +
   geom_point(aes(y = obs.Fe.10m, col = "Observed"), pch = 19, size = 1) +
   geom_line(aes(y = mod.Fe10m, col = "Modeled"), size = 0.5) +
   #ylim(0,10) +
-  ylab(expression(Fe ~ (mg / L))) +
+  ylab(expression(Fe ~ 10 ~ m ~ (mg / L))) +
   xlab(" ") +
   scale_colour_manual("", 
                       breaks = c("Observed", "Modeled"),
