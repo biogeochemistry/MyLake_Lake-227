@@ -79,7 +79,7 @@ lake_params = {
 
 sediment_params = {
     0.4,   'k_Chl',                 % 1       % 1
-    0.04,  'k_POP',                 % 2       % 1
+    0.4,  'k_POP',                 % 2       % 1
     0.2, 'k_POC',                  % 3       % 0.01
     0.04,  'k_DOP',                 % 4       % 1
     0.02, 'k_DOC',                  % 5       % 1
