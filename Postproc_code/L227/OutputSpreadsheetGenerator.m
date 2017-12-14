@@ -10,7 +10,7 @@ cyanointegratedepi = transpose(mean(cyano(1:8,1:2015)));
 TDP = MyLake_results.basin1.concentrations.P + MyLake_results.basin1.concentrations.DOP;
 TDPintegratedepi = transpose(mean(TDP(1:8,1:2015)));
 
-TP = Totalchl + TDP + MyLake_results.basin1.concentrations.PP;
+TP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + TDP + MyLake_results.basin1.concentrations.PP;
 TPintegratedepi = transpose(mean(TP(1:8,1:2015)));
 
 filename='Postproc_code/L227/Output_IntegratedEpi.csv';
