@@ -7,13 +7,13 @@
 % population_size than it is to have a large max_generations since it is
 % important to sample a large part of the parameter space before starting
 % to sample around the best fits.
-population_size = 2;  
+population_size = 48;  
 % Max generations to run. The maximal amount of runs is population_size*max_generations.
-max_generations = 2;
-paralellize     = true; % Run many lake processes in parallell (saves time if the computer has many cores).
+max_generations = 32;
+paralellize     = false; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
 m_start = [1969, 6, 27];
-m_stop = [1970, 12, 31];
+m_stop = [1979, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
@@ -37,7 +37,7 @@ varyindexes = [10 47 49 50 53 73 74 75 76 77 78 85; %PAR_sat, w_chl, m_twty, g_t
 
 % Setting up the min and max boundaries for each covarying set of parameters.
 minparam = [ 3e-6, 0.01, 0.02, 0.1, 0.001, 0.01, 0.01, 0.01, 0.01, 0.001, 0.0001, 0.001];
-maxparam = [ 3e-4, 0.5 , 0.1 , 2.0, 100, 5, 5, 5, 5, 0.05, 1, 50];
+maxparam = [ 3e-4, 0.5 , 0.1 , 2.0, 100, 5, 5, 5, 5, 0.02, 1, 50];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
@@ -68,16 +68,16 @@ function Data = loadData(MyL_dates)
     Data.TDPintegratedepi = rawTDPdata(withinmodelrange);
     rawO24m = rawcsvdata(:,4);
     rawO24m(rawO24m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    DataO24m = rawO24m(withinmodelrange);
+    Data.O24m = rawO24m(withinmodelrange);
     rawO26m = rawcsvdata(:,5);
     rawO26m(rawO26m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    DataO26m = rawO26m(withinmodelrange);
+    Data.O26m = rawO26m(withinmodelrange);
     rawO28m = rawcsvdata(:,6);
     rawO28m(rawO28m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    DataO28m = rawO28m(withinmodelrange);
+    Data.O28m = rawO28m(withinmodelrange);
     rawO210m = rawcsvdata(:,7);
     rawO210m(rawO210m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    DataO210m = rawO210m(withinmodelrange);
+    Data.O210m = rawO210m(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
     Data.date_mask = getmask(dateswithinrange, MyL_dates); % Used later to match model data to observed data by correct date.
 end
@@ -120,13 +120,13 @@ end
 function err = error_function_Chl(ModelResult, Data)
     
     MatchedModelChl = ModelResult.Chlintegratedepi(Data.date_mask);
-    MatchedMmodelTP = ModelResult.TPintegratedepi(Data.date_mask);
+    MatchedModelTP = ModelResult.TPintegratedepi(Data.date_mask);
     MatchedModelTDP =  ModelResult.TDPintegratedepi(Data.date_mask);
     MatchedModelO24m = ModelResult.O24m(Data.date_mask);
     MatchedModelO26m = ModelResult.O26m(Data.date_mask);
-    MatchedModel028m = ModelResult.O28m(Data.date_mask);
-    MatchedModel0210m = ModelResult.O210m(Data.date_mask);
-    err = nansum(((MatchedModelChl - Data.Chlintegratedepi).^2) + ((MatchedModelTP - Data.TPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2) + ((MatchedModelO24m - DataO24m).^2) + ((MatchedModelO26m - DataO26m).^2)+ ((MatchedModelO28m - DataO28m).^2) + ((MatchedModelO210m - DataO210m).^2));
+    MatchedModelO28m = ModelResult.O28m(Data.date_mask);
+    MatchedModelO210m = ModelResult.O210m(Data.date_mask);
+    err = nansum(((MatchedModelChl - Data.Chlintegratedepi).^2) + ((MatchedModelTP - Data.TPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2) + ((MatchedModelO24m - Data.O24m).^2) + ((MatchedModelO26m - Data.O26m).^2)+ ((MatchedModelO28m - Data.O28m).^2) + ((MatchedModelO210m - Data.O210m).^2));
 end
 
 %% END project specific evaluation functions
