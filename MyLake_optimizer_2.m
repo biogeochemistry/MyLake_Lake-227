@@ -10,7 +10,7 @@
 population_size = 48;  
 % Max generations to run. The maximal amount of runs is population_size*max_generations.
 max_generations = 32;
-paralellize     = false; % Run many model evaluations in parallell (saves time if the computer has many cores).
+paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
 m_start = [1969, 6, 27];
 m_stop = [1979, 12, 31];
@@ -32,16 +32,16 @@ Data = loadData(MyL_dates);
 
 % Example: (g_twty (parameter nr 50) is always given the same value as
 % g_twty2 (parameter nr 58) and so on ..)
-varyindexes = [10 47 49 50 53 73 74 75 76 77 78 85; %PAR_sat, w_chl, m_twty, g_twty, P_half, k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2
-               54 56 57 58 59 NaN NaN NaN NaN NaN NaN NaN]; %PAR_sat_2, w_chl2, m_twty2, g_twty2, P_half_2
+varyindexes = [10 47 49 50 53; %PAR_sat, w_chl, m_twty, g_twty, P_half, k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2
+               54 56 57 58 59 ]; %PAR_sat_2, w_chl2, m_twty2, g_twty2, P_half_2
 
 % Setting up the min and max boundaries for each covarying set of parameters.
-minparam = [ 3e-6, 0.01, 0.02, 0.1, 0.001, 0.01, 0.01, 0.01, 0.01, 0.001, 0.0001, 0.001];
-maxparam = [ 3e-4, 0.5 , 0.1 , 2.0, 100, 5, 5, 5, 5, 0.02, 1, 50];
+minparam = [ 3e-6, 0.01, 0.02, 0.1, 0.001];
+maxparam = [ 3e-4, 0.5 , 0.1 , 2.0, 100];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
-initial_guess = [2.23e-4, 0.1, 0.01, 0.6, 0.483, 0.4, 0.4, 0.2, 0.04, 0.02, 0.123, 0.3292];
+initial_guess = [2.23e-4, 0.1, 0.01, 0.6, 0.483];
 
 modeleval      = @MyLake_227_model_evaluation;
 errfun         = @error_function_Chl;
@@ -66,18 +66,6 @@ function Data = loadData(MyL_dates)
     rawTDPdata = rawcsvdata(:,3);
     rawTDPdata(rawTDPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
     Data.TDPintegratedepi = rawTDPdata(withinmodelrange);
-    rawO24m = rawcsvdata(:,4);
-    rawO24m(rawO24m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    Data.O24m = rawO24m(withinmodelrange);
-    rawO26m = rawcsvdata(:,5);
-    rawO26m(rawO26m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    Data.O26m = rawO26m(withinmodelrange);
-    rawO28m = rawcsvdata(:,6);
-    rawO28m(rawO28m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    Data.O28m = rawO28m(withinmodelrange);
-    rawO210m = rawcsvdata(:,7);
-    rawO210m(rawO210m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    Data.O210m = rawO210m(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
     Data.date_mask = getmask(dateswithinrange, MyL_dates); % Used later to match model data to observed data by correct date.
 end
@@ -106,10 +94,7 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     ModelResult.TDPintegratedepi = transpose(mean(TDP(1:8,:)));
     TP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + TDP + MyLake_results.basin1.concentrations.PP;
     ModelResult.TPintegratedepi = transpose(mean(TP(1:8,:)));
-    ModelResult.O24m = transpose(MyLake_results.basin1.concentrations.O2(8,:)/1000);
-    ModelResult.O26m = transpose(MyLake_results.basin1.concentrations.O2(12,:)/1000);
-    ModelResult.O28m = transpose(MyLake_results.basin1.concentrations.O2(16,:)/1000);
-    ModelResult.O210m = transpose(MyLake_results.basin1.concentrations.O2(20,:)/1000);
+
 end
 
 % Error function. The error function takes a ModelResult
@@ -122,11 +107,7 @@ function err = error_function_Chl(ModelResult, Data)
     MatchedModelChl = ModelResult.Chlintegratedepi(Data.date_mask);
     MatchedModelTP = ModelResult.TPintegratedepi(Data.date_mask);
     MatchedModelTDP =  ModelResult.TDPintegratedepi(Data.date_mask);
-    MatchedModelO24m = ModelResult.O24m(Data.date_mask);
-    MatchedModelO26m = ModelResult.O26m(Data.date_mask);
-    MatchedModelO28m = ModelResult.O28m(Data.date_mask);
-    MatchedModelO210m = ModelResult.O210m(Data.date_mask);
-    err = nansum(((MatchedModelChl - Data.Chlintegratedepi).^2) + ((MatchedModelTP - Data.TPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2) + ((MatchedModelO24m - Data.O24m).^2) + ((MatchedModelO26m - Data.O26m).^2)+ ((MatchedModelO28m - Data.O28m).^2) + ((MatchedModelO210m - Data.O210m).^2));
+    err = nansum(((MatchedModelChl - Data.Chlintegratedepi).^2) + ((MatchedModelTP - Data.TPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2));
 end
 
 %% END project specific evaluation functions
