@@ -64,7 +64,7 @@ theme_set(theme_std())
 
 library(strucchange)
 
-#TN:TP
+#### TN:TP ----
 TNtoTPbreak = breakpoints (TNtoTP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 summary(TNtoTPbreak)
     # Breakpoints at observation number:
@@ -135,7 +135,8 @@ summary(TNtoTPperiod2)
     # Multiple R-squared:  0.09559,	Adjusted R-squared:  0.09315 
     # F-statistic: 39.21 on 1 and 371 DF,  p-value: 1.052e-09
 
-ggplot(NtoPinsitu, aes(x = Datelake, y = TNtoTP)) +
+TNtoTPplot <- 
+  ggplot(NtoPinsitu, aes(x = Datelake, y = TNtoTP)) +
   geom_point(aes(y = TNtoTP), size = 0.5) +
   ylim(0,200) +
   ylab(expression(TN:TP)) +
@@ -145,7 +146,7 @@ ggplot(NtoPinsitu, aes(x = Datelake, y = TNtoTP)) +
   geom_smooth(method = 'lm', data = NtoPinsitu[565:1015,], aes(x = Datelake, y = TNtoTP), se = FALSE, color = "blue") + #significant slope
   geom_vline(xintercept = as.numeric(NtoPinsitu$Datelake[565]), lty = 5)
 
-#TDN:TDP
+#### TDN:TDP ----
 TDNtoTDPbreak = breakpoints (TDNtoTDP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 summary(TDNtoTDPbreak)
     # Breakpoints at observation number:
@@ -205,6 +206,7 @@ summary(TDNtoTDPperiod2)
     # Multiple R-squared:  0.001064,	Adjusted R-squared:  -0.002127 
     # F-statistic: 0.3335 on 1 and 313 DF,  p-value: 0.564
 
+TDNtoTDPplot <-
 ggplot(NtoPinsitu, aes(x = Datelake)) +
   geom_point(aes(y = TDNtoTDP), size = 0.5) +
   ylim(0,800) +
@@ -215,7 +217,7 @@ ggplot(NtoPinsitu, aes(x = Datelake)) +
   geom_smooth(method = 'lm', data = NtoPinsitu[657:1015,], aes(x = Datelake, y = TDNtoTDP), se = FALSE, color = "black") + #non-significant slope
   geom_vline(xintercept = as.numeric(NtoPinsitu$Datelake[657]), lty = 5)
 
-#DIN:TDP (not used)
+#### DIN:TDP (not used) ----
 # DINtoTDPbreak = breakpoints (DINtoTDP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 # summary(DINtoTDPbreak)
 # #did not converge on a breakpoint (chose point 20 when h = 20, chose point 100 when h = 100)
@@ -228,10 +230,11 @@ ggplot(NtoPinsitu, aes(x = Datelake)) +
 #   xlab(" ") +
 #   theme(legend.position = c(0.9,0.9)) 
 
-#PN:PP
+#### PN:PP ----
 PNtoPPbreak = breakpoints (PNtoPP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 summary(PNtoPPbreak)
 #did not converge on a breakpoint (chose point 20 when h = 20, chose point 100 when h = 100)
+
 PNtoPPbydate <- lm(PNtoPP ~ Datelake)
 summary(PNtoPPbydate)
     # Residuals:
@@ -250,7 +253,8 @@ summary(PNtoPPbydate)
     # Multiple R-squared:  0.007425,	Adjusted R-squared:  0.006201 
     # F-statistic: 6.067 on 1 and 811 DF,  p-value: 0.01398
 
-ggplot(NtoPinsitu, aes(x = Datelake)) +
+PNtoPPplot <-
+  ggplot(NtoPinsitu, aes(x = Datelake)) +
   geom_point(aes(y = PNtoPP), size = 0.5) +
   ylim(0,100) +
   ylab(expression(PN:PP)) +
@@ -258,7 +262,7 @@ ggplot(NtoPinsitu, aes(x = Datelake)) +
   theme(legend.position = c(0.9,0.9)) +
   geom_smooth(method = 'lm', data = NtoPinsitu, aes(x = Datelake, y = PNtoPP), se = FALSE, color = "blue") #significant slope
 
-#DIN  
+#### DIN ----
 DINbreak = breakpoints (DIN_molar ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 summary(DINbreak)
     # Breakpoints at observation number:
@@ -319,6 +323,7 @@ summary(DINperiod2)
     # Multiple R-squared:  0.04752,	Adjusted R-squared:  0.04519 
     # F-statistic:  20.4 on 1 and 409 DF,  p-value: 8.212e-06
 
+DIN_molarplot <-
 ggplot(NtoPinsitu, aes(x = Datelake)) +
   geom_point(aes(y = DIN_molar), size = 0.5) +
   ylim(0,125) +
@@ -329,7 +334,8 @@ ggplot(NtoPinsitu, aes(x = Datelake)) +
   geom_smooth(method = 'lm', data = NtoPinsitu[537:1015,], aes(x = Datelake, y = DIN_molar), se = FALSE, color = "blue") + #significant slope
   geom_vline(xintercept = as.numeric(NtoPinsitu$Datelake[537]), lty = 5)
 
-#Fertilizer N:P
+#### Fertilizer N:P ----
+FertNtoPplot <-
 ggplot(NtoPinput, aes(x = Dateinflow, y = Fert_NtoP)) +
   geom_point(size = 0.5) +
   ylim(0,50) +
@@ -337,25 +343,80 @@ ggplot(NtoPinput, aes(x = Dateinflow, y = Fert_NtoP)) +
   xlab(" ") +
   theme(legend.position = c(0.9,0.9)) 
 
-#Inflow N:P
+#### Inflow N:P ----
 Inflow_NtoPbreak = breakpoints (Inflow_NtoP ~ Dateinflow, h = 20, data = NtoPinput, breaks=1)
 summary(Inflow_NtoPbreak)
+    # Breakpoints at observation number:
+    #   m = 1   884
+    #   m   0      1     
+    # RSS 293396 280929
+    # BIC  24401  24280
 
 Inflow_NtoPbydate <- lm(Inflow_NtoP ~ Dateinflow)
 summary(Inflow_NtoPbydate)
+    # Residuals:
+    #   Min      1Q  Median      3Q     Max 
+    # -6.984  -3.741  -1.979   0.453 150.860 
+    # 
+    # Coefficients:
+    #   Estimate Std. Error t value Pr(>|t|)    
+    # (Intercept) 5.944e+00  3.253e-01  18.274  < 2e-16 ***
+    #   Dateinflow  2.123e-04  3.789e-05   5.601  2.3e-08 ***
+    #   ---
+    #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+    # 
+    # Residual standard error: 9.387 on 3330 degrees of freedom
+    # (4155 observations deleted due to missingness)
+    # Multiple R-squared:  0.009334,	Adjusted R-squared:  0.009037 
+    # F-statistic: 31.38 on 1 and 3330 DF,  p-value: 2.299e-08
 
-Inflow_NtoPperiod1 <- lm(Inflow_NtoP[537:1015] ~ Dateinflow[537:1015])
+Inflow_NtoPperiod1 <- lm(Inflow_NtoP[1:883] ~ Dateinflow[1:883])
 summary(Inflow_NtoPperiod1)
+    # Residuals:
+    #   Min     1Q Median     3Q    Max 
+    # -5.936 -2.818 -0.851  1.342 81.907 
+    # 
+    # Coefficients:
+    #   Estimate Std. Error t value Pr(>|t|)    
+    # (Intercept)        6.5099257  0.5081759  12.810  < 2e-16 ***
+    #   Dateinflow[1:883] -0.0017974  0.0006149  -2.923  0.00368 ** 
+    #   ---
+    #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+    # 
+    # Residual standard error: 6.071 on 362 degrees of freedom
+    # (519 observations deleted due to missingness)
+    # Multiple R-squared:  0.02306,	Adjusted R-squared:  0.02036 
+    # F-statistic: 8.546 on 1 and 362 DF,  p-value: 0.003681
 
-Inflow_NtoPperiod2 <- lm(Inflow_NtoP[537:1015] ~ Dateinflow[537:1015])
+Inflow_NtoPperiod2 <- lm(Inflow_NtoP[884:7487] ~ Dateinflow[884:7487])
 summary(Inflow_NtoPperiod2)
+    # Residuals:
+    #   Min      1Q  Median      3Q     Max 
+    # -6.871  -3.926  -2.070   0.352 150.594 
+    # 
+    # Coefficients:
+    #   Estimate Std. Error t value Pr(>|t|)    
+    # (Intercept)          6.389e+00  4.283e-01  14.917  < 2e-16 ***
+    #   Dateinflow[884:7487] 1.692e-04  4.712e-05   3.591 0.000335 ***
+    #   ---
+    #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+    # 
+    # Residual standard error: 9.705 on 2966 degrees of freedom
+    # (3636 observations deleted due to missingness)
+    # Multiple R-squared:  0.004328,	Adjusted R-squared:  0.003993 
+    # F-statistic: 12.89 on 1 and 2966 DF,  p-value: 0.000335
 
+NtoPinputplot <-
 ggplot(NtoPinput, aes(x = Dateinflow)) +
   geom_point(aes(y = Inflow_NtoP), size = 0.5) +
   ylab(expression(InflowN:InflowP)) +
   xlab(" ") +
-  theme(legend.position = c(0.9,0.9)) 
+  theme(legend.position = c(0.9,0.9))  #+
+  #geom_smooth(method = 'lm', data = NtoPinput[1:883,], aes(x = Dateinflow, y = Inflow_NtoP), se = FALSE, color = "blue") + #significant slope
+  #geom_smooth(method = 'lm', data = NtoPinput[884:7487,], aes(x = Dateinflow, y = Inflow_NtoP), se = FALSE, color = "blue") + #significant slope
+  #geom_vline(xintercept = as.numeric(NtoPinput$Datelake[884]), lty = 5)
 
+#### N:P fertilizer + inflow (not used) ----
 ggplot(NtoPinput, aes(x = Dateinflow)) +
   geom_point(aes(y = Input_NtoP), size = 0.5) +
   ylim(0,50) +
@@ -363,4 +424,6 @@ ggplot(NtoPinput, aes(x = Dateinflow)) +
   xlab(" ") +
   theme(legend.position = c(0.9,0.9)) 
 
-
+#### multiplot ----
+library(gridExtra)
+grid.arrange(TNtoTPplot, TDNtoTDPplot, PNtoPPplot, DIN_molarplot, FertNtoPplot, NtoPinputplot, ncol = 3)
