@@ -1,4 +1,4 @@
-setwd("/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227")
+setwd("/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227/Stoichiometry")
 
 NtoPLake <- read.csv("NP_Stoichiometry_L227.csv")
 attach(NtoPLake)
@@ -40,8 +40,8 @@ Datelake <- as.Date(NtoPLake$Date, "%m/%d/%y")
 Dateinflow <- as.Date(NtoPInflow$Date, "%m/%d/%y")
 
 #Create data frames for N:P stoichiometry in lake and inflows
-NtoPinsitu <- data.frame(Datelake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP)
-NtoPinput <- data.frame(Dateinflow, Fert_NtoP, Inflow_NtoP, Input_NtoP)
+NtoPinsitu <- data.frame(Datelake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP, DIN_molar)
+NtoPinput <- data.frame(Dateinflow, Fert_NtoP, Inflow_NtoP, Input_NtoP, Input_TN_molar)
 
 library(ggplot2)
 theme_std <- function (base_size = 16, base_family = "") {
@@ -62,18 +62,33 @@ theme_std <- function (base_size = 16, base_family = "") {
 theme_set(theme_std())
 
 library(strucchange)
-a = breakpoints (Input_NtoP ~ Dateinflow, h = 20, data = NtoPinput, breaks=2)
-summary(a)
+TNtoTPbreak = breakpoints (TNtoTP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
+summary(TNtoTPbreak)
 TNtoTPbydate <- lm(TNtoTP ~ Datelake)
+summary(TNtoTPbydate)
 
+TDNtoTDPbreak = breakpoints (TDNtoTDP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
+summary(TDNtoTDPbreak)
+TDNtoTDPbydate <- lm(TDNtoTDP ~ Datelake)
+summary(TDNtoTDPbydate)
 
+DINtoTDPbreak = breakpoints (DINtoTDP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
+summary(DINtoTDPbreak)
+DINtoTDPbydate <- lm(DINtoTDP ~ Datelake)
+summary(DINtoTDPbydate)
 
-ggplot(NtoPinsitu, aes(x = Datelake)) +
+PNtoPPbreak = breakpoints (PNtoPP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
+summary(PNtoPPbreak)
+PNtoPPbydate <- lm(PNtoPP ~ Datelake)
+summary(PNtoPPbydate)
+
+ggplot(NtoPinsitu, aes(x = Datelake, y = TNtoTP)) +
   geom_point(aes(y = TNtoTP), size = 0.5) +
   ylim(0,200) +
   ylab(expression(TN:TP)) +
   xlab(" ") +
-  theme(legend.position = c(0.9,0.9))
+  theme(legend.position = c(0.9,0.9)) + 
+  geom_smooth(method = 'lm')
 
 ggplot(NtoPinsitu, aes(x = Datelake)) +
   geom_point(aes(y = TDNtoTDP), size = 0.5) +
@@ -96,6 +111,13 @@ ggplot(NtoPinsitu, aes(x = Datelake)) +
   xlab(" ") +
   theme(legend.position = c(0.9,0.9)) 
 
+ggplot(NtoPinsitu, aes(x = Datelake)) +
+  geom_point(aes(y = DIN_molar), size = 0.5) +
+  ylim(0,125) +
+  ylab(expression(DIN ~ (mu*M))) +
+  xlab(" ") +
+  theme(legend.position = c(0.9,0.9)) 
+
 ggplot(NtoPinput, aes(x = Dateinflow, y = Fert_NtoP)) +
   geom_point(size = 0.5) +
   ylim(0,50) +
@@ -115,3 +137,5 @@ ggplot(NtoPinput, aes(x = Dateinflow)) +
   ylab(expression(InputN:InputP)) +
   xlab(" ") +
   theme(legend.position = c(0.9,0.9)) 
+
+
