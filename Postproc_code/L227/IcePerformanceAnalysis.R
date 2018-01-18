@@ -25,7 +25,7 @@ theme_std <- function (base_size = 16, base_family = "") {
 }
 theme_set(theme_std())
 
-
+#### Modify ice observation spreadsheet ----
 obs.ice <- read.csv("Lake_239_ice-on_ice-off.csv", header = T)
 attach(obs.ice)
 obs.ice$Ice.Off.Date <- as.Date(obs.ice$Ice.Off.Date, format = "%Y-%m-%d")
@@ -34,7 +34,9 @@ obs.daybreak <- strftime(obs.ice$Ice.Off.Date, format = "%j")
 obs.dayfreeze <- strftime(obs.ice$Ice.On.Date, format = "%j")
 obs.year <- format(obs.ice$Ice.On.Date, "%Y")
 obs.ice.edit <- cbind(obs.year, obs.ice[4], obs.ice[5], obs.daybreak, obs.dayfreeze)
+colnames(obs.ice.edit) <- c("Year", "Ice.Off.Date", "Ice.On.Date", "obs.daybreak", "obs.dayfreeze")
 
+#### Modify ice model output spreadsheet ----
 out.ice <- read.csv("Output_Ice.csv", header = F)
 colnames(out.ice) <- c("Year.Break", "Month.Break", "Day.Break", "Year.Freeze", "Month.Freeze", "Day.Freeze")
 out.ice.edit <- out.ice %>% unite(Ice.Off.Date, Year.Break, Month.Break, Day.Break, sep = '-')
@@ -45,14 +47,53 @@ out.daybreak <- strftime(out.ice.edit$Ice.Off.Date, format = "%j")
 out.dayfreeze <- strftime(out.ice.edit$Ice.On.Date, format = "%j")
 out.year <- as.character(out.ice$Year.Freeze)
 out.ice.edit2 <- cbind(out.year, out.ice.edit, out.daybreak, out.dayfreeze)
+colnames(out.ice.edit2) <- c("Year", "Ice.Off.Date", "Ice.On.Date", "out.daybreak", "out.dayfreeze")
 
+#### Combine observations and model output ----
+match.ice <- inner_join(obs.ice.edit, out.ice.edit2, by = "Year") 
+match.ice$obs.daybreak <- as.numeric(as.character(match.ice$obs.daybreak))
+match.ice$out.daybreak <- as.numeric(as.character(match.ice$out.daybreak))
+match.ice$obs.dayfreeze <- as.numeric(as.character(match.ice$obs.dayfreeze))
+match.ice$out.dayfreeze <- as.numeric(as.character(match.ice$out.dayfreeze))
+match.ice$Year <- as.numeric(match.ice$Year)
 
-@iceplot <- 
+#### Calculate fit metrics
+icebreakregression <- lm (match.ice$obs.daybreak ~ match.ice$out.daybreak)
+summary(icebreakregression)
+msebreak <- mean(residuals(icebreakregression)^2)
+rmsebreak <- sqrt(msebreak)
+rmsebreak
+rmsebreak <- round(rmsebreak, digits = 2)
+
+icefreezeregression <- lm (match.ice$obs.dayfreeze ~ match.ice$out.dayfreeze)
+summary(icefreezeregression)
+msefreeze <- mean(residuals(icefreezeregression)^2)
+rmsefreeze <- sqrt(msefreeze)
+rmsefreeze
+rmsefreeze <- round(rmsefreeze, digits = 2)
+
+#### Plots ----
+icedateplot <- 
+  ggplot(data = match.ice, aes(x = Year, group = 1)) +
+    geom_point(aes(y = obs.daybreak), color = "red") +
+    geom_line(aes(y = out.daybreak), color = "red") +
+    geom_point(aes(y = obs.dayfreeze), color = "blue") +
+    geom_line(aes(y = out.dayfreeze), color = "blue") + 
+    scale_y_reverse() + 
+    ylab("Julian Day") + 
+    annotate("text", x = 1969, y = 280, label = "Ice Freeze", color = "blue", size = 5, hjust = 0) +
+    annotate("text", x = 1969, y = 150, label = "Ice Break", color = "red", size = 5, hjust = 0) +
+    annotate("text", x = 1971, y = 170, label = rmsebreak, color = "red", size = 5, hjust = 0) +
+    annotate("text", x = 1969, y = 170, label = "RMSE =", color = "red", size = 5, hjust = 0) +
+    annotate("text", x = 1971, y = 300, label = rmsefreeze, color = "blue", size = 5, hjust = 0) +
+    annotate("text", x = 1969, y = 300, label = "RMSE =", color = "blue", size = 5, hjust = 0)
   
-  ggplot() +
-  geom_point(data = obs.ice.edit, aes(x = obs.year, y = obs.daybreak)) +
-  #geom_line(data = obs.ice.edit, aes(x = obs.year, y = obs.daybreak)) + 
-  geom_point(data = out.ice.edit2, aes(x = out.year, y = out.daybreak), color = "red") + 
-  geom_line(aes(x = out.year, y = out.daybreak))
-  
+icebreakregressionplot <- 
+  ggplot(data = match.ice) + 
+    geom_point(aes(x = obs.daybreak, y = out.daybreak), color = "red") +
+    geom_smooth(method = "lm", aes(x = obs.daybreak, y = out.daybreak), se = FALSE, color = "red")
 
+icefreezeregressionplot <- 
+  ggplot(data = match.ice) + 
+    geom_point(aes(x = obs.dayfreeze, y = out.dayfreeze), color = "blue") +
+    geom_smooth(method = "lm", aes(x = obs.dayfreeze, y = out.dayfreeze), se = FALSE, color = "blue") 
