@@ -9,7 +9,7 @@
 % to sample around the best fits.
 population_size = 48;  
 % Max generations to run. The maximal amount of runs is population_size*max_generations.
-max_generations = 32;
+max_generations = 24;
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
 m_start = [1969, 6, 27];
@@ -86,7 +86,16 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     save_initial_conditions = false; % save final concentrations as initial for the next run
     run_ID = 0;
     clim_ID = 0;
-    [MyLake_results, Sediment_results]  = fn_MyL_application(m_start, m_stop, sediment_params, lake_params, use_INCA, run_INCA, run_ID, clim_ID, save_initial_conditions); % runs the model and outputs obs and sim
+    try
+        [MyLake_results, Sediment_results]  = fn_MyL_application(m_start, m_stop, sediment_params, lake_params, use_INCA, run_INCA, run_ID, clim_ID, save_initial_conditions); % runs the model and outputs obs and sim
+    catch exception
+        fprintf(1, 'fn_MyL_application crashed. Parameters in this run:');
+        for ii = 1:length(varyparam)
+        fprintf(1, ' %.3g', varyparam(ii));
+        end
+        fprintf('\n');
+        rethrow(exception);
+    end 
     
     Totalchl = (MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C)/0.42;
     ModelResult.Chlintegratedepi = transpose(mean(Totalchl(1:8,:)));
@@ -167,6 +176,6 @@ function err = MyLake_optimizer_single_run(m_start, m_stop, K_sediments, K_lake,
     fprintf(1, ' %.3g', varyparam(ii));
     end
     fprintf('\n');
-    fprintf(1, '*******************************************************************************************\n');
+    fprintf(1, '****************************************************************q***************************\n');
     fprintf(1, '\n');
 end
