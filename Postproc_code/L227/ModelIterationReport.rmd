@@ -264,7 +264,7 @@ p11 <- ggplot(mod3.match, aes(x = date)) +
 
 p12 <- ggplot(mod3.match, aes(x = date)) +
   geom_point(aes(y = obs.O2.8m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Oxy10m, col = "Modeled"), size = 0.5) +
+  geom_line(aes(y = mod.Oxy8m, col = "Modeled"), size = 0.5) +
   #ylim(0,10) +
   ylab(expression(Oxygen ~ (mg / L))) +
   xlab(" ") +
