@@ -76,19 +76,14 @@ theme_set(theme_std())
 obs <- read.csv("Observed_IntegratedEpi_icefree.csv", header = T)
 attach(obs)
 colnames(obs) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP")
-
 obs_temp <- read.csv("Observed_Temperature.csv")
 attach(obs_temp)
-
 obs_O2 <- read.csv("Observed_Oxygen.csv")
 attach(obs_O2)
-
 obs_Fe <- read.csv("Observed_Fe.csv")
 attach(obs_Fe)
-
 mod <- read.csv("Output_IntegratedEpi.csv", header = F)
 colnames(mod) <- c("Year", "Month", "Day", "mod.chla", "mod.cyano", "mod.TDP", "mod.TP")
-
 mod2 <- read.csv("Output_Depths.csv", header = F)
 colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy6m", "mod.Oxy8m", "mod.Oxy10m", "mod.Fe4m", "mod.Fe6m", "mod.Fe8m", "mod.Fe10m")
 
@@ -101,7 +96,6 @@ obs <- obs %>%
 obs <- data.frame(obs, Month, Year)
 obs <- na.omit(obs)
 obs <- obs[,-1]
-
 mod <- mod %>% unite(date, Year, Month, Day, sep = '-')
 mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
 
@@ -112,7 +106,6 @@ obs_O2$date <- as.Date(obs_O2$date, format = "%d/%m/%y") #Converts data to date 
 obs_Fe$date <- as.Date(obs_Fe$date, format = "%d/%m/%y") #Converts data to date structure
 mod$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
 mod2$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
-
 
 # tidy! - part 2: match model time and observational time
 library(dplyr)
@@ -127,221 +120,185 @@ mod.totaltemp <- stack(mod.totaltempa)
 totaltemp <- data.frame(cbind(obs.totaltemp[,1], mod.totaltemp[,1]))
 colnames(totaltemp) <- c("TempObs","TempMod")
 
-#write data for later use
-#write.csv(filename = paste0("./example-data/processed/", format(Sys.time(), "%Y%m%d-%H%M"), "_modelcomp-output.csv"))
 ```
 
 <Figure 1>
 ```{r model-overlay, fig.cap="Overlay of observed (red) and modeled data (black). \\label{ModelOverlay}", echo = FALSE, fig.height = 7}
 
-p <- ggplot(mod.match, aes(x = date)) +
-  geom_point(aes(y = obs.TP, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.TP, col = "Modeled"), size = 0.5) +
+p <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.TP, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.TP, col = "Observed"), pch = 19, size = 1) +
   ylim(0,150) +
   ylab(expression(Total ~ Phosphorus ~ (mu*g / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) # TP by time
 #print(p)
 
-p2 <- ggplot(mod.match, aes(x = date)) +
-  geom_point(aes(y = obs.TDP, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.TDP, col = "Modeled"), size = 0.5) +
+p2 <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.TDP, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.TDP, col = "Observed"), pch = 19, size = 1) +
   ylim(0,100) +
   ylab(expression(TDP ~ (mu*g / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) #TDP by time
 #print(p2)
 
-p3 <- ggplot(mod.match, aes(x = date)) +
-  geom_point(aes(y = obs.chla, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.chla, col = "Modeled"), size = 0.5) +
+p3 <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.chla, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.chla, col = "Observed"), pch = 19, size = 1) +
   ylim(0,100) +
   ylab(expression(Chlorophyll ~ a ~ (mu*g / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) #chl by time
 #print(p3)
 
-p4 <- ggplot(mod2.match, aes(x = date)) +
-  geom_point(aes(y = obs.Temp1m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Temp1m, col = "Modeled"), size = 0.5) +
+p4 <- ggplot() +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp1m, col = "Observed"), pch = 19, size = 1) +
   ylim(0,30) +
   ylab(expression("Temperature " ( degree*C))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) #temp 1m by time
 
 p5 <- ggplot(mod2.match, aes(x = date)) +
-  geom_point(aes(y = obs.Temp4m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Temp4m, col = "Modeled"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp4m, col = "Observed"), pch = 19, size = 1) +
   ylim(0,30) +
   ylab(expression("Temperature " ( degree*C))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) #temp 4m by time
   
 p6 <- ggplot(mod2.match, aes(x = date)) +
-  geom_point(aes(y = obs.Temp9m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Temp9m, col = "Modeled"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp9m, col = "Observed"), pch = 19, size = 1) +
   ylim(0,10) +
   ylab(expression("Temperature " ( degree*C))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) #temp 9m by time
 
 p7 <- ggplot(mod2.match, aes(x = date)) +
-  geom_point(aes(y = obs.Temp1m, col = "1m"), pch = 19, size = 1) +
-  geom_point(aes(y = obs.Temp4m, col = "4m"), pch = 19, size = 1) +
-  geom_point(aes(y = obs.Temp9m, col = "9m"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Temp1m, col = "1m"), size = 0.5) +
-  geom_line(aes(y = mod.Temp4m, col = "4m"), size = 0.5) +
-  geom_line(aes(y = mod.Temp9m, col = "9m"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "1m"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "4m"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "9m"), size = 0.5) +  
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp1m, col = "1m"), pch = 19, size = 1) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp4m, col = "4m"), pch = 19, size = 1) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp9m, col = "9m"), pch = 19, size = 1) +
   ylim(0,30) +
   ylab(expression("Temperature " ( degree*C))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("1m", "4m", "9m"),
-                      values = c("#6baed6", "#3182bd", "#08519c")) +
+  scale_colour_manual("", breaks = c("1m", "4m", "9m"), values = c("#6baed6", "#3182bd", "#08519c")) +
   theme(legend.position = c(0.9,0.9)) #all temp by time
 
-p8 <- ggplot(mod3.match, aes(x = date)) +
-  geom_point(aes(y = obs.O2.2m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Oxy2m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
-ylab(expression(Oxygen ~ 2 ~ m ~ (mg / L))) +
+p8 <- ggplot() +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy2m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.2m, col = "Observed"), pch = 19, size = 1) +
+  ylab(expression(Oxygen ~ 2 ~ m ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
   theme(legend.position = c(0.9,0.9)) #O2 2m by time
 
-p9 <- ggplot(mod3.match, aes(x = date)) +
-  geom_point(aes(y = obs.O2.3m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Oxy3m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
+p9 <- ggplot() +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy3m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.3m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
   theme(legend.position = c(0.9,0.9)) #O2 3m by time
 
-p10 <- ggplot(mod3.match, aes(x = date)) +
-  geom_point(aes(y = obs.O2.4m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Oxy4m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
+p10 <- ggplot() +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy4m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.4m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ 4 ~ m ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
   theme(legend.position = c(0.9,0.9)) #O2 4m by time
 
-p11 <- ggplot(mod3.match, aes(x = date)) +
-  geom_point(aes(y = obs.O2.6m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Oxy6m, col = "Modeled"), size = 0.5) +
- # ylim(0,10) +
+p11 <- ggplot() +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy6m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.6m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
   theme(legend.position = c(0.9,0.9)) #O2 6m by time
 
-p12 <- ggplot(mod3.match, aes(x = date)) +
-  geom_point(aes(y = obs.O2.8m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Oxy8m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
+p12 <- ggplot() +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy8m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.8m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
   theme(legend.position = c(0.9,0.9)) #O2 8m by time
 
-p13 <- ggplot(mod3.match, aes(x = date)) +
-  geom_point(aes(y = obs.O2.10m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Oxy10m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
+p13 <- ggplot() +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy10m, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.10m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ 10 ~ m ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
   theme(legend.position = c(0.9,0.9)) #O2 10m by time
 
 p18 <- ggplot(mod3.match, aes(x = date)) +
-  geom_point(aes(y = obs.O2.2m, col = "2m"), pch = 19, size = 1) +
-  geom_point(aes(y = obs.O2.4m, col = "4m"), pch = 19, size = 1) +
-  geom_point(aes(y = obs.O2.10m, col = "10m"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Oxy2m, col = "2m"), size = 0.5) +
-  geom_line(aes(y = mod.Oxy4m, col = "4m"), size = 0.5) +
-  geom_line(aes(y = mod.Oxy10m, col = "10m"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy4m, col = "4m"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy6m, col = "6m"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Oxy10m, col = "10m"), size = 0.5) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.4m, col = "4m"), pch = 19, size = 1) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.6m, col = "6m"), pch = 19, size = 1) +
+  geom_point(data = mod3.match, aes(x = date, y = obs.O2.10m, col = "10m"), pch = 19, size = 1) +
   ylim(0,12) +
   ylab(expression(Oxygen ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("2m", "4m", "10m"),
-                      values = c("#6baed6", "#3182bd", "#08519c")) +
-  theme(legend.position = c(0.9,0.9)) #all temp by time
-
-p14 <- ggplot(mod4.match, aes(x = date)) +
-  geom_point(aes(y = obs.Fe.4m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Fe4m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
-  ylab(expression(Fe ~ 4 ~ m ~ (mg / L))) +
-  xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #Fe 4m by time
-
-p15 <- ggplot(mod4.match, aes(x = date)) +
-  geom_point(aes(y = obs.Fe.6m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Fe6m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
-  ylab(expression(Fe ~ (mg / L))) +
-  xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #Fe 6m by time
-
-p16 <- ggplot(mod4.match, aes(x = date)) +
-  geom_point(aes(y = obs.Fe.8m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Fe8m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
-  ylab(expression(Fe ~ (mg / L))) +
-  xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #Fe 8m by time
-
-p17 <- ggplot(mod4.match, aes(x = date)) +
-  geom_point(aes(y = obs.Fe.10m, col = "Observed"), pch = 19, size = 1) +
-  geom_line(aes(y = mod.Fe10m, col = "Modeled"), size = 0.5) +
-  #ylim(0,10) +
-  ylab(expression(Fe ~ 10 ~ m ~ (mg / L))) +
-  xlab(" ") +
-  scale_colour_manual("", 
-                      breaks = c("Observed", "Modeled"),
-                      values = c("black", "red")) +
+  scale_colour_manual("", breaks = c("4m", "6m", "10m"), values = c("#6baed6", "#3182bd", "#08519c")) +
   theme(legend.position = c(0.9,0.9))
+
+# p14 <- ggplot(mod4.match, aes(x = date)) +
+#   geom_point(aes(y = obs.Fe.4m, col = "Observed"), pch = 19, size = 1) +
+#   geom_line(aes(y = mod.Fe4m, col = "Modeled"), size = 0.5) +
+#   #ylim(0,10) +
+#   ylab(expression(Fe ~ 4 ~ m ~ (mg / L))) +
+#   xlab(" ") +
+#   scale_colour_manual("", 
+#                       breaks = c("Observed", "Modeled"),
+#                       values = c("black", "red")) +
+#   theme(legend.position = c(0.9,0.9)) #Fe 4m by time
+# 
+# p15 <- ggplot(mod4.match, aes(x = date)) +
+#   geom_point(aes(y = obs.Fe.6m, col = "Observed"), pch = 19, size = 1) +
+#   geom_line(aes(y = mod.Fe6m, col = "Modeled"), size = 0.5) +
+#   #ylim(0,10) +
+#   ylab(expression(Fe ~ (mg / L))) +
+#   xlab(" ") +
+#   scale_colour_manual("", 
+#                       breaks = c("Observed", "Modeled"),
+#                       values = c("black", "red")) +
+#   theme(legend.position = c(0.9,0.9)) #Fe 6m by time
+# 
+# p16 <- ggplot(mod4.match, aes(x = date)) +
+#   geom_point(aes(y = obs.Fe.8m, col = "Observed"), pch = 19, size = 1) +
+#   geom_line(aes(y = mod.Fe8m, col = "Modeled"), size = 0.5) +
+#   #ylim(0,10) +
+#   ylab(expression(Fe ~ (mg / L))) +
+#   xlab(" ") +
+#   scale_colour_manual("", 
+#                       breaks = c("Observed", "Modeled"),
+#                       values = c("black", "red")) +
+#   theme(legend.position = c(0.9,0.9)) #Fe 8m by time
+# 
+# p17 <- ggplot(mod4.match, aes(x = date)) +
+#   geom_point(aes(y = obs.Fe.10m, col = "Observed"), pch = 19, size = 1) +
+#   geom_line(aes(y = mod.Fe10m, col = "Modeled"), size = 0.5) +
+#   #ylim(0,10) +
+#   ylab(expression(Fe ~ 10 ~ m ~ (mg / L))) +
+#   xlab(" ") +
+#   scale_colour_manual("", 
+#                       breaks = c("Observed", "Modeled"),
+#                       values = c("black", "red")) +
+#   theme(legend.position = c(0.9,0.9))
 
 require(gridExtra)
 grid.arrange(p, p2, p3, ncol = 1) #Fe 10m by time
@@ -404,6 +361,15 @@ q5 <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Year)) +
   scale_color_distiller(palette="YlGnBu") +
   theme(legend.position=c(0.9, 0.8))
 
+q7 <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Year)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,50)) + scale_y_continuous(limits=c(0,50)) +
+  xlab(expression(TDP ~ Observed ~ (mu*g / L))) +
+  ylab(expression(TDP ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
 q6 <- ggplot(totaltemp, aes(x = TempObs, y = TempMod)) +
   geom_point(pch = 19, size = 1.5) +
   geom_abline(slope=1, intercept=0) + 
@@ -416,143 +382,79 @@ q6 <- ggplot(totaltemp, aes(x = TempObs, y = TempMod)) +
 library(gridExtra)
 grid.arrange(p, p2, p3, ncol = 2)
 
+library(hydroGOF)
 
 tempregression <- lm(mod2.match$obs.Temp1m ~ mod2.match$mod.Temp1m)
 summary(tempregression)
 mse <- mean(residuals(tempregression)^2)
 rmse <- sqrt(mse)
 rmse
-#[1:138]
+NSE(mod2.match$mod.Temp1m, mod2.match$obs.Temp1m)
 
 tempregression <- lm(mod2.match$obs.Temp4m ~ mod2.match$mod.Temp4m)
 summary(tempregression)
 mse <- mean(residuals(tempregression)^2)
 rmse <- sqrt(mse)
 rmse
-#[1:138]
+NSE(mod2.match$mod.Temp4m, mod2.match$obs.Temp4m)
 
 tempregression <- lm(mod2.match$obs.Temp9m ~ mod2.match$mod.Temp9m)
 summary(tempregression)
 mse <- mean(residuals(tempregression)^2)
 rmse <- sqrt(mse)
 rmse
-#[1:138]
-
-# tempregression <- lm(mod.match.temp$obs.Temp1m[139:340] ~ mod.match.temp$mod.Temp1m[139:340])
-# summary(tempregression)
-# mse <- mean(residuals(tempregression)^2)
-# rmse <- sqrt(mse)
-# rmse
-# 
-# tempregression <- lm(mod.match.temp$obs.Temp4m[139:340] ~ mod.match.temp$mod.Temp4m[139:340])
-# summary(tempregression)
-# mse <- mean(residuals(tempregression)^2)
-# rmse <- sqrt(mse)
-# rmse
-# 
-# tempregression <- lm(mod.match.temp$obs.Temp9m[139:340] ~ mod.match.temp$mod.Temp9m[139:340])
-# summary(tempregression)
-# mse <- mean(residuals(tempregression)^2)
-# rmse <- sqrt(mse)
-# rmse
-# tempregression <- lm(mod.match.temp$obs.Temp1m[341:610] ~ mod.match.temp$mod.Temp1m[341:610])
-# summary(tempregression)
-# mse <- mean(residuals(tempregression)^2)
-# rmse <- sqrt(mse)
-# rmse
-# 
-# tempregression <- lm(mod.match.temp$obs.Temp4m[341:610] ~ mod.match.temp$mod.Temp4m[341:610])
-# summary(tempregression)
-# mse <- mean(residuals(tempregression)^2)
-# rmse <- sqrt(mse)
-# rmse
-# 
-# tempregression <- lm(mod.match.temp$obs.Temp9m[341:610] ~ mod.match.temp$mod.Temp9m[341:610])
-# summary(tempregression)
-# mse <- mean(residuals(tempregression)^2)
-# rmse <- sqrt(mse)
-# rmse
+NSE(mod2.match$mod.Temp9m, mod2.match$obs.Temp9m)
 
 chlaregression <- lm (mod.match$obs.chla ~ mod.match$mod.chla)
 summary(chlaregression)
 mse <- mean(residuals(chlaregression)^2)
 rmse <- sqrt(mse)
 rmse
-#[1:127]
-
-# chlaregression <- lm (mod.match$obs.chla[128:470] ~ mod.match$mod.chla[128:470])
-# summary(chlaregression)
-# mse <- mean(residuals(chlaregression)^2)
-# rmse <- sqrt(mse)
-# rmse
-# 
-# chlaregression <- lm (mod.match$obs.chla[471:756] ~ mod.match$mod.chla[471:756])
-# summary(chlaregression)
-# mse <- mean(residuals(chlaregression)^2)
-# rmse <- sqrt(mse)
-# rmse
+NSE(mod.match$mod.chla, mod.match$obs.chla)
 
 TDPregression <- lm (mod.match$obs.TDP ~ mod.match$mod.TDP)
 summary(TDPregression)
 mse <- mean(residuals(TDPregression)^2)
 rmse <- sqrt(mse)
 rmse
-#[1:127]
-
-# TDPregression <- lm (mod.match$obs.TDP[128:470] ~ mod.match$mod.TDP[128:470])
-# summary(TDPregression)
-# mse <- mean(residuals(TDPregression)^2)
-# rmse <- sqrt(mse)
-# rmse
-# 
-# TDPregression <- lm (mod.match$obs.TDP[471:756] ~ mod.match$mod.TDP[471:756])
-# summary(TDPregression)
-# mse <- mean(residuals(TDPregression)^2)
-# rmse <- sqrt(mse)
-# rmse
+NSE(mod.match$mod.TDP, mod.match$obs.TDP)
 
 TPregression <- lm (mod.match$obs.TP ~ mod.match$mod.TP)
 summary(TPregression)
 mse <- mean(residuals(TPregression)^2)
 rmse <- sqrt(mse)
 rmse
-#[1:127]
-
-# TPregression <- lm (mod.match$obs.TP[128:470] ~ mod.match$mod.TP[128:470])
-# summary(TPregression)
-# mse <- mean(residuals(TPregression)^2)
-# rmse <- sqrt(mse)
-# rmse
-# 
-# TPregression <- lm (mod.match$obs.TP[471:756] ~ mod.match$mod.TP[471:756])
-# summary(TPregression)
-# mse <- mean(residuals(TPregression)^2)
-# rmse <- sqrt(mse)
-# rmse
+NSE(mod.match$mod.TP, mod.match$obs.TP)
 
 O2regression2m <- lm(mod3.match$obs.O2.2m ~ mod3.match$mod.Oxy2m)
 summary(O2regression2m)
 mse <- mean(residuals(O2regression2m)^2); rmse <- sqrt(mse); rmse
+NSE(mod3.match$mod.Oxy2m, mod3.match$obs.O2.2m )
 
 O2regression3m <- lm(mod3.match$obs.O2.3m ~ mod3.match$mod.Oxy3m)
 summary(O2regression3m)
 mse <- mean(residuals(O2regression3m)^2); rmse <- sqrt(mse); rmse
+NSE(mod3.match$mod.Oxy3m, mod3.match$obs.O2.3m )
 
 O2regression4m <- lm(mod3.match$obs.O2.4m ~ mod3.match$mod.Oxy4m)
 summary(O2regression4m)
 mse <- mean(residuals(O2regression4m)^2); rmse <- sqrt(mse); rmse
+NSE(mod3.match$mod.Oxy4m, mod3.match$obs.O2.4m )
 
 O2regression6m <- lm(mod3.match$obs.O2.6m ~ mod3.match$mod.Oxy6m)
 summary(O2regression6m)
 mse <- mean(residuals(O2regression6m)^2); rmse <- sqrt(mse); rmse
+NSE(mod3.match$mod.Oxy6m, mod3.match$obs.O2.6m )
 
 O2regression8m <- lm(mod3.match$obs.O2.8m ~ mod3.match$mod.Oxy8m)
 summary(O2regression8m)
 mse <- mean(residuals(O2regression8m)^2); rmse <- sqrt(mse); rmse
+NSE(mod3.match$mod.Oxy6m, mod3.match$obs.O2.6m )
 
 O2regression10m <- lm(mod3.match$obs.O2.10m ~ mod3.match$mod.Oxy10m)
 summary(O2regression10m)
 mse <- mean(residuals(O2regression10m)^2); rmse <- sqrt(mse); rmse
+NSE(mod3.match$mod.Oxy10m, mod3.match$obs.O2.10m )
 
 Feregression4m <- lm(mod4.match$obs.Fe.4m ~ mod4.match$mod.Fe4m)
 summary(Feregression4m)
