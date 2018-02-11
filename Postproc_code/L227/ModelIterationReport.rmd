@@ -379,8 +379,8 @@ q6 <- ggplot(totaltemp, aes(x = TempObs, y = TempMod)) +
   scale_color_distiller(palette="YlGnBu") +
   theme(legend.position=c(0.9, 0.8))
 
-library(gridExtra)
-grid.arrange(p, p2, p3, ncol = 2)
+#library(gridExtra)
+#grid.arrange(p, p2, p3, ncol = 2)
 
 library(hydroGOF)
 
