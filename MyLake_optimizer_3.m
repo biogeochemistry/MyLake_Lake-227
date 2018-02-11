@@ -12,8 +12,8 @@ population_size = 48;
 max_generations = 32;
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
-m_start = [1969, 6, 27];
-m_stop = [1979, 12, 31];
+m_start = [1979, 6, 27];
+m_stop = [1989, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
@@ -32,20 +32,19 @@ Data = loadData(MyL_dates);
 
 % Example: (g_twty (parameter nr 50) is always given the same value as
 % g_twty2 (parameter nr 58) and so on ..)
-varyindexes = [10 47 49 50 53 73 74 75 76 77 78 85; %PAR_sat, w_chl, m_twty, g_twty, P_half, k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2
-               54 56 57 58 59 NaN NaN NaN NaN NaN NaN NaN]; %PAR_sat_2, w_chl2, m_twty2, g_twty2, P_half_2
+varyindexes = [73 74 75 76 77 78 85]; %k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2
 
 % Setting up the min and max boundaries for each covarying set of parameters.
-minparam = [ 3e-6, 0.01, 0.02, 0.1, 0.001, 0.01, 0.01, 0.01, 0.01, 0.001, 0.0001, 0.001];
-maxparam = [ 3e-4, 0.5 , 0.1 , 2.0, 10, 5, 5, 5, 5, 0.02, 1, 2];
+minparam = [0.01, 0.01, 0.01, 0.01, 0.001, 0.0001, 0.001];
+maxparam = [5, 5, 5, 5, 0.02, 1, 2];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
-initial_guess = [0.000272, 0.169, 0.02, 1.6, 0.483, 0.4, 0.4, 1.75, 1.04, 0.021, 0.031, 0.329];
+initial_guess = [0.4, 0.4, 1.75, 1.04, 0.021, 0.031, 0.329];
 
 modeleval      = @MyLake_227_model_evaluation;
-errfun         = @error_function_Chl;
-filenameprefix = 'Chl'; % Prefix for the .mat file where the optimal parameters are saved in the end.
+errfun         = @error_function_oxygen;
+filenameprefix = 'O2'; % Prefix for the .mat file where the optimal parameters are saved in the end.
 
 do_MyLake_optimization(m_start, m_stop, K_sediments, K_lake, Data, ...
     varyindexes, minparam, maxparam, initial_guess, modeleval, errfun,...
@@ -57,15 +56,6 @@ function Data = loadData(MyL_dates)
     rawcsvdata = csvread('Postproc_code/L227/OutputForOptimization.csv', 1, 1);
     rawdatadates = datenum(rawcsvdata(:,8:10));
     withinmodelrange = (rawdatadates >= MyL_dates(1)) & (rawdatadates <= MyL_dates(end));
-    rawchldata = rawcsvdata(:,2);
-    rawchldata(rawchldata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    Data.Chlintegratedepi = rawchldata(withinmodelrange);
-    rawTPdata = rawcsvdata(:,1);
-    rawTPdata(rawTPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
-    Data.TPintegratedepi = rawTPdata(withinmodelrange);
-    rawTDPdata = rawcsvdata(:,3);
-    rawTDPdata(rawTDPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    Data.TDPintegratedepi = rawTDPdata(withinmodelrange);
     rawO24m = rawcsvdata(:,4);
     rawO24m(rawO24m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
     Data.O24m = rawO24m(withinmodelrange);
@@ -100,12 +90,6 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     clim_ID = 0;
     [MyLake_results, Sediment_results]  = fn_MyL_application(m_start, m_stop, sediment_params, lake_params, use_INCA, run_INCA, run_ID, clim_ID, save_initial_conditions); % runs the model and outputs obs and sim
     
-    Totalchl = (MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C)/0.42;
-    ModelResult.Chlintegratedepi = transpose(mean(Totalchl(1:8,:)));
-    TDP = MyLake_results.basin1.concentrations.P + MyLake_results.basin1.concentrations.DOP;
-    ModelResult.TDPintegratedepi = transpose(mean(TDP(1:8,:)));
-    TP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + TDP + MyLake_results.basin1.concentrations.PP;
-    ModelResult.TPintegratedepi = transpose(mean(TP(1:8,:)));
     ModelResult.O24m = transpose(MyLake_results.basin1.concentrations.O2(8,:)/1000);
     ModelResult.O26m = transpose(MyLake_results.basin1.concentrations.O2(12,:)/1000);
     ModelResult.O28m = transpose(MyLake_results.basin1.concentrations.O2(16,:)/1000);
@@ -117,16 +101,13 @@ end
 % defined. They should contain whatever is needed for the error function to
 % compare the model result to measured data. It has to return a positive
 % number err, which is smaller the better fit the model is to the data.
-function err = error_function_Chl(ModelResult, Data)
+function err = error_function_oxygen(ModelResult, Data)
     
-    MatchedModelChl = ModelResult.Chlintegratedepi(Data.date_mask);
-    MatchedModelTP = ModelResult.TPintegratedepi(Data.date_mask);
-    MatchedModelTDP =  ModelResult.TDPintegratedepi(Data.date_mask);
     MatchedModelO24m = ModelResult.O24m(Data.date_mask);
     MatchedModelO26m = ModelResult.O26m(Data.date_mask);
     MatchedModelO28m = ModelResult.O28m(Data.date_mask);
     MatchedModelO210m = ModelResult.O210m(Data.date_mask);
-    err = nansum(((MatchedModelChl - Data.Chlintegratedepi).^2) + ((MatchedModelTP - Data.TPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2) + ((MatchedModelO24m - Data.O24m).^2) + ((MatchedModelO26m - Data.O26m).^2)+ ((MatchedModelO28m - Data.O28m).^2) + ((MatchedModelO210m - Data.O210m).^2));
+    err = nansum (((MatchedModelO24m - Data.O24m).^2) + ((MatchedModelO26m - Data.O26m).^2)+ ((MatchedModelO28m - Data.O28m).^2) + ((MatchedModelO210m - Data.O210m).^2));
 end
 
 %% END project specific evaluation functions
