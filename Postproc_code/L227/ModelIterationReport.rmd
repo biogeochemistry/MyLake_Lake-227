@@ -4,16 +4,11 @@ output:
     keep_tex: yes
     fig_caption: yes
     number_sections: yes
-    citation_package: natbib
-    template: C:/Users/meglarse/Dropbox (Personal)/Consulting/Salk_Kateri/modIteration-report/doc-setup/svm-latex-ms-mod.tex
-title: Fe-ELA Model Iteration Comparison Report [Iteration Number]
-author: 
-- name: Dr. Kateri Salk
-  affiliation: University of Waterloo
-geometry: margin=0.5in
-fontsize: 11pt
-fontfamily: mathpazo
-biblio-style: apsr
+title: MyLake Evaluation for Lake 227
+author: Kateri Salk
+
+date: "12 February 2018"
+geometry: margin=2.54cm
 ---
 
 <Information in these brackets is used for annotating the RMarkdown file. They will not appear in the final PDF version of the document>
@@ -23,18 +18,19 @@ biblio-style: apsr
 
 setwd("/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227")
 
-# Install packages for the document
-
-## install.packages("ggplot2")
+# Load packages for the document
 library(ggplot2)
-
-# Package options
 library(knitr)
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+library(tidyr)
+library(magrittr)
+library(dplyr)
+library(hydroGOF)
+library(gridExtra)
 
 ## ggplot theme and figure parameters
 # set the theme ####
-theme_std <- function (base_size = 16, base_family = "") {
+theme_std <- function (base_size = 12, base_family = "") {
     theme_grey(base_size = base_size, base_family = base_family) %+replace% 
         theme(axis.ticks = element_line(colour = "black", size = 1), 
               legend.key = element_rect(colour = "white"), 
@@ -52,26 +48,26 @@ theme_std <- function (base_size = 16, base_family = "") {
         )
 }
 theme_set(theme_std())
-#
-
 ```
 
-# Summary of Major Findings
+# Summary of Progress
 
-1. **Model overlay** was ok...(\autoref{ModelOverlay}) <we can use the function autoref to automatically pull labeled graphics>
-    + Sublists can be made like this
+1. Optimizations have been run for TP, TDP, and chl. The model fits are fairly poor.
 
-2. **Model regression** was ok...(\autoref{ModelRegression}) <we can use the function autoref to automatically pull labeled graphics>
-    + Sublists can be made like this
+2. Initial optimization has been run for dissolved oxygen. The model fit is poor, as oxygen is not consumed quickly enough following mixing.
 
-<Add the text for each of your sections. Check out the [RMarkdown cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) and [Markdown cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#lists) for more information about text formatting.>
+3. Model fits are computed for: 
+  + R-squared value: amount of variance explained by the relationship (ideally close to 1)
+  + RMSE: mean difference between modeled value and observed value, in the units of interest (ideally close to 0)
+  + Nash-Sutcliffe coefficient: how well the model explains the observations (range: -infinity to 1; ideally close to 1; 0 indicates model predicts as well as the mean observation, > 0 indicates model predicts better than the mean observation, and < 0 indicates the model predicts more poorly than the mean observarion)
 
+4. I've included some ideas for improvements to the optimization.
+
+5. I've also included ideas for adding in a switching function for N fixers vs. non-N fixers growth.
 \newpage
 
-# Model Overlay
 
-<Perform the required functions to match the model output and observational data>
-```{r data-reduction, echo = FALSE}
+```{r, echo = FALSE}
 # Read in the data and add colnames
 obs <- read.csv("Observed_IntegratedEpi_icefree.csv", header = T)
 attach(obs)
@@ -88,8 +84,6 @@ mod2 <- read.csv("Output_Depths.csv", header = F)
 colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy6m", "mod.Oxy8m", "mod.Oxy10m", "mod.Fe4m", "mod.Fe6m", "mod.Fe8m", "mod.Fe10m")
 
 #Let's tidy! - part 1
-library(tidyr)
-library(magrittr)
 obs <- obs %>% 
   unite(date, Year, Month, Day, sep = '-') #%>%
   #filter(!is.na(obs.TP))
@@ -108,7 +102,6 @@ mod$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date struct
 mod2$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
 
 # tidy! - part 2: match model time and observational time
-library(dplyr)
 mod.match <- inner_join(obs,mod, by = "date") 
 mod2.match <- inner_join(obs_temp, mod2, by = "date")
 mod3.match <- inner_join(obs_O2, mod2, by = "date")
@@ -121,68 +114,47 @@ totaltemp <- data.frame(cbind(obs.totaltemp[,1], mod.totaltemp[,1]))
 colnames(totaltemp) <- c("TempObs","TempMod")
 
 ```
+\newpage
+# Model Performance: Physics
+## Ice Break and Ice Freeze
+Ice break and ice freeze are within 5 days of the observed dates. An important note is that the observed dates are for Lake 239, not Lake 227. It is expected that lakes of smaller size, like Lake 227, will break and freeze a few days to a week in advance of Lake 239.
 
-<Figure 1>
-```{r model-overlay, fig.cap="Overlay of observed (red) and modeled data (black). \\label{ModelOverlay}", echo = FALSE, fig.height = 7}
+![Date of observed (points) and modeled (lines) dates for ice break and ice freeze.](/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227/IceFig.png)
 
-p <- ggplot() +
-  geom_line(data = mod, aes(x = date, y = mod.TP, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod.match, aes(x = date, y = obs.TP, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,150) +
-  ylab(expression(Total ~ Phosphorus ~ (mu*g / L))) +
-  xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
-  theme(legend.position = c(0.9,0.9)) # TP by time
-#print(p)
+\newpage
+## Temperature profiles
 
-p2 <- ggplot() +
-  geom_line(data = mod, aes(x = date, y = mod.TDP, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod.match, aes(x = date, y = obs.TDP, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,100) +
-  ylab(expression(TDP ~ (mu*g / L))) +
-  xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
-  theme(legend.position = c(0.9,0.9)) #TDP by time
-#print(p2)
+Temperatures at 1, 4, and 9 m are predicted within 1.42, 1.73, and 0.52 degrees, respectively. Nash-Sutcliffe values are all > 0. 
 
-p3 <- ggplot() +
-  geom_line(data = mod, aes(x = date, y = mod.chla, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod.match, aes(x = date, y = obs.chla, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,100) +
-  ylab(expression(Chlorophyll ~ a ~ (mu*g / L))) +
-  xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
-  theme(legend.position = c(0.9,0.9)) #chl by time
-#print(p3)
+```{r, fig.cap = "Temperatures at 1, 4, and 9 m depth for observed (points) and modeled (lines) dates.", echo = FALSE}
+# temp1mplot <- ggplot() +
+#   geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "Modeled"), size = 0.5) +
+#   geom_point(data = mod2.match, aes(x = date, y = obs.Temp1m, col = "Observed"), pch = 19, size = 1) +
+#   ylim(0,30) +
+#   ylab(expression("Temperature " ( degree*C))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+#   theme(legend.position = c(0.9,0.9))
+# 
+# temp4mplot <- ggplot(mod2.match, aes(x = date)) +
+#   geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "Modeled"), size = 0.5) +
+#   geom_point(data = mod2.match, aes(x = date, y = obs.Temp4m, col = "Observed"), pch = 19, size = 1) +
+#   ylim(0,30) +
+#   ylab(expression("Temperature " ( degree*C))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+#   theme(legend.position = c(0.9,0.9))
+#   
+# temp9mplot <- ggplot(mod2.match, aes(x = date)) +
+#   geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "Modeled"), size = 0.5) +
+#   geom_point(data = mod2.match, aes(x = date, y = obs.Temp9m, col = "Observed"), pch = 19, size = 1) +
+#   ylim(0,10) +
+#   ylab(expression("Temperature " ( degree*C))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+#   theme(legend.position = c(0.9,0.9))
 
-p4 <- ggplot() +
-  geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod2.match, aes(x = date, y = obs.Temp1m, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,30) +
-  ylab(expression("Temperature " ( degree*C))) +
-  xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
-  theme(legend.position = c(0.9,0.9)) #temp 1m by time
-
-p5 <- ggplot(mod2.match, aes(x = date)) +
-  geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod2.match, aes(x = date, y = obs.Temp4m, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,30) +
-  ylab(expression("Temperature " ( degree*C))) +
-  xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
-  theme(legend.position = c(0.9,0.9)) #temp 4m by time
-  
-p6 <- ggplot(mod2.match, aes(x = date)) +
-  geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod2.match, aes(x = date, y = obs.Temp9m, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,10) +
-  ylab(expression("Temperature " ( degree*C))) +
-  xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
-  theme(legend.position = c(0.9,0.9)) #temp 9m by time
-
-p7 <- ggplot(mod2.match, aes(x = date)) +
+tempplot <- ggplot(mod2.match, aes(x = date)) +
   geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "1m"), size = 0.5) +
   geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "4m"), size = 0.5) +
   geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "9m"), size = 0.5) +  
@@ -193,69 +165,270 @@ p7 <- ggplot(mod2.match, aes(x = date)) +
   ylab(expression("Temperature " ( degree*C))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("1m", "4m", "9m"), values = c("#6baed6", "#3182bd", "#08519c")) +
-  theme(legend.position = c(0.9,0.9)) #all temp by time
+  theme(legend.position = c(0.9,0.9))
+print(tempplot)
+```
+```{r, echo = TRUE}
+temp1m.regression <- lm(mod2.match$obs.Temp1m ~ mod2.match$mod.Temp1m)
+summary(temp1m.regression)$adj.r.squared
+mse.temp1m <- mean(residuals(temp1m.regression)^2); rmse.temp1m <- sqrt(mse.temp1m); rmse.temp1m
+NashSutcliffe.temp1m <- NSE(mod2.match$mod.Temp1m, mod2.match$obs.Temp1m); NashSutcliffe.temp1m
 
-p8 <- ggplot() +
-  geom_line(data = mod2, aes(x = date, y = mod.Oxy2m, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod3.match, aes(x = date, y = obs.O2.2m, col = "Observed"), pch = 19, size = 1) +
-  ylab(expression(Oxygen ~ 2 ~ m ~ (mg / L))) +
+temp4m.regression <- lm(mod2.match$obs.Temp4m ~ mod2.match$mod.Temp4m)
+summary(temp4m.regression)$adj.r.squared
+mse.temp4m <- mean(residuals(temp4m.regression)^2); rmse.temp4m <- sqrt(mse.temp4m); rmse.temp4m
+NashSutcliffe.temp4m <- NSE(mod2.match$mod.Temp4m, mod2.match$obs.Temp4m); NashSutcliffe.temp4m
+
+temp9m.regression <- lm(mod2.match$obs.Temp9m ~ mod2.match$mod.Temp9m)
+summary(temp9m.regression)$adj.r.squared
+mse.temp9m <- mean(residuals(temp9m.regression)^2); rmse.temp9m <- sqrt(mse.temp9m); rmse.temp9m
+NashSutcliffe.temp9m <- NSE(mod2.match$mod.Temp9m, mod2.match$obs.Temp9m); NashSutcliffe.temp9m
+```
+
+# Model Performance: Phosphorus
+The model fits are poor for phosphorus-related variables. This parameterization is optimized for 1979-1989, but the fit for that period is still not good. 
+
+Parameters for optimization period 1979-1989 (fit for this model is shown in this report): 
+
+  * Par_sat: 0.0002421
+  * w_chl: 0.1103
+  * m_twty: 0.02
+  * g_twty: 0.5987
+  * P_half: 0.7408
+
+Parameters for optimization period 1969-1979 (not shown): 
+
+  * Par_sat: 0.000238
+  * w_chl: 0.114
+  * m_twty: 0.02
+  * g_twty: 1.12
+  * P_half: 1.68  
+  
+## Total Phosphorus
+Model predictions tend to be underestimated in the 1980s but overesimated in the 2000s. 
+
+```{r, fig.cap = "Total phosphorus concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
+
+TPplot <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.TP, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.TP, col = "Observed"), pch = 19, size = 1) +
+  ylim(0,150) +
+  ylab(expression(Total ~ Phosphorus ~ (mu*g / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #O2 2m by time
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9)) 
+print(TPplot)
 
-p9 <- ggplot() +
-  geom_line(data = mod2, aes(x = date, y = mod.Oxy3m, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod3.match, aes(x = date, y = obs.O2.3m, col = "Observed"), pch = 19, size = 1) +
-  ylab(expression(Oxygen ~ (mg / L))) +
+```
+```{r, fig.cap = "Observed vs. modeled TP concentrations for ice-free season.", echo = FALSE, fig.height = 3}
+TPbymonthplot <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Month)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(Total ~ Phosphorus ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Total ~ Phosphorus ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+TPbyyearplot <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Year)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(TP ~ Observed ~ (mu*g / L))) +
+  ylab(expression(TP ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+grid.arrange(TPbymonthplot, TPbyyearplot, ncol = 2)
+```
+```{r, echo = TRUE}
+TPregression <- lm (mod.match$obs.TP ~ mod.match$mod.TP)
+summary(TPregression)$adj.r.squared
+mse.TP <- mean(residuals(TPregression)^2); rmse.TP <- sqrt(mse.TP); rmse.TP
+NashSutcliffe.TP <-NSE(mod.match$mod.TP, mod.match$obs.TP); NashSutcliffe.TP
+```
+
+## Total Dissolved Phosphorus
+TDP is nearly always overestimated (too much P in the dissolved pool, not enough in the particulate pool).
+
+```{r, fig.cap = "Total dissolved phosphorus concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
+TDPplot <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.TDP, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.TDP, col = "Observed"), pch = 19, size = 1) +
+  ylim(0,100) +
+  ylab(expression(TDP ~ (mu*g / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #O2 3m by time
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9))
+print(TDPplot)
+```
+```{r, fig.cap = "Observed vs. modeled TDP concentrations for ice-free season.", echo = FALSE, fig.height = 3}
+TDPbymonthplot <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Month)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+   scale_x_continuous(limits=c(0,50)) + scale_y_continuous(limits=c(0,50)) +
+  xlab(expression(TDP ~ Observed ~ (mu*g / L))) +
+  ylab(expression(TDP ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8)) 
 
-p10 <- ggplot() +
+TDPbyyearplot <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Year)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,50)) + scale_y_continuous(limits=c(0,50)) +
+  xlab(expression(TDP ~ Observed ~ (mu*g / L))) +
+  ylab(expression(TDP ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+grid.arrange(TDPbymonthplot, TDPbyyearplot, ncol = 2)
+```
+```{r, echo = TRUE}
+TDPregression <- lm (mod.match$obs.TDP ~ mod.match$mod.TDP)
+summary(TDPregression)$adj.r.squared
+mse.TDP <- mean(residuals(TDPregression)^2); rmse.TDP <- sqrt(mse.TDP); rmse.TDP
+NashSutcliffe.TDP <- NSE(mod.match$mod.TDP, mod.match$obs.TDP); NashSutcliffe.TDP
+```
+
+## Chlorophyll
+Chlorophyll tends to be underestimated in the spring (missing the diatom bloom?) and overestaimted in the summer and fall. There isn't an apparent effect of year for chlorophyll. 
+
+```{r, fig.cap = "Chlorophyll concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
+chlplot <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.chla, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.chla, col = "Observed"), pch = 19, size = 1) +
+  ylim(0,100) +
+  ylab(expression(Chlorophyll ~ a ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9)) #chl by time
+print(chlplot)
+```
+```{r, fig.cap = "Observed vs. modeled chlorophyll concentrations for ice-free season.", echo = FALSE, fig.height = 3}
+chlbymonthplot <- ggplot(mod.match, aes(x = obs.chla, y = mod.chla, color=Month)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + #(intercept = mod.lm[[1]][[1]], slope = mod.lm[[1]][[2]]) +
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(Chlorophyll ~ a ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Chlorophyll ~ a ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8)) #chl regression
+
+chlbyyearplot <- ggplot(mod.match, aes(x = obs.chla, y = mod.chla, color=Year)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(Chlorophyll ~ a ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Chlorophyll ~ a ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+grid.arrange(chlbymonthplot, chlbyyearplot, ncol = 2)
+```
+```{r, echo = TRUE}
+chlaregression <- lm (mod.match$obs.chla ~ mod.match$mod.chla)
+summary(chlaregression)$adj.r.squared
+mse.chl <- mean(residuals(chlaregression)^2); rmse.chl <- sqrt(mse.chl); rmse.chl
+NashSutcliffe.chl <- NSE(mod.match$mod.chla, mod.match$obs.chla); NashSutcliffe.chl
+```
+Right now, we are assuming a phytoplankton P:chl ratio of 0.42 (Hecky et al. 1993). Does this ratio always hold? Here is a plot of particulate P (phytoplankton + other particulates) vs. chl concentrations. The slope of the line is 0.65, but the R-squared value is only 0.26. This is significantly dependent on month. I would conclude that assuming a consistent P:chl ratio is not appropriate, and perhaps we should use a different metric for predicting phytoplankton biomass. I suggest using particulate P as a phytoplankton metric would be appropriate.
+
+
+![Particulate P concentrations vs. chlorophyll a concentrations (observed) by month.](/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227/Pvschlplot.png)
+\newpage
+
+# Model Performance: Oxygen
+
+The model fits for oxygen are poor. When water column mixing occurs, the oxygen concentrations don't decrease quickly enough. 
+
+Oxygen concentrations were optimized separately from phosphorus. Parameters for optimization period 1979-1989 (fit for this model is shown in this report): 
+
+  * k_chl: 1.3665
+  * k_POP: 4.7616
+  * k_POC: 0.2427
+  * k_DOP: 3.3683
+  * k_DOC: 0.02
+  * Km_O2: 0.0226
+  * Kin_O2: 1.9823
+
+```{r, fig.cap = "Total phosphorus concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
+# oxygen2mplot <- ggplot() +
+#   geom_line(data = mod2, aes(x = date, y = mod.Oxy2m, col = "Modeled"), size = 0.5) +
+#   geom_point(data = mod3.match, aes(x = date, y = obs.O2.2m, col = "Observed"), pch = 19, size = 1) +
+#   ylab(expression(Oxygen ~ 2 ~ m ~ (mg / L))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+#   theme(legend.position = c(0.9,0.9)) 
+# 
+# oxygen3mplot <- ggplot() +
+#   geom_line(data = mod2, aes(x = date, y = mod.Oxy3m, col = "Modeled"), size = 0.5) +
+#   geom_point(data = mod3.match, aes(x = date, y = obs.O2.3m, col = "Observed"), pch = 19, size = 1) +
+#   ylab(expression(Oxygen ~ (mg / L))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+#   theme(legend.position = c(0.9,0.9)) 
+
+oxygen4mplot <- ggplot() +
   geom_line(data = mod2, aes(x = date, y = mod.Oxy4m, col = "Modeled"), size = 0.5) +
   geom_point(data = mod3.match, aes(x = date, y = obs.O2.4m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ 4 ~ m ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #O2 4m by time
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9))
+print(oxygen4mplot)
 
-p11 <- ggplot() +
+oxygen6mplot <- ggplot() +
   geom_line(data = mod2, aes(x = date, y = mod.Oxy6m, col = "Modeled"), size = 0.5) +
   geom_point(data = mod3.match, aes(x = date, y = obs.O2.6m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #O2 6m by time
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9))
+print(oxygen6mplot)
 
-p12 <- ggplot() +
+oxygen8mplot <- ggplot() +
   geom_line(data = mod2, aes(x = date, y = mod.Oxy8m, col = "Modeled"), size = 0.5) +
   geom_point(data = mod3.match, aes(x = date, y = obs.O2.8m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #O2 8m by time
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9)) 
+print(oxygen8mplot)
 
-p13 <- ggplot() +
+oxygen10mplot <- ggplot() +
   geom_line(data = mod2, aes(x = date, y = mod.Oxy10m, col = "Modeled"), size = 0.5) +
   geom_point(data = mod3.match, aes(x = date, y = obs.O2.10m, col = "Observed"), pch = 19, size = 1) +
   ylab(expression(Oxygen ~ 10 ~ m ~ (mg / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "red")) +
-  theme(legend.position = c(0.9,0.9)) #O2 10m by time
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9)) 
+print(oxygen10mplot)
+```
 
-p18 <- ggplot(mod3.match, aes(x = date)) +
-  geom_line(data = mod2, aes(x = date, y = mod.Oxy4m, col = "4m"), size = 0.5) +
-  geom_line(data = mod2, aes(x = date, y = mod.Oxy6m, col = "6m"), size = 0.5) +
-  geom_line(data = mod2, aes(x = date, y = mod.Oxy10m, col = "10m"), size = 0.5) +
-  geom_point(data = mod3.match, aes(x = date, y = obs.O2.4m, col = "4m"), pch = 19, size = 1) +
-  geom_point(data = mod3.match, aes(x = date, y = obs.O2.6m, col = "6m"), pch = 19, size = 1) +
-  geom_point(data = mod3.match, aes(x = date, y = obs.O2.10m, col = "10m"), pch = 19, size = 1) +
-  ylim(0,12) +
-  ylab(expression(Oxygen ~ (mg / L))) +
-  xlab(" ") +
-  scale_colour_manual("", breaks = c("4m", "6m", "10m"), values = c("#6baed6", "#3182bd", "#08519c")) +
-  theme(legend.position = c(0.9,0.9))
+```{r, echo = TRUE}
+O2regression4m <- lm(mod3.match$obs.O2.4m ~ mod3.match$mod.Oxy4m)
+summary(O2regression4m)$adj.r.squared
+mse.024m <- mean(residuals(O2regression4m)^2); rmse.024m <- sqrt(mse.024m); rmse.024m
+NashSutcliffe.O24m <- NSE(mod3.match$mod.Oxy4m, mod3.match$obs.O2.4m); NashSutcliffe.O24m 
 
+O2regression6m <- lm(mod3.match$obs.O2.6m ~ mod3.match$mod.Oxy6m)
+summary(O2regression6m)$adj.r.squared
+mse.026m <- mean(residuals(O2regression6m)^2); rmse.026m <- sqrt(mse.026m); rmse.026m
+NashSutcliffe.O26m <- NSE(mod3.match$mod.Oxy6m, mod3.match$obs.O2.6m); NashSutcliffe.O26m
+
+O2regression8m <- lm(mod3.match$obs.O2.8m ~ mod3.match$mod.Oxy8m)
+summary(O2regression8m)$adj.r.squared
+mse.028m <- mean(residuals(O2regression8m)^2); rmse.028m <- sqrt(mse.028m); rmse.028m
+NashSutcliffe.O28m <- NSE(mod3.match$mod.Oxy8m, mod3.match$obs.O2.8m); NashSutcliffe.O28m 
+
+O2regression10m <- lm(mod3.match$obs.O2.10m ~ mod3.match$mod.Oxy10m)
+summary(O2regression10m)$adj.r.squared
+mse.0210m <- mean(residuals(O2regression10m)^2); rmse.0210m <- sqrt(mse.0210m); rmse.0210m
+NashSutcliffe.O210m <- NSE(mod3.match$mod.Oxy10m, mod3.match$obs.O2.10m); NashSutcliffe.O210m
+```
+
+```{r}
+#Fe graphs, not ready yet
 # p14 <- ggplot(mod4.match, aes(x = date)) +
 #   geom_point(aes(y = obs.Fe.4m, col = "Observed"), pch = 19, size = 1) +
 #   geom_line(aes(y = mod.Fe4m, col = "Modeled"), size = 0.5) +
@@ -300,198 +473,43 @@ p18 <- ggplot(mod3.match, aes(x = date)) +
 #                       values = c("black", "red")) +
 #   theme(legend.position = c(0.9,0.9))
 
-require(gridExtra)
-grid.arrange(p, p2, p3, ncol = 1) #Fe 10m by time
-
+# Feregression4m <- lm(mod4.match$obs.Fe.4m ~ mod4.match$mod.Fe4m)
+# summary(Feregression4m)
+# mse <- mean(residuals(Feregression4m)^2); rmse <- sqrt(mse); rmse
+# 
+# Feregression6m <- lm(mod4.match$obs.Fe.6m ~ mod4.match$mod.Fe6m)
+# summary(Feregression6m)
+# mse <- mean(residuals(Feregression6m)^2); rmse <- sqrt(mse); rmse
+# 
+# Feregression8m <- lm(mod4.match$obs.Fe.8m ~ mod4.match$mod.Fe8m)
+# summary(Feregression8m)
+# mse <- mean(residuals(Feregression8m)^2); rmse <- sqrt(mse); rmse
+# 
+# Feregression10m <- lm(mod4.match$obs.Fe.10m ~ mod4.match$mod.Fe10m)
+# summary(Feregression10m)
+# mse <- mean(residuals(Feregression10m)^2); rmse <- sqrt(mse); rmse
 ```
 
-\newpage
+# Stoichiometric indicators of N fixer shift in L227
+We need to come up with a stoichoimetric indicator to act as a switch for N fixer vs. non-N fixer growth in Lake 227. The key challenge here is that N fixers show up after 1975, but they don't dominate the entire season. Is there  stoichiometric indicator that can capture intra-annual changes in the relative availability of N for phytoplankton? 
 
-# Model regression
+I suggest using either 
 
-```{r model-reg, fig.cap="Data regression for observed against modeled data. \\label{ModelRegression}", echo = FALSE, fig.height = 5}
+1. Combined fertilizer and inflow N:P ratios (low on fertilizer days, higher on non-fertilizer days)
+2. DIN concentration 
 
-q <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Month)) +
-  geom_point(pch = 19, size = 1.5) +
-  geom_abline(slope=1, intercept=0) + 
-  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
-  xlab(expression(Total ~ Phosphorus ~ Observed ~ (mu*g / L))) +
-  ylab(expression(Total ~ Phosphorus ~ Modeled ~ (mu*g / L))) +
+We would need to choose a threshold value, in either case, to serve as the switch point of a sigmoid function that dictates the proportion of phytoplankton growth allocated to N fixers vs. non-N fixers.
 
-  scale_color_distiller(palette="YlGnBu") +
-  theme(legend.position=c(0.9, 0.8)) #TP regression
-#print(q)
-
-q2 <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Month)) +
-  geom_point(pch = 19, size = 1.5) +
-  geom_abline(slope=1, intercept=0) + 
-   scale_x_continuous(limits=c(0,50)) + scale_y_continuous(limits=c(0,50)) +
-  xlab(expression(TDP ~ Observed ~ (mu*g / L))) +
-  ylab(expression(TDP ~ Modeled ~ (mu*g / L))) +
-  scale_color_distiller(palette="YlGnBu") +
-  theme(legend.position=c(0.9, 0.8)) #TDP regression
-#print(q2)
-
-q3 <- ggplot(mod.match, aes(x = obs.chla, y = mod.chla, color=Month)) +
-  geom_point(pch = 19, size = 1.5) +
-  geom_abline(slope=1, intercept=0) + #(intercept = mod.lm[[1]][[1]], slope = mod.lm[[1]][[2]]) +
-  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
-  xlab(expression(Chlorophyll ~ a ~ Observed ~ (mu*g / L))) +
-  ylab(expression(Chlorophyll ~ a ~ Modeled ~ (mu*g / L))) +
-  scale_color_distiller(palette="YlGnBu") +
-  theme(legend.position=c(0.9, 0.8)) #chl regression
-#print(q3)
-
-q4 <- ggplot(mod.match, aes(x = obs.chla, y = mod.chla, color=Year)) +
-  geom_point(pch = 19, size = 1.5) +
-  geom_abline(slope=1, intercept=0) + 
-  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
-  xlab(expression(Chlorophyll ~ a ~ Observed ~ (mu*g / L))) +
-  ylab(expression(Chlorophyll ~ a ~ Modeled ~ (mu*g / L))) +
-
-  scale_color_distiller(palette="YlGnBu") +
-  theme(legend.position=c(0.9, 0.8))
-
-q5 <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Year)) +
-  geom_point(pch = 19, size = 1.5) +
-  geom_abline(slope=1, intercept=0) + 
-  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
-  xlab(expression(TP ~ Observed ~ (mu*g / L))) +
-  ylab(expression(TP ~ Modeled ~ (mu*g / L))) +
-  scale_color_distiller(palette="YlGnBu") +
-  theme(legend.position=c(0.9, 0.8))
-
-q7 <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Year)) +
-  geom_point(pch = 19, size = 1.5) +
-  geom_abline(slope=1, intercept=0) + 
-  scale_x_continuous(limits=c(0,50)) + scale_y_continuous(limits=c(0,50)) +
-  xlab(expression(TDP ~ Observed ~ (mu*g / L))) +
-  ylab(expression(TDP ~ Modeled ~ (mu*g / L))) +
-  scale_color_distiller(palette="YlGnBu") +
-  theme(legend.position=c(0.9, 0.8))
-
-q6 <- ggplot(totaltemp, aes(x = TempObs, y = TempMod)) +
-  geom_point(pch = 19, size = 1.5) +
-  geom_abline(slope=1, intercept=0) + 
-  scale_x_continuous(limits=c(0,30)) + scale_y_continuous(limits=c(0,30)) +
-  xlab(expression("Temperature Observed " ( degree*C))) +
-  ylab(expression("Temperature Modeled " ( degree*C))) +
-  scale_color_distiller(palette="YlGnBu") +
-  theme(legend.position=c(0.9, 0.8))
-
-#library(gridExtra)
-#grid.arrange(p, p2, p3, ncol = 2)
-
-library(hydroGOF)
-
-tempregression <- lm(mod2.match$obs.Temp1m ~ mod2.match$mod.Temp1m)
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
-NSE(mod2.match$mod.Temp1m, mod2.match$obs.Temp1m)
-
-tempregression <- lm(mod2.match$obs.Temp4m ~ mod2.match$mod.Temp4m)
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
-NSE(mod2.match$mod.Temp4m, mod2.match$obs.Temp4m)
-
-tempregression <- lm(mod2.match$obs.Temp9m ~ mod2.match$mod.Temp9m)
-summary(tempregression)
-mse <- mean(residuals(tempregression)^2)
-rmse <- sqrt(mse)
-rmse
-NSE(mod2.match$mod.Temp9m, mod2.match$obs.Temp9m)
-
-chlaregression <- lm (mod.match$obs.chla ~ mod.match$mod.chla)
-summary(chlaregression)
-mse <- mean(residuals(chlaregression)^2)
-rmse <- sqrt(mse)
-rmse
-NSE(mod.match$mod.chla, mod.match$obs.chla)
-
-TDPregression <- lm (mod.match$obs.TDP ~ mod.match$mod.TDP)
-summary(TDPregression)
-mse <- mean(residuals(TDPregression)^2)
-rmse <- sqrt(mse)
-rmse
-NSE(mod.match$mod.TDP, mod.match$obs.TDP)
-
-TPregression <- lm (mod.match$obs.TP ~ mod.match$mod.TP)
-summary(TPregression)
-mse <- mean(residuals(TPregression)^2)
-rmse <- sqrt(mse)
-rmse
-NSE(mod.match$mod.TP, mod.match$obs.TP)
-
-O2regression2m <- lm(mod3.match$obs.O2.2m ~ mod3.match$mod.Oxy2m)
-summary(O2regression2m)
-mse <- mean(residuals(O2regression2m)^2); rmse <- sqrt(mse); rmse
-NSE(mod3.match$mod.Oxy2m, mod3.match$obs.O2.2m )
-
-O2regression3m <- lm(mod3.match$obs.O2.3m ~ mod3.match$mod.Oxy3m)
-summary(O2regression3m)
-mse <- mean(residuals(O2regression3m)^2); rmse <- sqrt(mse); rmse
-NSE(mod3.match$mod.Oxy3m, mod3.match$obs.O2.3m )
-
-O2regression4m <- lm(mod3.match$obs.O2.4m ~ mod3.match$mod.Oxy4m)
-summary(O2regression4m)
-mse <- mean(residuals(O2regression4m)^2); rmse <- sqrt(mse); rmse
-NSE(mod3.match$mod.Oxy4m, mod3.match$obs.O2.4m )
-
-O2regression6m <- lm(mod3.match$obs.O2.6m ~ mod3.match$mod.Oxy6m)
-summary(O2regression6m)
-mse <- mean(residuals(O2regression6m)^2); rmse <- sqrt(mse); rmse
-NSE(mod3.match$mod.Oxy6m, mod3.match$obs.O2.6m )
-
-O2regression8m <- lm(mod3.match$obs.O2.8m ~ mod3.match$mod.Oxy8m)
-summary(O2regression8m)
-mse <- mean(residuals(O2regression8m)^2); rmse <- sqrt(mse); rmse
-NSE(mod3.match$mod.Oxy6m, mod3.match$obs.O2.6m )
-
-O2regression10m <- lm(mod3.match$obs.O2.10m ~ mod3.match$mod.Oxy10m)
-summary(O2regression10m)
-mse <- mean(residuals(O2regression10m)^2); rmse <- sqrt(mse); rmse
-NSE(mod3.match$mod.Oxy10m, mod3.match$obs.O2.10m )
-
-Feregression4m <- lm(mod4.match$obs.Fe.4m ~ mod4.match$mod.Fe4m)
-summary(Feregression4m)
-mse <- mean(residuals(Feregression4m)^2); rmse <- sqrt(mse); rmse
-
-Feregression6m <- lm(mod4.match$obs.Fe.6m ~ mod4.match$mod.Fe6m)
-summary(Feregression6m)
-mse <- mean(residuals(Feregression6m)^2); rmse <- sqrt(mse); rmse
-
-Feregression8m <- lm(mod4.match$obs.Fe.8m ~ mod4.match$mod.Fe8m)
-summary(Feregression8m)
-mse <- mean(residuals(Feregression8m)^2); rmse <- sqrt(mse); rmse
-
-Feregression10m <- lm(mod4.match$obs.Fe.10m ~ mod4.match$mod.Fe10m)
-summary(Feregression10m)
-mse <- mean(residuals(Feregression10m)^2); rmse <- sqrt(mse); rmse
-
-```
-
-
-\newpage
-
-# Additional information
-## Model Parameters
-```{r}
-parms <- read.csv("./example-data/L227_para_all.csv", header = F)
-colnames(parms) <- c("Parameter","Value","Min","Max","Unit")
-parms <- parms[-c(1:2),]
-
-require(pander)
-row.names(parms) <- NULL
-panderOptions("graph.fontsize", 8)
-pander(parms, include.rownames=FALSE)
-```
+![N:P ratios in various pools in Lake 227. Vertical lines represent calculated breakpoints for linear regressions. Linear regressions with a slope significantly different than zero are represented with a blue line, and those with a slope not significantly different from zero are represented with a black line.](/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227/Stoichiometryplot.png)
 
 \newpage
 
 # Next steps and follow-up questions
-1. Let's change the vmax in the next interation.
+1. I propose using TPP and TDP as the optimization variables for phosphorus, rather than TP, TDP, and chl. I would have liked to optimize with only phytoplankton-associated PP, but the observation data from L227 contain only aggregate PP.
+
+2. We need to determine ways to make the parameterization for both P and oxygen to be more successful. Any ideas for parameters we have not tried?
+
+3. The next step after parameterization is to add a sigmoid function to parse phytoplankton growth between the two pools of phytoplankton. I will need help with the code on this. I suggest 16 for N:P and 1 uM for DIN concentration as a starting point for the switch point.
+
+4. I will need to generate several years of data for simulated weather conditions plus changes to fertilization regime. Is there an algorithm of some sort that can generate simulated data?
 

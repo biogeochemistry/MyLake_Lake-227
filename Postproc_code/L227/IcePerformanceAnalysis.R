@@ -82,11 +82,11 @@ icedateplot <-
     scale_y_reverse() + 
     ylab("Julian Day") + 
     annotate("text", x = 1969, y = 280, label = "Ice Freeze", color = "blue", size = 5, hjust = 0) +
-    annotate("text", x = 1969, y = 150, label = "Ice Break", color = "red", size = 5, hjust = 0) #+
-    #annotate("text", x = 1976, y = 170, label = rmsebreak, color = "red", size = 5, hjust = 0) +
-    #annotate("text", x = 1969, y = 170, label = "RMSE =", color = "red", size = 5, hjust = 0) +
-    #annotate("text", x = 1976, y = 300, label = rmsefreeze, color = "blue", size = 5, hjust = 0) +
-    #annotate("text", x = 1969, y = 300, label = "RMSE =", color = "blue", size = 5, hjust = 0)
+    annotate("text", x = 1969, y = 150, label = "Ice Break", color = "red", size = 5, hjust = 0) +
+    annotate("text", x = 1974, y = 170, label = rmsebreak, color = "red", size = 5, hjust = 0) +
+    annotate("text", x = 1969, y = 170, label = "RMSE =", color = "red", size = 5, hjust = 0) +
+    annotate("text", x = 1974, y = 300, label = rmsefreeze, color = "blue", size = 5, hjust = 0) +
+    annotate("text", x = 1969, y = 300, label = "RMSE =", color = "blue", size = 5, hjust = 0)
   
 icebreakregressionplot <- 
   ggplot(data = match.ice) + 

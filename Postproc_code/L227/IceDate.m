@@ -1,4 +1,4 @@
-% Remi Bouyssou - ELA MyLake
+
 % Ice plot
 % Make graphs of lake freezing and breaking ice dates compared to observed data
 

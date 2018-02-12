@@ -23,4 +23,4 @@ summary(PPvschlbymonth)
 library(ggplot2)
 ggplot(L227chemistry_epi_icefree, aes(x = Susp.P, y = chla, color = Month)) +
   geom_point(size = 0.5) +
-  geom_smooth(method = "lm", color = "black")
+  geom_smooth(method = "lm", color = "black", se = FALSE)
