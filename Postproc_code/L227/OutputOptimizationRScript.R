@@ -13,7 +13,7 @@ O2$date = as.Date(O2$date, "%m/%d/%y")
 library(tidyverse)
 
 OutputForOptimization = merge(integratedepi, O2, by = "date", all=T)
-OutputForOptimization_Simple = select(OutputForOptimization, date, Obs_TP:Obs_TDP, obs.O2.4m:obs.O2.10m)
+OutputForOptimization_Simple = select(OutputForOptimization, date, Obs_TP:Obs_PP, obs.O2.4m:obs.O2.10m)
 OutputForOptimization_Dates = mutate(OutputForOptimization_Simple, 
                                      Year = as.numeric(format(date, format="%Y")), 
                                      Month = as.numeric(format(date, format="%m")), 
