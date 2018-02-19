@@ -97,7 +97,7 @@ end
 % defined. They should contain whatever is needed for the error function to
 % compare the model result to measured data. It has to return a positive
 % number err, which is smaller the better fit the model is to the data.
-function err = error_function_Chl(ModelResult, Data)
+function err = error_function_P(ModelResult, Data)
     
     MatchedModelPP = ModelResult.PPintegratedepi(Data.date_mask);
     MatchedModelTDP =  ModelResult.TDPintegratedepi(Data.date_mask);
