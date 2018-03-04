@@ -78,19 +78,19 @@ lake_params = {
 
 
 sediment_params = {
-    1.3665,   'k_Chl',                 % 1       % 1
-    4.7616,  'k_POP',                 % 2       % 1
-    0.2427, 'k_POC',                  % 3       % 0.01
-    3.3683,  'k_DOP',                 % 4       % 1
+    0.4,   'k_Chl',                 % 1       % 1
+    0.4,  'k_POP',                 % 2       % 1
+    1.75, 'k_POC',                  % 3       % 0.01
+    1.04,  'k_DOP',                 % 4       % 1
     0.02, 'k_DOC',                  % 5       % 1
-    0.0226, 'Km_O2',                 % 6       % Canavan, R. W (2006) rho=2.5
+    0.031, 'Km_O2',                 % 6       % Canavan, R. W (2006) rho=2.5
     0.01,  'Km_NO3',                % 7       % Canavan, R. W (2006) rho=2.5
     3.92,  'Km_Fe(OH)3',         % 8       % Canavan, R. W (2006) rho=2.5
     2415,  'Km_FeOOH',           % 9       % Canavan, R. W (2006) rho=2.5
     0.0293,  'Km_SO4',                 % 10       % Canavan, R. W (2006 rho=2.5
     0.001,'Km_oxao',                % 11       % the same as Km rho=2.5
     0.1,  'Km_amao',                % 12       % the same as Km rho=2.5
-    1.9823, 'Kin_O2',                % 13       % the same as Km rho=2.5
+    0.329, 'Kin_O2',                % 13       % the same as Km rho=2.5
     0.01,  'Kin_NO3',               % 14       % the same as Km rho=2.5
     0.1,   'Kin_FeOH3',         % 15       % the same as Km rho=2.5
     0.1,   'Kin_FeOOH',         % 16       % the same as Km rho=2.5
@@ -151,5 +151,5 @@ sediment_params = {
     0,      'Pz3',                  % 71           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
     9,     'effective_depth',     % 72           % depth below which the lake is affected by sediments, [m], if -1 (experimental) , then sediments below pycnocline
     48,     'n_ts',                 % 73           % (48 is the minimum, 24 for calibration) number of time steps during 1 day (fixed time step of MyLake) for chemical and sediment module (the modules should be in sync)
-    1,      'pH algorithm',         % 74           % 0. Disabled  % 1. Phreeqc  % 2. Electro-neutrality Equation
+    0,      'pH algorithm',         % 74           % 0. Disabled  % 1. Phreeqc  % 2. Electro-neutrality Equation
     };
