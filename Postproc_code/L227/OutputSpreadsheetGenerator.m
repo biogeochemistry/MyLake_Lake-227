@@ -2,19 +2,22 @@
 datechar=datestr(MyLake_results.basin1.days);
 dates=datevec(datechar);
 
-Totalchl = (MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C)/0.42;
-Chlintegratedepi = transpose(mean(Totalchl(1:10,:)));
-cyano = rdivide(MyLake_results.basin1.concentrations.C/0.42,Totalchl);
-cyanointegratedepi = transpose(mean(cyano(1:10,:)));
+%Totalchl = (MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C)/0.42;
+%Chlintegratedepi = transpose(mean(Totalchl(1:10,:)));
+%cyano = rdivide(MyLake_results.basin1.concentrations.C/0.42,Totalchl);
+%cyanointegratedepi = transpose(mean(cyano(1:10,:)));
 
 TDP = MyLake_results.basin1.concentrations.P + MyLake_results.basin1.concentrations.DOP;
-TDPintegratedepi = transpose(mean(TDP(1:10,:)));
+TDPintegratedepi = transpose(mean(TDP(1:8,:)));
 
-TP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + TDP + MyLake_results.basin1.concentrations.PP;
-TPintegratedepi = transpose(mean(TP(1:10,:)));
+%TP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + TDP + MyLake_results.basin1.concentrations.PP;
+%TPintegratedepi = transpose(mean(TP(1:8,:)));
+
+TPP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + MyLake_results.basin1.concentrations.PP;
+TPPintegratedepi = transpose(mean(TPP(1:8,:)));
 
 filename='Postproc_code/L227/Output_IntegratedEpi.csv';
-M = [dates(:,1:3), Chlintegratedepi, cyanointegratedepi, TDPintegratedepi, TPintegratedepi];
+M = [dates(:,1:3), TDPintegratedepi, TPPintegratedepi];
 csvwrite(filename,M);
 
 Temp1m = transpose(MyLake_results.basin1.T(2,:));
