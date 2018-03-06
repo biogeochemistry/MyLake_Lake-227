@@ -7,7 +7,7 @@ output:
 title: MyLake Evaluation for Lake 227
 author: Kateri Salk
 
-date: ""
+date: "12 February 2018"
 geometry: margin=2.54cm
 ---
 
@@ -25,10 +25,8 @@ knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 library(tidyr)
 library(magrittr)
 library(dplyr)
-library(plyr)
 library(hydroGOF)
 library(gridExtra)
-library(zoo)
 
 ## ggplot theme and figure parameters
 # set the theme ####
@@ -54,29 +52,44 @@ theme_set(theme_std())
 
 # Summary of Progress
 
-1. 
+1. Optimizations have been run for TP, TDP, and chl. The model fits are fairly poor.
+
+2. Initial optimization has been run for dissolved oxygen. The model fit is poor, as oxygen is not consumed quickly enough following mixing.
+
+3. Model fits are computed for: 
+  + R-squared value: amount of variance explained by the relationship (ideally close to 1)
+  + RMSE: mean difference between modeled value and observed value, in the units of interest (ideally close to 0)
+  + Nash-Sutcliffe coefficient: how well the model explains the observations (range: -infinity to 1; ideally close to 1; 0 indicates model predicts as well as the mean observation, > 0 indicates model predicts better than the mean observation, and < 0 indicates the model predicts more poorly than the mean observarion)
+
+4. I've included some ideas for improvements to the optimization.
+
+5. I've also included ideas for adding in a switching function for N fixers vs. non-N fixers growth.
 \newpage
 
 
 ```{r, echo = FALSE}
 # Read in the data and add colnames
-obsinit <- read.csv("Observed_IntegratedEpi_icefree_lateMay.csv", header = T)
-colnames(obsinit) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP", "obs.PP")
+obs <- read.csv("Observed_IntegratedEpi_icefree.csv", header = T)
+attach(obs)
+colnames(obs) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP")
 obs_temp <- read.csv("Observed_Temperature.csv")
+attach(obs_temp)
 obs_O2 <- read.csv("Observed_Oxygen.csv")
+attach(obs_O2)
 obs_Fe <- read.csv("Observed_Fe.csv")
+attach(obs_Fe)
 mod <- read.csv("Output_IntegratedEpi.csv", header = F)
-colnames(mod) <- c("Year", "Month", "Day", "mod.TDP", "mod.PP")
+colnames(mod) <- c("Year", "Month", "Day", "mod.chla", "mod.cyano", "mod.TDP", "mod.TP")
 mod2 <- read.csv("Output_Depths.csv", header = F)
 colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy6m", "mod.Oxy8m", "mod.Oxy10m", "mod.Fe4m", "mod.Fe6m", "mod.Fe8m", "mod.Fe10m")
 
 #Let's tidy! - part 1
-obs <- obsinit %>% 
+obs <- obs %>% 
   unite(date, Year, Month, Day, sep = '-') #%>%
-obs <- data.frame(obs, obsinit$Month, obsinit$Year)
+  #filter(!is.na(obs.TP))
+obs <- data.frame(obs, Month, Year)
 obs <- na.omit(obs)
 obs <- obs[,-1]
-colnames(obs) <- c("date", "obs.TP","obs.chla","obs.TDP", "obs.PP", "Month", "Year")
 mod <- mod %>% unite(date, Year, Month, Day, sep = '-')
 mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
 
@@ -86,7 +99,7 @@ obs_temp$date <- as.Date(obs_temp$date) #, format = "%Y-%m-%d") #Converts data t
 obs_O2$date <- as.Date(obs_O2$date, format = "%d/%m/%y") #Converts data to date structure
 obs_Fe$date <- as.Date(obs_Fe$date, format = "%d/%m/%y") #Converts data to date structure
 mod$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
-mod2$date <- as.Date(mod2$date, format = "%Y-%m-%d") #Converts data to date structure
+mod2$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
 
 # tidy! - part 2: match model time and observational time
 mod.match <- inner_join(obs,mod, by = "date") 
@@ -173,29 +186,42 @@ NashSutcliffe.temp9m <- NSE(mod2.match$mod.Temp9m, mod2.match$obs.Temp9m); NashS
 ```
 
 # Model Performance: Phosphorus
-  * Par_sat: 
-  * w_chl: 
-  * m_twty: 
-  * g_twty: 
-  * P_half: 
+The model fits are poor for phosphorus-related variables. This parameterization is optimized for 1979-1989, but the fit for that period is still not good. 
+
+Parameters for optimization period 1979-1989 (fit for this model is shown in this report): 
+
+  * Par_sat: 0.0002421
+  * w_chl: 0.1103
+  * m_twty: 0.02
+  * g_twty: 0.5987
+  * P_half: 0.7408
+
+Parameters for optimization period 1969-1979 (not shown): 
+
+  * Par_sat: 0.000238
+  * w_chl: 0.114
+  * m_twty: 0.02
+  * g_twty: 1.12
+  * P_half: 1.68  
   
-## Particulate Phosphorus
+## Total Phosphorus
+Model predictions tend to be underestimated in the 1980s but overesimated in the 2000s. 
 
 ```{r, fig.cap = "Total phosphorus concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
 
-PPplot <- ggplot() +
-  geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 1) +
+TPplot <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.TP, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.TP, col = "Observed"), pch = 19, size = 1) +
   ylim(0,150) +
   ylab(expression(Total ~ Phosphorus ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) 
-print(PPplot)
+print(TPplot)
 
 ```
 ```{r, fig.cap = "Observed vs. modeled TP concentrations for ice-free season.", echo = FALSE, fig.height = 3}
-PPbymonthplot <- ggplot(mod.match, aes(x = obs.PP, y = mod.PP, color=Month)) +
+TPbymonthplot <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Month)) +
   geom_point(pch = 19, size = 1.5) +
   geom_abline(slope=1, intercept=0) + 
   scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
@@ -204,7 +230,7 @@ PPbymonthplot <- ggplot(mod.match, aes(x = obs.PP, y = mod.PP, color=Month)) +
   scale_color_distiller(palette="YlGnBu") +
   theme(legend.position=c(0.9, 0.8))
 
-PPbyyearplot <- ggplot(mod.match, aes(x = obs.PP, y = mod.PP, color=Year)) +
+TPbyyearplot <- ggplot(mod.match, aes(x = obs.TP, y = mod.TP, color=Year)) +
   geom_point(pch = 19, size = 1.5) +
   geom_abline(slope=1, intercept=0) + 
   scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
@@ -213,52 +239,17 @@ PPbyyearplot <- ggplot(mod.match, aes(x = obs.PP, y = mod.PP, color=Year)) +
   scale_color_distiller(palette="YlGnBu") +
   theme(legend.position=c(0.9, 0.8))
 
-grid.arrange(PPbymonthplot, PPbyyearplot, ncol = 2)
+grid.arrange(TPbymonthplot, TPbyyearplot, ncol = 2)
 ```
 ```{r, echo = TRUE}
-PPregression <- lm (mod.match$obs.PP ~ mod.match$mod.PP)
-summary(PPregression)$adj.r.squared
-mse.PP <- mean(residuals(PPregression)^2); rmse.PP <- sqrt(mse.PP); rmse.PP
-NashSutcliffe.PP <-NSE(mod.match$mod.PP, mod.match$obs.PP); NashSutcliffe.PP
-```
-
-```{r}
-# Compute 7-day rolling mean of PP
-modPP.rollingmean <- as.data.frame(rollmean(mod$mod.PP, 7))
-# Add dates
-moddate.rollingmean <- as.data.frame(mod$date[-c(1:3, 2012:2014)])
-modPP.rollingmean <- cbind(moddate.rollingmean, modPP.rollingmean )
-colnames(modPP.rollingmean) <- c("date", "mod.PP")
-
-# Compute model fits
-mod.match.rollingmean <- inner_join(obs, modPP.rollingmean, by = "date") 
-PPregression.rollingmean <- lm (mod.match.rollingmean$obs.PP ~ mod.match.rollingmean$mod.PP)
-summary(PPregression.rollingmean)$adj.r.squared
-mse.PP.rollingmean <- mean(residuals(PPregression.rollingmean)^2); rmse.PP.rollingmean <- sqrt(mse.PP.rollingmean); rmse.PP.rollingmean
-NashSutcliffe.PP.rollingmean <-NSE(mod.match.rollingmean$mod.PP, mod.match.rollingmean$obs.PP); NashSutcliffe.PP.rollingmean
-
-# Compare model fits between daily and 7-day rolling means: how much better is the rolling mean fit?
-summary(PPregression.rollingmean)$adj.r.squared - summary(PPregression)$adj.r.squared
-rmse.PP - rmse.PP.rollingmean
-NashSutcliffe.PP.rollingmean - NashSutcliffe.PP
-
-# Cumulative Sum of PP
-mod.match.daily <- right_join(obs, mod, by = "date")
-mod.match.daily$Month <- as.numeric(format(mod.match.daily$date, "%m"))
-mod.match.daily$Year <- format(mod.match.daily$date, "%Y")
-mod.match.daily <- mod.match.daily %>% 
-  mutate(Day = as.numeric(format(mod.match.daily$date, "%d")))  %>% 
-  filter(Month > 4 & Month < 11)  %>% 
-  filter(Month == 5 & Day > 15 | Month > 5 )
-
-mod.match.daily$obs.PP[mod.match.daily$Month == 5 & mod.match.daily$Day == 16] <- 0
-obs.PP.interpolated <- as.data.frame(na.approx(mod.match.daily$obs.PP))
-mod.match.daily <- mod.match.daily[-c(1:6, 964:972),]
-mod.match.daily$obs.PP <- obs.PP.interpolated
-mod.match.cumulative <- ddply(mod.match, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
+TPregression <- lm (mod.match$obs.TP ~ mod.match$mod.TP)
+summary(TPregression)$adj.r.squared
+mse.TP <- mean(residuals(TPregression)^2); rmse.TP <- sqrt(mse.TP); rmse.TP
+NashSutcliffe.TP <-NSE(mod.match$mod.TP, mod.match$obs.TP); NashSutcliffe.TP
 ```
 
 ## Total Dissolved Phosphorus
+TDP is nearly always overestimated (too much P in the dissolved pool, not enough in the particulate pool).
 
 ```{r, fig.cap = "Total dissolved phosphorus concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
 TDPplot <- ggplot() +
@@ -298,27 +289,53 @@ summary(TDPregression)$adj.r.squared
 mse.TDP <- mean(residuals(TDPregression)^2); rmse.TDP <- sqrt(mse.TDP); rmse.TDP
 NashSutcliffe.TDP <- NSE(mod.match$mod.TDP, mod.match$obs.TDP); NashSutcliffe.TDP
 ```
-```{r}
-# Compute 7-day rolling mean of TDP
-modTDP.rollingmean <- as.data.frame(rollmean(mod$mod.TDP, 7))
-# Add dates
-moddate.rollingmean <- as.data.frame(mod$date[-c(1:3, 2012:2014)])
-modTDP.rollingmean <- cbind(moddate.rollingmean, modTDP.rollingmean )
-colnames(modTDP.rollingmean) <- c("date", "mod.TDP")
 
-# Compute model fits
-mod.match.rollingmean <- inner_join(obs, modTDP.rollingmean, by = "date") 
-TDPregression.rollingmean <- lm (mod.match.rollingmean$obs.TDP ~ mod.match.rollingmean$mod.TDP)
-summary(TDPregression.rollingmean)$adj.r.squared
-mse.TDP.rollingmean <- mean(residuals(TDPregression.rollingmean)^2); rmse.TDP.rollingmean <- sqrt(mse.TDP.rollingmean); rmse.TDP.rollingmean
-NashSutcliffe.TDP.rollingmean <-NSE(mod.match.rollingmean$mod.TDP, mod.match.rollingmean$obs.TDP); NashSutcliffe.TDP.rollingmean
+## Chlorophyll
+Chlorophyll tends to be underestimated in the spring (missing the diatom bloom?) and overestaimted in the summer and fall. There isn't an apparent effect of year for chlorophyll. 
 
-# Compare model fits between daily and 7-day rolling means: how much better is the rolling mean fit?
-summary(TDPregression.rollingmean)$adj.r.squared - summary(TDPregression)$adj.r.squared
-rmse.TDP - rmse.TDP.rollingmean
-NashSutcliffe.TDP.rollingmean - NashSutcliffe.TDP
-
+```{r, fig.cap = "Chlorophyll concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
+chlplot <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.chla, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.chla, col = "Observed"), pch = 19, size = 1) +
+  ylim(0,100) +
+  ylab(expression(Chlorophyll ~ a ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9)) #chl by time
+print(chlplot)
 ```
+```{r, fig.cap = "Observed vs. modeled chlorophyll concentrations for ice-free season.", echo = FALSE, fig.height = 3}
+chlbymonthplot <- ggplot(mod.match, aes(x = obs.chla, y = mod.chla, color=Month)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + #(intercept = mod.lm[[1]][[1]], slope = mod.lm[[1]][[2]]) +
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(Chlorophyll ~ a ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Chlorophyll ~ a ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8)) #chl regression
+
+chlbyyearplot <- ggplot(mod.match, aes(x = obs.chla, y = mod.chla, color=Year)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
+  xlab(expression(Chlorophyll ~ a ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Chlorophyll ~ a ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+grid.arrange(chlbymonthplot, chlbyyearplot, ncol = 2)
+```
+```{r, echo = TRUE}
+chlaregression <- lm (mod.match$obs.chla ~ mod.match$mod.chla)
+summary(chlaregression)$adj.r.squared
+mse.chl <- mean(residuals(chlaregression)^2); rmse.chl <- sqrt(mse.chl); rmse.chl
+NashSutcliffe.chl <- NSE(mod.match$mod.chla, mod.match$obs.chla); NashSutcliffe.chl
+```
+Right now, we are assuming a phytoplankton P:chl ratio of 0.42 (Hecky et al. 1993). Does this ratio always hold? Here is a plot of particulate P (phytoplankton + other particulates) vs. chl concentrations. The slope of the line is 0.65, but the R-squared value is only 0.26. This is significantly dependent on month. I would conclude that assuming a consistent P:chl ratio is not appropriate, and perhaps we should use a different metric for predicting phytoplankton biomass. I suggest using particulate P as a phytoplankton metric would be appropriate.
+
+
+![Particulate P concentrations vs. chlorophyll a concentrations (observed) by month.](/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227/Pvschlplot.png)
+\newpage
 
 # Model Performance: Oxygen
 
