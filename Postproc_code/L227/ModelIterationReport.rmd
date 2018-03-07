@@ -46,8 +46,7 @@ theme_std <- function (base_size = 12, base_family = "") {
               axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size=rel(1)),
               axis.title.y = element_text(margin = unit(c(0, 3, 0, 0), "mm"),size=rel(1), angle = 90),
               strip.text = element_text(size = rel(1.15), colour = "black", face = "bold"),
-              plot.margin=unit(c(10,10,10,10),"pt")
-        )
+              plot.margin=unit(c(10,10,10,10),"pt"))
 }
 theme_set(theme_std())
 ```
@@ -187,7 +186,7 @@ PPplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 1) +
   ylim(0,150) +
-  ylab(expression(Total ~ Phosphorus ~ (mu*g / L))) +
+  ylab(expression(Particulate ~ Phosphorus ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) 
@@ -199,8 +198,8 @@ PPbymonthplot <- ggplot(mod.match, aes(x = obs.PP, y = mod.PP, color=Month)) +
   geom_point(pch = 19, size = 1.5) +
   geom_abline(slope=1, intercept=0) + 
   scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
-  xlab(expression(Total ~ Phosphorus ~ Observed ~ (mu*g / L))) +
-  ylab(expression(Total ~ Phosphorus ~ Modeled ~ (mu*g / L))) +
+  xlab(expression(Particulate ~ Phosphorus ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Particulate ~ Phosphorus ~ Modeled ~ (mu*g / L))) +
   scale_color_distiller(palette="YlGnBu") +
   theme(legend.position=c(0.9, 0.8))
 
@@ -208,8 +207,8 @@ PPbyyearplot <- ggplot(mod.match, aes(x = obs.PP, y = mod.PP, color=Year)) +
   geom_point(pch = 19, size = 1.5) +
   geom_abline(slope=1, intercept=0) + 
   scale_x_continuous(limits=c(0,100)) + scale_y_continuous(limits=c(0,100)) +
-  xlab(expression(TP ~ Observed ~ (mu*g / L))) +
-  ylab(expression(TP ~ Modeled ~ (mu*g / L))) +
+  xlab(expression(Particulate ~ Phosphorus ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Particulate ~ Phosphorus ~ Modeled ~ (mu*g / L))) +
   scale_color_distiller(palette="YlGnBu") +
   theme(legend.position=c(0.9, 0.8))
 
@@ -252,10 +251,21 @@ mod.match.daily <- mod.match.daily %>%
   filter(Month == 5 & Day > 15 | Month > 5 )
 
 mod.match.daily$obs.PP[mod.match.daily$Month == 5 & mod.match.daily$Day == 16] <- 0
-obs.PP.interpolated <- as.data.frame(na.approx(mod.match.daily$obs.PP))
+obs.PP.interpolated <- na.approx(mod.match.daily$obs.PP)
 mod.match.daily <- mod.match.daily[-c(1:6, 964:972),]
 mod.match.daily$obs.PP <- obs.PP.interpolated
-mod.match.cumulative <- ddply(mod.match, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
+mod.match.cumulative <- ddply(mod.match.daily, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
+mod.match.cumulative <- filter(mod.match.cumulative, Year > 1969)
+
+PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
+  geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 0.5) +
+  geom_point(aes(x = date, y = Cum.Sum.obs.PP, col = "Observed"),size = 0.5) +
+  #ylim(0,150) +
+  ylab(expression(Cumulative ~ Particulate ~ Phosphorus ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9)) 
+print(PPcumulativeplot)
 ```
 
 ## Total Dissolved Phosphorus
