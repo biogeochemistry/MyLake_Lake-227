@@ -185,7 +185,7 @@ NashSutcliffe.temp9m <- NSE(mod2.match$mod.Temp9m, mod2.match$obs.Temp9m); NashS
 PPplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,150) +
+  ylim(0,100) +
   ylab(expression(Particulate ~ Phosphorus ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
@@ -252,10 +252,17 @@ mod.match.daily <- mod.match.daily %>%
 
 mod.match.daily$obs.PP[mod.match.daily$Month == 5 & mod.match.daily$Day == 16] <- 0
 obs.PP.interpolated <- na.approx(mod.match.daily$obs.PP)
+# remove dates before and after the first and last measured values, respectively
 mod.match.daily <- mod.match.daily[-c(1:6, 964:972),]
 mod.match.daily$obs.PP <- obs.PP.interpolated
 mod.match.cumulative <- ddply(mod.match.daily, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
 mod.match.cumulative <- filter(mod.match.cumulative, Year > 1969)
+# calculate end-of season comparison between cumulative modeled vs. observed PP
+end.of.season.cumulative <- as.data.frame(mod.match.cumulative) %>%
+  filter(Day == 31 & Month == 10) %>%
+  select(date, Month, Year, Day, Cum.Sum.mod.PP, Cum.Sum.obs.PP) %>%
+  mutate(mod.minus.obs.PP = Cum.Sum.mod.PP -Cum.Sum.obs.PP) %>%
+  mutate(mod.divided.obs.PP = Cum.Sum.mod.PP/Cum.Sum.obs.PP)
 
 PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 0.5) +
@@ -266,6 +273,24 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) 
 print(PPcumulativeplot)
+
+mod.match.daily <- mutate(mod.match.daily, Week = format(mod.match.daily$date, "%W/%Y"))
+mod.match.weeklyPP <- aggregate(mod.match.daily[c(5,9)], list(mod.match.daily$Week), FUN = sum)
+colnames(mod.match.weeklyPP) <- c("Week", "Sum.Obs.PP", "Sum.Mod.PP")
+#mod.match.weeklyPP$Week <- as.Date(mod.match.weeklyPP$Week, format = "%W/%Y")
+#mod.match.weeklyPP <- mutate(mod.match.weeklyPP, mod.div.obs = Sum.Mod.PP/Sum.Obs.PP, Weekvalue = format(mod.match.weeklyPP$Week, "%W"))
+
+
+# PPweeklyloadplot <- ggplot(data = mod.match.weeklyPP) +
+#   geom_point(aes(x = Week, y = Sum.Mod.PP, col = "Modeled"), size = 0.5) +
+#   geom_point(aes(x = Week, y = Sum.Obs.PP, col = "Observed"),size = 0.5) +
+#   #ylim(0,150) +
+#   ylab(expression(Cumulative ~ Particulate ~ Phosphorus ~ (mu*g / L))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+#   theme(legend.position = c(0.9,0.9)) 
+# print(PPweeklyloadplot)
+
 ```
 
 ## Total Dissolved Phosphorus
@@ -274,7 +299,7 @@ print(PPcumulativeplot)
 TDPplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.TDP, col = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.TDP, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,100) +
+  ylim(0,40) +
   ylab(expression(TDP ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
@@ -285,7 +310,7 @@ print(TDPplot)
 TDPbymonthplot <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Month)) +
   geom_point(pch = 19, size = 1.5) +
   geom_abline(slope=1, intercept=0) + 
-   scale_x_continuous(limits=c(0,50)) + scale_y_continuous(limits=c(0,50)) +
+   scale_x_continuous(limits=c(0,40)) + scale_y_continuous(limits=c(0,40)) +
   xlab(expression(TDP ~ Observed ~ (mu*g / L))) +
   ylab(expression(TDP ~ Modeled ~ (mu*g / L))) +
   scale_color_distiller(palette="YlGnBu") +
@@ -294,7 +319,7 @@ TDPbymonthplot <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Month)) 
 TDPbyyearplot <- ggplot(mod.match, aes(x = obs.TDP, y = mod.TDP, color=Year)) +
   geom_point(pch = 19, size = 1.5) +
   geom_abline(slope=1, intercept=0) + 
-  scale_x_continuous(limits=c(0,50)) + scale_y_continuous(limits=c(0,50)) +
+  scale_x_continuous(limits=c(0,40)) + scale_y_continuous(limits=c(0,40)) +
   xlab(expression(TDP ~ Observed ~ (mu*g / L))) +
   ylab(expression(TDP ~ Modeled ~ (mu*g / L))) +
   scale_color_distiller(palette="YlGnBu") +
