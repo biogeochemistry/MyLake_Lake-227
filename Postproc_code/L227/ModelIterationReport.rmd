@@ -212,6 +212,7 @@ PPbyyearplot <- ggplot(mod.match, aes(x = obs.PP, y = mod.PP, color=Year)) +
   scale_color_distiller(palette="YlGnBu") +
   theme(legend.position=c(0.9, 0.8))
 
+
 grid.arrange(PPbymonthplot, PPbyyearplot, ncol = 2)
 ```
 ```{r, echo = TRUE}
@@ -247,13 +248,14 @@ mod.match.daily$Month <- as.numeric(format(mod.match.daily$date, "%m"))
 mod.match.daily$Year <- format(mod.match.daily$date, "%Y")
 mod.match.daily <- mod.match.daily %>% 
   mutate(Day = as.numeric(format(mod.match.daily$date, "%d")))  %>% 
+  filter(Year != 1996) %>% #1996 was the pike year
   filter(Month > 4 & Month < 11)  %>% 
   filter(Month == 5 & Day > 15 | Month > 5 )
 
 mod.match.daily$obs.PP[mod.match.daily$Month == 5 & mod.match.daily$Day == 16] <- 0
 obs.PP.interpolated <- na.approx(mod.match.daily$obs.PP)
 # remove dates before and after the first and last measured values, respectively
-mod.match.daily <- mod.match.daily[-c(1:6, 6863:6887),]
+mod.match.daily <- mod.match.daily[-c(1:6, 6694:6718),]
 mod.match.daily$obs.PP <- obs.PP.interpolated
 mod.match.cumulative <- ddply(mod.match.daily, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
 mod.match.cumulative <- filter(mod.match.cumulative, Year > 1969)
@@ -276,10 +278,10 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   theme(legend.position = c(0.9,0.9)) 
 print(PPcumulativeplot)
 
-mod.match.daily <- mutate(mod.match.daily, Week = format(mod.match.daily$date, "%W/%Y"))
-mod.match.weeklyPP <- aggregate(mod.match.daily[c(5,9)], list(mod.match.daily$Week), FUN = sum)
+mod.match.daily <- mutate(mod.match.daily, Week = format(mod.match.daily$date, "%W"), WeekYear = format(mod.match.daily$date, "%W%Y"))
+mod.match.weeklyPP <- aggregate(mod.match.daily[c(5,9)], list(mod.match.daily$WeekYear), FUN = sum)
 colnames(mod.match.weeklyPP) <- c("Week", "Sum.Obs.PP", "Sum.Mod.PP")
-#mod.match.weeklyPP$Week <- as.Date(mod.match.weeklyPP$Week, format = "%W/%Y")
+mod.match.weeklyPP$Week <- as.Date(mod.match.weeklyPP$Week, format = "%W/%Y")
 #mod.match.weeklyPP <- mutate(mod.match.weeklyPP, mod.div.obs = Sum.Mod.PP/Sum.Obs.PP, Weekvalue = format(mod.match.weeklyPP$Week, "%W"))
 
 
