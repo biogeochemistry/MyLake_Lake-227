@@ -12,8 +12,8 @@ population_size = 48;
 max_generations = 24;
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
-m_start = [1969, 6, 27];
-m_stop = [1974, 12, 31];
+m_start = [1975, 6, 27];
+m_stop = [1980, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
@@ -32,7 +32,7 @@ Data = loadData(MyL_dates);
 
 % Example: (g_twty (parameter nr 50) is always given the same value as
 % g_twty2 (parameter nr 58) and so on ..)
-varyindexes = [10 47 49 50 53; %PAR_sat, w_chl, m_twty, g_twty, P_half, k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2
+varyindexes = [10 47 49 50 53; %PAR_sat, w_chl, m_twty, g_twty, P_half
                54 56 57 58 59 ]; %PAR_sat_2, w_chl2, m_twty2, g_twty2, P_half_2
 
 % Setting up the min and max boundaries for each covarying set of parameters.
