@@ -12,8 +12,8 @@ population_size = 48;
 max_generations = 24;
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
-m_start = [1990, 6, 27];
-m_stop = [1995, 12, 31];
+m_start = [1969, 6, 27];
+m_stop = [1974, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
@@ -60,9 +60,6 @@ function Data = loadData(MyL_dates)
     rawPPdata = rawcsvdata(:,4);
     rawPPdata(rawPPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
     Data.PPintegratedepi = rawPPdata(withinmodelrange);
-    rawTDPdata = rawcsvdata(:,3);
-    rawTDPdata(rawTDPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    Data.TDPintegratedepi = rawTDPdata(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
     Data.date_mask = getmask(dateswithinrange, MyL_dates); % Used later to match model data to observed data by correct date.
 end
@@ -85,8 +82,6 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     clim_ID = 0;
     [MyLake_results, Sediment_results]  = fn_MyL_application(m_start, m_stop, sediment_params, lake_params, use_INCA, run_INCA, run_ID, clim_ID, save_initial_conditions); % runs the model and outputs obs and sim
     
-    TDP = MyLake_results.basin1.concentrations.P + MyLake_results.basin1.concentrations.DOP;
-    ModelResult.TDPintegratedepi = transpose(mean(TDP(1:8,:)));
     PP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + MyLake_results.basin1.concentrations.PP;
     ModelResult.PPintegratedepi = transpose(mean(PP(1:8,:)));
 
@@ -100,8 +95,7 @@ end
 function err = error_function_P(ModelResult, Data)
     
     MatchedModelPP = ModelResult.PPintegratedepi(Data.date_mask);
-    MatchedModelTDP =  ModelResult.TDPintegratedepi(Data.date_mask);
-    err = nansum(((MatchedModelPP - Data.PPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2));
+    err = nansum((MatchedModelPP - Data.PPintegratedepi).^2);
 end
 
 %% END project specific evaluation functions

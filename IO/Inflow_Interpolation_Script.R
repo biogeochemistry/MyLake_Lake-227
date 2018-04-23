@@ -38,7 +38,9 @@ attach(dataset)
 head(dataset)
 library(zoo)
 
-#Variables aggregated by mean of remaining dataset
+
+
+#### Variables aggregated by mean of remaining dataset ----
 CloudI = na.aggregate(Cloud)
 #Check
 #Cloud2 = na.omit(Cloud)
