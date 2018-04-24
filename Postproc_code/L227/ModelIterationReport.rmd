@@ -255,10 +255,10 @@ mod.match.daily <- mod.match.daily %>%
 mod.match.daily$obs.PP[mod.match.daily$Month == 5 & mod.match.daily$Day == 16] <- 0
 obs.PP.interpolated <- na.approx(mod.match.daily$obs.PP)
 # remove dates before and after the first and last measured values, respectively
-mod.match.daily <- mod.match.daily[-c(1:6, 6694:6718),]
+mod.match.daily <- mod.match.daily[-c(1, 972),]
 mod.match.daily$obs.PP <- obs.PP.interpolated
 mod.match.cumulative <- ddply(mod.match.daily, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
-mod.match.cumulative <- filter(mod.match.cumulative, Year > 1969)
+mod.match.cumulative <- filter(mod.match.cumulative, Year > 1990)
 # calculate end-of season comparison between cumulative modeled vs. observed PP
 end.of.season.cumulative <- as.data.frame(mod.match.cumulative) %>%
   filter(Day == 31 & Month == 10) %>%

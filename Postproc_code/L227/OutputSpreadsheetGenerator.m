@@ -12,38 +12,22 @@ epidepthposition = 2*epidepth; %MyLake computes for every 0.5 m, so adding a fac
 %cyanointegratedepi = transpose(mean(cyano(1:10,:)));
 
 TDP = MyLake_results.basin1.concentrations.P + MyLake_results.basin1.concentrations.DOP;
-TDP(TDP(:,1)>epidepthposition) = NaN;
-TDPintegratedepi = transpose(mean(TDP(1:(2*epidepth),:)));
+TDPintegratedepi = zeros(1,length(TDP));
+    for (i=1:length(TDP))
+        TDPintegratedepi(i) = mean(TDP(1:epidepthposition(i), i));
+    end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
+TDPintegratedepi = transpose(TDPintegratedepi);
 
 %TP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + TDP + MyLake_results.basin1.concentrations.PP;
 %TPintegratedepi = transpose(mean(TP(1:8,:)));
 
 TPP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + MyLake_results.basin1.concentrations.PP;
-TPPintegratedepi = transpose(mean(TPP(1:(epidepthposition),:)));
 
-%averages all depths on a single day
-TPPintegratedepi = zeros(1,2014);
-for (j=1:length(epidepthposition))
+TPPintegratedepi = zeros(1,length(TPP));
     for (i=1:length(TPP))
-        TPPintegratedepi(i) = mean(TPP(1:j, i));
-    end
-end
-
-%returns surface measurement on a single day
-TPPintegratedepi = zeros(1,2014);
-for (j=1:length(epidepthposition))
-    for (i=1:length(TPP))
-        TPPintegratedepi(i) = mean(TPP(1:epidepthposition, i));
-    end
-end
-
-%returns surface measurement on a single day
-TPPintegratedepi = zeros(1,2014);
-for (j=1:length(epidepthposition))
-    for (i=1:length(TPP))
-        TPPintegratedepi(i) = mean(TPP(1:epidepthposition(j), i));
-    end
-end
+        TPPintegratedepi(i) = mean(TPP(1:epidepthposition(i), i));
+    end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
+TPPintegratedepi = transpose(TPPintegratedepi);
 
 filename='Postproc_code/L227/Output_IntegratedEpi.csv';
 M = [dates(:,1:3), TDPintegratedepi, TPPintegratedepi];
