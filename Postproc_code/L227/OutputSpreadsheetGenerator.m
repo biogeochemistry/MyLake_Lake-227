@@ -2,19 +2,48 @@
 datechar=datestr(MyLake_results.basin1.days);
 dates=datevec(datechar);
 
+epidepth = floor(MyLake_results.basin1.MixStat(12,:)*2)/2;
+epidepth(isnan(epidepth)) = 10;
+epidepthposition = 2*epidepth; %MyLake computes for every 0.5 m, so adding a factor of 2
+
 %Totalchl = (MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C)/0.42;
 %Chlintegratedepi = transpose(mean(Totalchl(1:10,:)));
 %cyano = rdivide(MyLake_results.basin1.concentrations.C/0.42,Totalchl);
 %cyanointegratedepi = transpose(mean(cyano(1:10,:)));
 
 TDP = MyLake_results.basin1.concentrations.P + MyLake_results.basin1.concentrations.DOP;
-TDPintegratedepi = transpose(mean(TDP(1:8,:)));
+TDP(TDP(:,1)>epidepthposition) = NaN;
+TDPintegratedepi = transpose(mean(TDP(1:(2*epidepth),:)));
 
 %TP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + TDP + MyLake_results.basin1.concentrations.PP;
 %TPintegratedepi = transpose(mean(TP(1:8,:)));
 
 TPP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + MyLake_results.basin1.concentrations.PP;
-TPPintegratedepi = transpose(mean(TPP(1:8,:)));
+TPPintegratedepi = transpose(mean(TPP(1:(epidepthposition),:)));
+
+%averages all depths on a single day
+TPPintegratedepi = zeros(1,2014);
+for (j=1:length(epidepthposition))
+    for (i=1:length(TPP))
+        TPPintegratedepi(i) = mean(TPP(1:j, i));
+    end
+end
+
+%returns surface measurement on a single day
+TPPintegratedepi = zeros(1,2014);
+for (j=1:length(epidepthposition))
+    for (i=1:length(TPP))
+        TPPintegratedepi(i) = mean(TPP(1:epidepthposition, i));
+    end
+end
+
+%returns surface measurement on a single day
+TPPintegratedepi = zeros(1,2014);
+for (j=1:length(epidepthposition))
+    for (i=1:length(TPP))
+        TPPintegratedepi(i) = mean(TPP(1:epidepthposition(j), i));
+    end
+end
 
 filename='Postproc_code/L227/Output_IntegratedEpi.csv';
 M = [dates(:,1:3), TDPintegratedepi, TPPintegratedepi];
