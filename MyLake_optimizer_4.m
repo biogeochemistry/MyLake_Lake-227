@@ -82,8 +82,17 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     clim_ID = 0;
     [MyLake_results, Sediment_results]  = fn_MyL_application(m_start, m_stop, sediment_params, lake_params, use_INCA, run_INCA, run_ID, clim_ID, save_initial_conditions); % runs the model and outputs obs and sim
     
-    PP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + MyLake_results.basin1.concentrations.PP;
-    ModelResult.PPintegratedepi = transpose(mean(PP(1:8,:)));
+    epidepth = floor(MyLake_results.basin1.MixStat(12,:)*2)/2;
+    epidepth(isnan(epidepth)) = 10;
+    epidepthposition = 2*epidepth; %MyLake computes for every 0.5 m, so adding a factor of 2
+
+    TPP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + MyLake_results.basin1.concentrations.PP;
+    TPPintegratedepi = zeros(1,length(TPP));
+    for (i=1:length(TPP))
+        TPPintegratedepi(i) = mean(TPP(1:epidepthposition(i), i));
+    end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
+    ModelResult.PPintegratedepi = transpose(TPPintegratedepi);
+   
 
 end
 
