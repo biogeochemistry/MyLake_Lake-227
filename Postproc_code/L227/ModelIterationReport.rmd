@@ -46,8 +46,7 @@ theme_std <- function (base_size = 12, base_family = "") {
               axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size=rel(1)),
               axis.title.y = element_text(margin = unit(c(0, 3, 0, 0), "mm"),size=rel(1), angle = 90),
               strip.text = element_text(size = rel(1.15), colour = "black", face = "bold"),
-              plot.margin=unit(c(10,10,10,10),"pt"))
-}
+              plot.margin=unit(c(10,10,10,10),"pt"))}
 theme_set(theme_std())
 ```
 
@@ -60,12 +59,13 @@ theme_set(theme_std())
 ```{r, echo = FALSE}
 # Read in the data and add colnames
 obsinit <- read.csv("Observed_IntegratedEpi_icefree_lateMay.csv", header = T)
-colnames(obsinit) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP", "obs.PP")
+colnames(obsinit) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP", "obs.PP", "obs.DOC")
+obsinit$obs.DOC <- obsinit$obs.DOC * 12 # concentrations are in umol/L and need to be in ug/L)
 obs_temp <- read.csv("Observed_Temperature.csv")
 obs_O2 <- read.csv("Observed_Oxygen.csv")
 obs_Fe <- read.csv("Observed_Fe.csv")
 mod <- read.csv("Output_IntegratedEpi.csv", header = F)
-colnames(mod) <- c("Year", "Month", "Day", "mod.TDP", "mod.PP")
+colnames(mod) <- c("Year", "Month", "Day", "mod.TDP", "mod.PP", "mod.DOC")
 mod2 <- read.csv("Output_Depths.csv", header = F)
 colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy6m", "mod.Oxy8m", "mod.Oxy10m", "mod.Fe4m", "mod.Fe6m", "mod.Fe8m", "mod.Fe10m")
 
@@ -75,7 +75,7 @@ obs <- obsinit %>%
 obs <- data.frame(obs, obsinit$Month, obsinit$Year)
 obs <- na.omit(obs)
 obs <- obs[,-1]
-colnames(obs) <- c("date", "obs.TP","obs.chla","obs.TDP", "obs.PP", "Month", "Year")
+colnames(obs) <- c("date", "obs.TP","obs.chla","obs.TDP", "obs.PP", "obs.DOC", "Month", "Year")
 mod <- mod %>% unite(date, Year, Month, Day, sep = '-')
 mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
 
@@ -177,7 +177,27 @@ NashSutcliffe.temp9m <- NSE(mod2.match$mod.Temp9m, mod2.match$obs.Temp9m); NashS
   * m_twty: 
   * g_twty: 
   * P_half: 
-  
+ 
+## DOC
+```{r, fig.cap = "", echo = FALSE, fig.height = 3}
+
+DOCplot <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.DOC, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.DOC, col = "Observed"), pch = 19, size = 1) +
+  #ylim(0,100) +
+  ylab(expression(Dissolved ~ Organic ~ Carbon ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9)) 
+print(DOCplot)
+
+DOCregression <- lm (mod.match$obs.DOC ~ mod.match$mod.DOC)
+summary(DOCregression)$adj.r.squared
+mse.DOC <- mean(residuals(DOCregression)^2); rmse.DOC <- sqrt(mse.DOC); rmse.DOC
+NashSutcliffe.DOC <-NSE(mod.match$mod.DOC, mod.match$obs.DOC); NashSutcliffe.DOC
+
+```
+
 ## Particulate Phosphorus
 
 ```{r, fig.cap = "Total phosphorus concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
