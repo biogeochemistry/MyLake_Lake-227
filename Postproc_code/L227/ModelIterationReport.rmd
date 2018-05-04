@@ -191,6 +191,8 @@ DOCplot <- ggplot() +
   theme(legend.position = c(0.9,0.9)) 
 print(DOCplot)
 
+mod.match <- filter(mod.match, Year != "1979" & Year != "1980" & Year != "1981")
+
 DOCregression <- lm (mod.match$obs.DOC ~ mod.match$mod.DOC)
 summary(DOCregression)$adj.r.squared
 mse.DOC <- mean(residuals(DOCregression)^2); rmse.DOC <- sqrt(mse.DOC); rmse.DOC

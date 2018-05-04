@@ -28,16 +28,35 @@ theme_std <- function (base_size = 12, base_family = "") {
 }
 theme_set(theme_std())
   
+#### inflow and weather spreadsheet ----
+inflowdata <- read.csv("Inflow_for_interpolation.csv")
+head(inflowdata)
+inflowdata <- inflowdata %>% unite(Date, Year, Month, Day, sep = '-')
+inflowdata$Date <- as.Date(inflowdata$Date, format = "%Y-%m-%d")
+inflowdata <- mutate(inflowdata, Year = as.numeric(format(inflowdata$Date, "%Y")))  %>% 
+  mutate(inflowdata, Class = 0)
 
+inflowdata$Class <- ifelse(inflowdata$Year == 1987 | inflowdata$Year == 1980 | 
+                             inflowdata$Year == 1984 | inflowdata$Year == 1979 | 
+                             inflowdata$Year == 1973 | inflowdata$Year == 1998 | 
+                             inflowdata$Year == 1972 | inflowdata$Year == 1981 | 
+                             inflowdata$Year == 1990 | inflowdata$Year == 1985, 
+                           "High", 
+                           ifelse(inflowdata$Year == 1971 | inflowdata$Year == 2008 | 
+                                    inflowdata$Year == 1976| inflowdata$Year == 1975 | 
+                                    inflowdata$Year == 1977 | inflowdata$Year == 1992 | 
+                                    inflowdata$Year == 1983 | inflowdata$Year == 1970 | 
+                                    inflowdata$Year == 2003 | inflowdata$Year == 2001, 
+                                  "Low", "Typical"))  
 # lake spreadsheet
 obsinit <- read.csv("../Postproc_code/L227/Observed_IntegratedEpi_icefree_lateMay.csv")
-colnames(obsinit) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP", "obs.PP")
+colnames(obsinit) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP", "obs.PP", "obs.DOC")
 obs <- obsinit %>% 
   unite(Date, Year, Month, Day, sep = '-') #%>%
 obs <- data.frame(obs, obsinit$Month, obsinit$Year)
 obs <- na.omit(obs)
 obs <- obs[,-1]
-colnames(obs) <- c("Date", "obs.TP","obs.chla","obs.TDP", "obs.PP", "Month", "Year")
+colnames(obs) <- c("Date", "obs.TP","obs.chla","obs.TDP", "obs.PP", "obs.DOC", "Month", "Year")
 obs$Date <- as.Date(obs$Date, format = "%Y-%m-%d") #Converts data to date structure
 
 mod.match.daily <- right_join(obs, inflowdata, by = "Date")
@@ -94,26 +113,7 @@ mod.match.cumulative$Class <- ifelse(mod.match.cumulative$Year == 1987 | mod.mat
                                     mod.match.cumulative$Year == 2003 | mod.match.cumulative$Year == 2001, 
                                   "Low", "Typical"))  
 
-#### inflow and weather spreadsheet ----
-inflowdata <- read.csv("Inflow_for_interpolation.csv")
-head(inflowdata)
-inflowdata <- inflowdata %>% unite(Date, Year, Month, Day, sep = '-')
-inflowdata$Date <- as.Date(inflowdata$Date, format = "%Y-%m-%d")
-inflowdata <- mutate(inflowdata, Year = as.numeric(format(inflowdata$Date, "%Y")))  %>% 
-  mutate(inflowdata, Class = 0)
 
-inflowdata$Class <- ifelse(inflowdata$Year == 1987 | inflowdata$Year == 1980 | 
-                             inflowdata$Year == 1984 | inflowdata$Year == 1979 | 
-                             inflowdata$Year == 1973 | inflowdata$Year == 1998 | 
-                             inflowdata$Year == 1972 | inflowdata$Year == 1981 | 
-                             inflowdata$Year == 1990 | inflowdata$Year == 1985, 
-                             "High", 
-                           ifelse(inflowdata$Year == 1971 | inflowdata$Year == 2008 | 
-                                    inflowdata$Year == 1976| inflowdata$Year == 1975 | 
-                                    inflowdata$Year == 1977 | inflowdata$Year == 1992 | 
-                                    inflowdata$Year == 1983 | inflowdata$Year == 1970 | 
-                                    inflowdata$Year == 2003 | inflowdata$Year == 2001, 
-                                  "Low", "Typical"))  
   
 
 #### Plots of variables over time ----
