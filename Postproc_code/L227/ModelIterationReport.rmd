@@ -192,6 +192,7 @@ DOCplot <- ggplot() +
 print(DOCplot)
 
 mod.match <- filter(mod.match, Year != "1979" & Year != "1980" & Year != "1981")
+mod.match <- filter(mod.match, Year != "1990")
 
 DOCregression <- lm (mod.match$obs.DOC ~ mod.match$mod.DOC)
 summary(DOCregression)$adj.r.squared

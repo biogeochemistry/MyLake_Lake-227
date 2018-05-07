@@ -67,5 +67,11 @@ SiO2I = na.approx(SiO2)
 
 #Write an output file
 InterpolatedData = data.frame(Year, Month, Day, CloudI, AirTempI, HumidityI, AirPressureI, WindSpeedI, InflowTempI, TPI, DOCI, NO3I, NH4I, SO4I, Fe2I, Ca2I, pHI, Fe3I, SiO2I)
+
+if(InterpolatedData$DOCI > 50000){
+  InterpolatedData$DOCI == 50000
+}
+InterpolatedData$DOCI[InterpolatedData$DOCI > 50000] <- 50000
+
 write.csv(InterpolatedData, "Inflow_Interpolated.csv")
 
