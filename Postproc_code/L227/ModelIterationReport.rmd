@@ -191,6 +191,27 @@ DOCplot <- ggplot() +
   theme(legend.position = c(0.9,0.9)) 
 print(DOCplot)
 
+DOCbymonthplot <- ggplot(mod.match, aes(x = obs.DOC, y = mod.DOC, color=Month)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(5000,13000)) + scale_y_continuous(limits=c(5000,13000)) +
+  xlab(expression(Dissolved ~ Organic ~ Carbon ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Dissolved ~ Organic ~ Carbon ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+DOCbyyearplot <- ggplot(mod.match, aes(x = obs.DOC, y = mod.DOC, color=Year)) +
+  geom_point(pch = 19, size = 1.5) +
+  geom_abline(slope=1, intercept=0) + 
+  scale_x_continuous(limits=c(5000,13000)) + scale_y_continuous(limits=c(5000,13000)) +
+  xlab(expression(Dissolved ~ Organic ~ Carbon ~ Observed ~ (mu*g / L))) +
+  ylab(expression(Dissolved ~ Organic ~ Carbon ~ Modeled ~ (mu*g / L))) +
+  scale_color_distiller(palette="YlGnBu") +
+  theme(legend.position=c(0.9, 0.8))
+
+
+grid.arrange(DOCbymonthplot, DOCbyyearplot, ncol = 2)
+
 mod.match <- filter(mod.match, Year != "1979" & Year != "1980" & Year != "1981")
 mod.match <- filter(mod.match, Year != "1990")
 
