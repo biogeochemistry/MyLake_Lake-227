@@ -7,7 +7,19 @@
 #put it back into the Fertilization Input Calculations.xlsx file to add
 #the fertilizer back into the inflows. 
 
-#For variables that have NaN as the first value in the dataset, I added the average value of the dataset
+#For variables that have NaN as the first and last value in the dataset, 
+#I added the average value of the dataset 
+#1969-2016 averages
+#TP: 18.37
+#DOC: 28833.12
+#NO3: 39.22
+#NH4: 31.32
+#SO4: 4112.95
+#Fe2: 420.02
+#Ca2: 2130.98
+#pH: 4.80
+#Fe3: 93.22
+#SiO2: 4875.23
 
 #Variables that have a random distribution should be aggregated 
 #by the average value in the rest of the dataset. These include: 
@@ -31,14 +43,10 @@
 #Fe3
 #SiO2
 
-setwd("/Users/krsalkgu/Documents/SourceTree/L227/IO")
-
 dataset = read.csv("Inflow_for_interpolation.csv")
 attach(dataset)
 head(dataset)
 library(zoo)
-
-
 
 #### Variables aggregated by mean of remaining dataset ----
 CloudI = na.aggregate(Cloud)
@@ -50,7 +58,6 @@ HumidityI = na.aggregate(Humidity)
 AirPressureI = na.aggregate(AirPressure)
 WindSpeedI = na.aggregate(WindSpeed)
 pHI = na.aggregate(pH)
-#DOCI = na.aggregate(DOC)
 
 #Variables interpolated linearly 
 AirTempI = na.approx(AirTemp)
@@ -68,10 +75,10 @@ SiO2I = na.approx(SiO2)
 #Write an output file
 InterpolatedData = data.frame(Year, Month, Day, CloudI, AirTempI, HumidityI, AirPressureI, WindSpeedI, InflowTempI, TPI, DOCI, NO3I, NH4I, SO4I, Fe2I, Ca2I, pHI, Fe3I, SiO2I)
 
-if(InterpolatedData$DOCI > 50000){
-  InterpolatedData$DOCI == 50000
-}
+#DOC was too high in the model inputs, which made the model crash. I will take all values > 50,000
+#and replace them with 50,000
+
 InterpolatedData$DOCI[InterpolatedData$DOCI > 50000] <- 50000
 
-write.csv(InterpolatedData, "Inflow_Interpolated.csv")
+write.csv(InterpolatedData, "Inflow_Interpolated.csv", row.names = F)
 
