@@ -73,7 +73,7 @@ colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Tem
 obs <- obsinit %>% 
   unite(date, Year, Month, Day, sep = '-') #%>%
 obs <- data.frame(obs, obsinit$Month, obsinit$Year)
-obs <- na.omit(obs)
+#obs <- na.omit(obs)
 obs <- obs[,-1]
 colnames(obs) <- c("date", "obs.TP","obs.chla","obs.TDP", "obs.PP", "obs.DOC", "Month", "Year")
 mod <- mod %>% unite(date, Year, Month, Day, sep = '-')
@@ -299,7 +299,7 @@ mod.match.daily <- mod.match.daily %>%
 mod.match.daily$obs.PP[mod.match.daily$Month == 5 & mod.match.daily$Day == 16] <- 0
 obs.PP.interpolated <- na.approx(mod.match.daily$obs.PP)
 # remove dates before and after the first and last measured values, respectively
-mod.match.daily <- mod.match.daily[-c(1, 972),]
+mod.match.daily <- mod.match.daily[-c(1, 4341:4373),]
 mod.match.daily$obs.PP <- obs.PP.interpolated
 mod.match.cumulative <- ddply(mod.match.daily, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
 mod.match.cumulative <- filter(mod.match.cumulative, Year > 1990)
