@@ -322,22 +322,57 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   theme(legend.position = c(0.9,0.9)) 
 print(PPcumulativeplot)
 
-mod.match.daily <- mutate(mod.match.daily, Week = format(mod.match.daily$date, "%W"), WeekYear = format(mod.match.daily$date, "%W%Y"))
-mod.match.weeklyPP <- aggregate(mod.match.daily[c(5,9)], list(mod.match.daily$WeekYear), FUN = sum)
-colnames(mod.match.weeklyPP) <- c("Week", "Sum.Obs.PP", "Sum.Mod.PP")
-mod.match.weeklyPP$Week <- as.Date(mod.match.weeklyPP$Week, format = "%W/%Y")
-#mod.match.weeklyPP <- mutate(mod.match.weeklyPP, mod.div.obs = Sum.Mod.PP/Sum.Obs.PP, Weekvalue = format(mod.match.weeklyPP$Week, "%W"))
+mod <- mutate(mod, Year = format(mod$date, "%Y"))
+MaxModPP <- 
+  mod %>%
+  select(date, mod.PP, Year) %>%
+  group_by(Year) %>%
+  filter(mod.PP == max(mod.PP))
+  summarize(MaxPP = max(mod.PP), date = date[mod.PP == MaxPP])
+MaxModPP$Year <- as.integer(MaxModPP$Year)
+names(MaxModPP)[1] <- "mod.date"
+
+MaxObsPP <- 
+  obs %>%
+  select(date, obs.PP, Year) %>%
+  na.omit(obs) %>%
+  group_by(Year) %>%
+  filter(obs.PP == max(obs.PP))
+names(MaxObsPP)[1] <- "obs.date"
 
 
-# PPweeklyloadplot <- ggplot(data = mod.match.weeklyPP) +
-#   geom_point(aes(x = Week, y = Sum.Mod.PP, col = "Modeled"), size = 0.5) +
-#   geom_point(aes(x = Week, y = Sum.Obs.PP, col = "Observed"),size = 0.5) +
-#   #ylim(0,150) +
-#   ylab(expression(Cumulative ~ Particulate ~ Phosphorus ~ (mu*g / L))) +
-#   xlab(" ") +
-#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
-#   theme(legend.position = c(0.9,0.9)) 
-# print(PPweeklyloadplot)
+match.MaxPP <- inner_join(MaxObsPP, MaxModPP, by = "Year") 
+match.MaxPP$mod.date <- format(match.MaxPP$mod.date, "%j")
+match.MaxPP$obs.date <- format(match.MaxPP$obs.date, "%j")
+match.MaxPP$Year <- as.numeric(match.MaxPP$Year)
+match.MaxPP$mod.date <- as.numeric(match.MaxPP$mod.date)
+match.MaxPP$obs.date <- as.numeric(match.MaxPP$obs.date)
+
+
+MaxPPdateplot <- 
+  ggplot(data = match.MaxPP, aes(x = Year)) +
+    geom_point(aes(y = obs.date), color = "blue") +
+    geom_line(aes(y = mod.date), color = "blue") + 
+    scale_y_reverse() + 
+    ylab("Julian Day") 
+
+MaxPPconcplot <- 
+  ggplot(data = match.MaxPP, aes(x = Year)) +
+    geom_point(aes(y = obs.PP), color = "blue") +
+    geom_line(aes(y = mod.PP), color = "blue") + 
+    ylab(expression(Particulate ~ Phosphorus ~ (mu*g / L)))
+
+MaxPPdateregression <- lm (match.MaxPP$obs.date ~ match.MaxPP$mod.date)
+summary(MaxPPdateregression)
+msedate <- mean(residuals(MaxPPdateregression)^2)
+rmsedate <- sqrt(msedate)
+rmsedate
+
+MaxPPconcregression <- lm (match.MaxPP$obs.PP ~ match.MaxPP$mod.PP)
+summary(MaxPPconcregression)
+mseconc <- mean(residuals(MaxPPconcregression)^2)
+rmseconc <- sqrt(mseconc)
+rmseconc
 
 ```
 
