@@ -19,10 +19,11 @@ geometry: margin=2.54cm
 setwd("/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227")
 
 # Load packages for the document
-library(ggplot2)
+library(tidyverse)
+#library(ggplot2)
 library(knitr)
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
-library(tidyr)
+#library(tidyr)
 library(magrittr)
 library(dplyr)
 library(plyr)
@@ -230,7 +231,7 @@ PPplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 1) +
   ylim(0,100) +
-  ylab(expression(Particulate ~ Phosphorus ~ (mu*g / L))) +
+  ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) 
@@ -316,13 +317,19 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 0.5) +
   geom_point(aes(x = date, y = Cum.Sum.obs.PP, col = "Observed"),size = 0.5) +
   #ylim(0,150) +
-  ylab(expression(Cumulative ~ Particulate ~ Phosphorus ~ (mu*g / L))) +
+  ylab(expression(Cumulative ~ PP ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
   theme(legend.position = c(0.9,0.9)) 
 print(PPcumulativeplot)
 
+grid.arrange(PPplot, PPcumulativeplot, nrow = 2)
+
+
 mod <- mutate(mod, Year = format(mod$date, "%Y"))
+#remove May dates from contention for 
+mod <- mutate(mod, Month = format(mod$date, "%m"))
+
 MaxModPP <- 
   mod %>%
   select(date, mod.PP, Year) %>%
@@ -348,19 +355,37 @@ match.MaxPP$Year <- as.numeric(match.MaxPP$Year)
 match.MaxPP$mod.date <- as.numeric(match.MaxPP$mod.date)
 match.MaxPP$obs.date <- as.numeric(match.MaxPP$obs.date)
 
+PPplot <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 1) +
+  ylim(0,100) +
+  ylab(expression(Particulate ~ Phosphorus ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
+  theme(legend.position = c(0.9,0.9)) 
 
 MaxPPdateplot <- 
   ggplot(data = match.MaxPP, aes(x = Year)) +
-    geom_point(aes(y = obs.date), color = "blue") +
-    geom_line(aes(y = mod.date), color = "blue") + 
-    scale_y_reverse() + 
-    ylab("Julian Day") 
+    geom_point(aes(y = obs.date, color = "Observed")) +
+    geom_line(aes(y = mod.date, color = "Modeled")) + 
+    scale_y_reverse(limits = c(310, 100)) + 
+    ylab("DOY of Maximum PP") + 
+    scale_colour_manual("", breaks = c("Observed", "Modeled"), 
+                        values = c("black", "blue")) +
+    theme(legend.position = "none") 
+print(MaxPPdateplot)
 
 MaxPPconcplot <- 
   ggplot(data = match.MaxPP, aes(x = Year)) +
-    geom_point(aes(y = obs.PP), color = "blue") +
-    geom_line(aes(y = mod.PP), color = "blue") + 
-    ylab(expression(Particulate ~ Phosphorus ~ (mu*g / L)))
+    geom_point(aes(y = obs.PP, color = "Observed")) +
+    geom_line(aes(y = mod.PP, color = "Modeled")) + 
+    scale_colour_manual("", breaks = c("Observed", "Modeled"), 
+                        values = c("black", "blue")) + 
+    ylab(expression(Maximum ~ PP ~ (mu*g / L))) +
+    theme(legend.position = c(0.9,0.9)) 
+print(MaxPPconcplot)
+
+grid.arrange(MaxPPconcplot, MaxPPdateplot, nrow = 2)
 
 MaxPPdateregression <- lm (match.MaxPP$obs.date ~ match.MaxPP$mod.date)
 summary(MaxPPdateregression)
