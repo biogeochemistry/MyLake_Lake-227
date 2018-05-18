@@ -25,7 +25,7 @@ lake_params = {
     1, 'I_scTP',               % 20    scaling factor for inflow concentration of total P (-)
     1, 'I_scDOP',              % 21    scaling factor for inflow concentration of diss. organic P (-)
     1, 'I_scChl',              % 22    scaling factor for inflow concentration of Chl a (-)
-    0.7, 'I_scDOC',              % 23    scaling factor for inflow concentration of DOC  (-)
+    1, 'I_scDOC',              % 23    scaling factor for inflow concentration of DOC  (-)
     1, 'I_scPOP',              % 24    scaling factor for inflow concentration of POP  (-)
     1, 'I_scO',                % 25    Scaling factor for inflow concentration of O2 (-)
     1 , 'I_scDIC',             % 26    Scaling factor for inflow concentration of DOC  (-)
