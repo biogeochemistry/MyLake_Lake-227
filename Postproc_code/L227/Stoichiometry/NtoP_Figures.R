@@ -72,33 +72,41 @@ library(strucchange)
 #### TN:TP ----
 TNtoTPbreak = breakpoints (TNtoTP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 summary(TNtoTPbreak)
-    # Breakpoints at observation number:
-    #   m = 1   470
+  # Breakpoints at observation number:
+  # m = 1   470
 
 TNtoTPbreak2 = breakpoints (TNtoTP ~ Datelake, h = 20, data = NtoPinsitu, breaks=2)
 summary(TNtoTPbreak2)
-    # Breakpoints at observation number:
-    # m = 1       470
-    # m = 2   112 132
+  # Breakpoints at observation number:
+  # m = 1       470
+  # m = 2   112 132
+
+shapiro.test(NtoPinsitu$TNtoTP)
+    # Shapiro-Wilk normality test
+    # 
+    # data:  NtoPinsitu$TNtoTP
+    # W = 0.83693, p-value < 2.2e-16
+qqnorm(NtoPinsitu$TNtoTP)
 
 TNtoTPbydate <- lm(NtoPinsitu$TNtoTP ~ NtoPinsitu$Datelake)
 summary(TNtoTPbydate)
-    # Coefficients:
-    #   Estimate Std. Error t value Pr(>|t|)    
-    # (Intercept)         61.2304046  1.7452061  35.085   <2e-16 ***
-    #   NtoPinsitu$Datelake -0.0005369  0.0002083  -2.577   0.0102 *  
-    #   ---
-    #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-    # 
-    # Residual standard error: 23.92 on 686 degrees of freedom
-    # (217 observations deleted due to missingness)
-    # Multiple R-squared:  0.009588,	Adjusted R-squared:  0.008144 
-    # F-statistic: 6.641 on 1 and 686 DF,  p-value: 0.01017
+  # Coefficients:
+  #   Estimate Std. Error t value Pr(>|t|)    
+  # (Intercept)         61.1493052  1.6310814  37.490  < 2e-16 ***
+  #   NtoPinsitu$Datelake -0.0005242  0.0001748  -2.998  0.00281 ** 
+  #   ---
+  #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+  # 
+  # Residual standard error: 23.58 on 750 degrees of freedom
+  # (220 observations deleted due to missingness)
+  # Multiple R-squared:  0.01184,	Adjusted R-squared:  0.01052 
+  # F-statistic: 8.987 on 1 and 750 DF,  p-value: 0.002808
+
 
 TNtoTPperiod1 <- TNtoTPbydate <- lm(NtoPinsitu$TNtoTP[1:469] ~ NtoPinsitu$Datelake[1:469])
 summary(TNtoTPperiod1)
     # Coefficients:
-    #   Estimate Std. Error t value Pr(>|t|)    
+    # Estimate Std. Error t value Pr(>|t|)    
     # (Intercept)                5.813e+01  2.908e+00  19.993   <2e-16 ***
     #   NtoPinsitu$Datelake[1:469] 1.846e-04  7.457e-04   0.248    0.805    
     # ---
@@ -109,29 +117,29 @@ summary(TNtoTPperiod1)
     # Multiple R-squared:  0.0001862,	Adjusted R-squared:  -0.002853 
     # F-statistic: 0.06129 on 1 and 329 DF,  p-value: 0.8046
 
-TNtoTPperiod2 <- TNtoTPbydate <- lm(NtoPinsitu$TNtoTP[470:905] ~ NtoPinsitu$Datelake[470:905])
+TNtoTPperiod2 <- TNtoTPbydate <- lm(NtoPinsitu$TNtoTP[470:972] ~ NtoPinsitu$Datelake[470:972])
 summary(TNtoTPperiod2)
     # Coefficients:
-    #   Estimate Std. Error t value Pr(>|t|)    
-    # (Intercept)                  72.3646322  4.3268408   16.73  < 2e-16 ***
-    #   NtoPinsitu$Datelake[470:905] -0.0015216  0.0003931   -3.87 0.000129 ***
+    # Estimate Std. Error t value Pr(>|t|)    
+    # (Intercept)                  68.6466462  3.6337370  18.891  < 2e-16 ***
+    #   NtoPinsitu$Datelake[470:972] -0.0011304  0.0003034  -3.726 0.000221 ***
     #   ---
     #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
     # 
-    # Residual standard error: 20.27 on 355 degrees of freedom
-    # (79 observations deleted due to missingness)
-    # Multiple R-squared:  0.04049,	Adjusted R-squared:  0.03779 
-    # F-statistic: 14.98 on 1 and 355 DF,  p-value: 0.0001293
+    # Residual standard error: 20.21 on 419 degrees of freedom
+    # (82 observations deleted due to missingness)
+    # Multiple R-squared:  0.03208,	Adjusted R-squared:  0.02977 
+    # F-statistic: 13.89 on 1 and 419 DF,  p-value: 0.0002209
 
 TNtoTPplot <- 
   ggplot(NtoPinsitu, aes(x = Datelake, y = TNtoTP)) +
   geom_point(aes(y = TNtoTP), size = 0.5) +
-  ylim(0,200) +
+  #ylim(0,200) +
   ylab(expression(TN:TP)) +
   xlab(" ") +
   theme(legend.position = c(0.9,0.9)) + 
   geom_smooth(method = 'lm', data = NtoPinsitu[1:469,], aes(x = Datelake, y = TNtoTP), se = FALSE, color = "black") + #non-significant slope
-  geom_smooth(method = 'lm', data = NtoPinsitu[470:905,], aes(x = Datelake, y = TNtoTP), se = FALSE, color = "blue") + #significant slope
+  geom_smooth(method = 'lm', data = NtoPinsitu[470:972,], aes(x = Datelake, y = TNtoTP), se = FALSE, color = "blue") + #significant slope
   geom_vline(xintercept = as.numeric(NtoPinsitu$Datelake[470]), lty = 5)
 
 #### TDN:TDP ----
@@ -140,19 +148,26 @@ summary(TDNtoTDPbreak)
     # Breakpoints at observation number:
     #   m = 1   558
 
+shapiro.test(NtoPinsitu$TDNtoTDP)
+    # Shapiro-Wilk normality test
+    # 
+    # data:  NtoPinsitu$TDNtoTDP
+    # W = 0.21698, p-value < 2.2e-16
+qqnorm(NtoPinsitu$TDNtoTDP)
+
 TDNtoTDPbydate <- lm(NtoPinsitu$TDNtoTDP ~ NtoPinsitu$Datelake)
 summary(TDNtoTDPbydate)
     # Coefficients:
     #   Estimate Std. Error t value Pr(>|t|)    
-    # (Intercept)         1.251e+02  1.561e+01   8.013  4.6e-15 ***
-    #   NtoPinsitu$Datelake 3.643e-03  1.881e-03   1.937   0.0531 .  
+    # (Intercept)         1.349e+02  1.421e+01   9.492   <2e-16 ***
+    #   NtoPinsitu$Datelake 1.692e-03  1.532e-03   1.104     0.27    
     # ---
     #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
     # 
-    # Residual standard error: 219.8 on 712 degrees of freedom
+    # Residual standard error: 211.2 on 779 degrees of freedom
     # (191 observations deleted due to missingness)
-    # Multiple R-squared:  0.005242,	Adjusted R-squared:  0.003845 
-    # F-statistic: 3.752 on 1 and 712 DF,  p-value: 0.05313
+    # Multiple R-squared:  0.001563,	Adjusted R-squared:  0.0002811 
+    # F-statistic: 1.219 on 1 and 779 DF,  p-value: 0.2698
 
 TDNtoTDPperiod1 <- lm(NtoPinsitu$TDNtoTDP[1:557] ~ NtoPinsitu$Datelake[1:557])
 summary(TDNtoTDPperiod1)
@@ -168,19 +183,19 @@ summary(TDNtoTDPperiod1)
     # Multiple R-squared:  0.03423,	Adjusted R-squared:  0.03187 
     # F-statistic: 14.46 on 1 and 408 DF,  p-value: 0.0001649
 
-TDNtoTDPperiod2 <- lm(NtoPinsitu$TDNtoTDP[558:905] ~ NtoPinsitu$Datelake[558:905])
+TDNtoTDPperiod2 <- lm(NtoPinsitu$TDNtoTDP[558:972] ~ NtoPinsitu$Datelake[558:972])
 summary(TDNtoTDPperiod2)
     # Coefficients:
     #   Estimate Std. Error t value Pr(>|t|)  
-    # (Intercept)                   1.778e+02  9.233e+01   1.926   0.0551 .
-    # NtoPinsitu$Datelake[558:905] -9.062e-04  7.954e-03  -0.114   0.9094  
+    # (Intercept)                  217.588484  67.213131   3.237  0.00132 **
+    #   NtoPinsitu$Datelake[558:972]  -0.004776   0.005331  -0.896  0.37095   
     # ---
     #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
     # 
-    # Residual standard error: 325.8 on 302 degrees of freedom
+    # Residual standard error: 295.8 on 369 degrees of freedom
     # (44 observations deleted due to missingness)
-    # Multiple R-squared:  4.298e-05,	Adjusted R-squared:  -0.003268 
-    # F-statistic: 0.01298 on 1 and 302 DF,  p-value: 0.9094
+    # Multiple R-squared:  0.00217,	Adjusted R-squared:  -0.0005342 
+    # F-statistic: 0.8025 on 1 and 369 DF,  p-value: 0.3709
 
 TDNtoTDPplot <-
 ggplot(NtoPinsitu, aes(x = Datelake)) +
@@ -190,7 +205,7 @@ ggplot(NtoPinsitu, aes(x = Datelake)) +
   xlab(" ") +
   theme(legend.position = c(0.9,0.9)) +
   geom_smooth(method = 'lm', data = NtoPinsitu[1:557,], aes(x = Datelake, y = TDNtoTDP), se = FALSE, color = "blue") + #significant slope
-  geom_smooth(method = 'lm', data = NtoPinsitu[558:905,], aes(x = Datelake, y = TDNtoTDP), se = FALSE, color = "black") + #non-significant slope
+  geom_smooth(method = 'lm', data = NtoPinsitu[558:972,], aes(x = Datelake, y = TDNtoTDP), se = FALSE, color = "black") + #non-significant slope
   geom_vline(xintercept = as.numeric(NtoPinsitu$Datelake[558]), lty = 5)
 
 #### DIN:TDP (not used) ----
@@ -215,15 +230,15 @@ PNtoPPbydate <- lm(NtoPinsitu$PNtoPP ~ NtoPinsitu$Datelake)
 summary(PNtoPPbydate)
     # Coefficients:
     #   Estimate Std. Error t value Pr(>|t|)    
-    # (Intercept)         37.3428413  2.0162596  18.521  < 2e-16 ***
-    #   NtoPinsitu$Datelake -0.0007438  0.0002437  -3.053  0.00235 ** 
+    # (Intercept)         36.3822046  1.8676529  19.480  < 2e-16 ***
+    #   NtoPinsitu$Datelake -0.0005515  0.0002026  -2.722  0.00663 ** 
     #   ---
     #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
     # 
-    # Residual standard error: 28.77 on 708 degrees of freedom
-    # (195 observations deleted due to missingness)
-    # Multiple R-squared:  0.01299,	Adjusted R-squared:  0.0116 
-    # F-statistic: 9.319 on 1 and 708 DF,  p-value: 0.002352
+    # Residual standard error: 28.02 on 772 degrees of freedom
+    # (198 observations deleted due to missingness)
+    # Multiple R-squared:  0.009507,	Adjusted R-squared:  0.008224 
+    # F-statistic:  7.41 on 1 and 772 DF,  p-value: 0.006633
 
 PNtoPPplot <-
   ggplot(NtoPinsitu, aes(x = Datelake)) +
@@ -238,49 +253,49 @@ PNtoPPplot <-
 DINbreak = breakpoints (DIN_molar ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 summary(DINbreak)
     # Breakpoints at observation number:
-    #   m = 1   185
+    #   m = 1   176
 
 DINbydate <- lm(NtoPinsitu$DIN_molar ~ NtoPinsitu$Datelake)
 summary(DINbydate)
     # Coefficients:
-    #   Estimate Std. Error t value Pr(>|t|)    
-    # (Intercept)          8.143e+00  7.607e-01  10.704  < 2e-16 ***
-    #   NtoPinsitu$Datelake -3.200e-04  9.205e-05  -3.476  0.00054 ***
+    # Estimate Std. Error t value Pr(>|t|)    
+    # (Intercept)          8.076e+00  7.002e-01  11.534  < 2e-16 ***
+    #   NtoPinsitu$Datelake -3.058e-04  7.651e-05  -3.997 7.02e-05 ***
     #   ---
     #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
     # 
-    # Residual standard error: 10.82 on 718 degrees of freedom
-    # (185 observations deleted due to missingness)
-    # Multiple R-squared:  0.01655,	Adjusted R-squared:  0.01518 
-    # F-statistic: 12.08 on 1 and 718 DF,  p-value: 0.0005398
+    # Residual standard error: 10.47 on 778 degrees of freedom
+    # (192 observations deleted due to missingness)
+    # Multiple R-squared:  0.02012,	Adjusted R-squared:  0.01886 
+    # F-statistic: 15.98 on 1 and 778 DF,  p-value: 7.024e-05
 
-DINperiod1 <- lm(NtoPinsitu$DIN_molar[1:184] ~ NtoPinsitu$Datelake[1:184])
+DINperiod1 <- lm(NtoPinsitu$DIN_molar[1:176] ~ NtoPinsitu$Datelake[1:176])
 summary(DINperiod1)
     # Coefficients:
     #   Estimate Std. Error t value Pr(>|t|)    
-    # (Intercept)                12.2555964  1.4764695   8.301 5.07e-14 ***
-    #   NtoPinsitu$Datelake[1:184] -0.0035193  0.0009763  -3.605 0.000422 ***
+    # (Intercept)                12.329699   1.513276   8.148 1.48e-13 ***
+    #   NtoPinsitu$Datelake[1:176] -0.003616   0.001040  -3.478 0.000664 ***
     #   ---
     #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
     # 
-    # Residual standard error: 10.44 on 153 degrees of freedom
-    # (29 observations deleted due to missingness)
-    # Multiple R-squared:  0.07828,	Adjusted R-squared:  0.07226 
-    # F-statistic: 12.99 on 1 and 153 DF,  p-value: 0.0004222
+    # Residual standard error: 10.59 on 147 degrees of freedom
+    # (27 observations deleted due to missingness)
+    # Multiple R-squared:  0.07604,	Adjusted R-squared:  0.06975 
+    # F-statistic:  12.1 on 1 and 147 DF,  p-value: 0.0006643
 
-DINperiod2 <- lm(NtoPinsitu$DIN_molar[185:905] ~ NtoPinsitu$Datelake[185:905])
+DINperiod2 <- lm(NtoPinsitu$DIN_molar[176:972] ~ NtoPinsitu$Datelake[176:972])
 summary(DINperiod2)
     # Coefficients:
     #   Estimate Std. Error t value Pr(>|t|)    
-    # (Intercept)                   7.4890958  1.1929977   6.278 6.87e-10 ***
-    #   NtoPinsitu$Datelake[185:905] -0.0002480  0.0001283  -1.932   0.0539 .  
-    # ---
+    # (Intercept)                   7.341e+00  1.012e+00   7.255 1.19e-12 ***
+    #   NtoPinsitu$Datelake[176:972] -2.354e-04  9.975e-05  -2.360   0.0186 *  
+    #   ---
     #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
     # 
-    # Residual standard error: 10.84 on 563 degrees of freedom
-    # (156 observations deleted due to missingness)
-    # Multiple R-squared:  0.006586,	Adjusted R-squared:  0.004822 
-    # F-statistic: 3.733 on 1 and 563 DF,  p-value: 0.05386
+    # Residual standard error: 10.36 on 630 degrees of freedom
+    # (165 observations deleted due to missingness)
+    # Multiple R-squared:  0.008762,	Adjusted R-squared:  0.007189 
+    # F-statistic: 5.569 on 1 and 630 DF,  p-value: 0.01858
 
 DIN_molarplot <-
 ggplot(NtoPinsitu, aes(x = Datelake)) +
@@ -289,9 +304,9 @@ ggplot(NtoPinsitu, aes(x = Datelake)) +
   ylab(expression(DIN ~ (mu*M))) +
   xlab(" ") +
   theme(legend.position = c(0.9,0.9)) +
-  geom_smooth(method = 'lm', data = NtoPinsitu[1:184,], aes(x = Datelake, y = DIN_molar), se = FALSE, color = "blue") + #significant slope
-  geom_smooth(method = 'lm', data = NtoPinsitu[185:905,], aes(x = Datelake, y = DIN_molar), se = FALSE, color = "blue", lty = 5) + #marginally significant slope
-  geom_vline(xintercept = as.numeric(NtoPinsitu$Datelake[185]), lty = 5)
+  geom_smooth(method = 'lm', data = NtoPinsitu[1:176,], aes(x = Datelake, y = DIN_molar), se = FALSE, color = "blue") + #significant slope
+  geom_smooth(method = 'lm', data = NtoPinsitu[176:972,], aes(x = Datelake, y = DIN_molar), se = FALSE, color = "blue") + # significant slope
+  geom_vline(xintercept = as.numeric(NtoPinsitu$Datelake[176]), lty = 5)
 
 #### Fertilizer N:P ----
 FertNtoPplot <-
