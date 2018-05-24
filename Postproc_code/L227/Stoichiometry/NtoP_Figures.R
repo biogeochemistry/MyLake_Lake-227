@@ -7,6 +7,7 @@ head(NtoPLake)
 NtoPInflow <- read.csv("NP_Stoichiometry_Inflow.csv")
 attach(NtoPInflow)
 head(NtoPInflow)
+CyanoPercent <- read.csv("../Phytoplankton/L227_cyanopercent.csv")
 
 #Change concentrations from mass (ug/L or mg/d) to molar (umol/L or mmol/d)
 Fert_TP_molar <- Fert_TP_mg.d/30.97
@@ -41,9 +42,10 @@ Datelake <- as.Date(NtoPLake$Date, "%m/%d/%y")
 Dateinflow <- as.Date(NtoPInflow$Date, "%m/%d/%y")
 Monthlake <- as.numeric(format(Datelake, "%m"))
 Monthinflow <- as.numeric(format(Dateinflow, "%m"))
+CyanoPercent$Date <- as.Date(CyanoPercent$Date, "%m/%d/%y")
 
 #Create data frames for N:P stoichiometry in lake and inflows for May-October
-NtoPinsitu <- data.frame(Datelake, Monthlake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP, DIN_molar)
+NtoPinsitu <- data.frame(Datelake, Monthlake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP, DIN_molar, PP)
 NtoPinsitu <- filter(NtoPinsitu, Monthlake > 4 & Monthlake < 11)
 NtoPinput <- data.frame(Dateinflow, Monthinflow, Fert_NtoP, Inflow_NtoP, Input_NtoP, Input_TN_molar)
 NtoPinput <- filter(NtoPinput, Monthinflow > 4 & Monthinflow < 11)
@@ -69,8 +71,23 @@ theme_set(theme_std())
 
 library(strucchange)
 
+#### cyanopercent ----
+shapiro.test(CyanoPercent$Nfixcyano.percent)
+    # Shapiro-Wilk normality test
+    # 
+    # data:  CyanoPercent$Nfixcyano.percent
+    # W = 0.88162, p-value < 2.2e-16
+
+#### PP ----
+shapiro.test(NtoPinsitu$PP)
+    # Shapiro-Wilk normality test
+    # 
+    # data:  NtoPinsitu$PP_molar
+    # W = 0.74035, p-value < 2.2e-16
+
 #### TN:TP ----
 TNtoTPbreak = breakpoints (TNtoTP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
+TNtoTPbreak = breakpoints (log(TNtoTP) ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 summary(TNtoTPbreak)
   # Breakpoints at observation number:
   # m = 1   470
@@ -132,7 +149,7 @@ summary(TNtoTPperiod2)
     # F-statistic: 13.89 on 1 and 419 DF,  p-value: 0.0002209
 
 TNtoTPplot <- 
-  ggplot(NtoPinsitu, aes(x = Datelake, y = TNtoTP)) +
+  ggplot(NtoPinsitu, aes(x = Datelake, y = log(TNtoTP))) +
   geom_point(aes(y = TNtoTP), size = 0.5) +
   #ylim(0,200) +
   ylab(expression(TN:TP)) +
@@ -144,6 +161,7 @@ TNtoTPplot <-
 
 #### TDN:TDP ----
 TDNtoTDPbreak = breakpoints (TDNtoTDP ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
+TDNtoTDPbreak = breakpoints (log(TDNtoTDP) ~ Datelake, h = 20, data = NtoPinsitu, breaks=1)
 summary(TDNtoTDPbreak)
     # Breakpoints at observation number:
     #   m = 1   558
@@ -315,7 +333,7 @@ ggplot(NtoPinput, aes(x = Dateinflow, y = Fert_NtoP)) +
   ylim(0,50) +
   ylab(expression(FertN:FertP)) +
   xlab(" ") +
-  theme(legend.position = c(0.9,0.9)) 
+  theme(axis.text.x=element_blank()) 
 
 #### Inflow N:P ----
 Inflow_NtoPbreak = breakpoints (Inflow_NtoP ~ Dateinflow, h = 20, data = NtoPinput, breaks=1)
@@ -386,3 +404,242 @@ ggplot(NtoPinput, aes(x = Dateinflow)) +
 #### multiplot ----
 library(gridExtra)
 grid.arrange(TNtoTPplot, TDNtoTDPplot, PNtoPPplot, DIN_molarplot, FertNtoPplot, NtoPinputplot, ncol = 3)
+
+
+#### non-parametric trend and changepoint testing for TN:TP, TDN:TDP, PP (non-normally distributed)
+library(trend)
+TNtoTPdataset <- NtoPinsitu %>%
+  select(Datelake, TNtoTP) %>%
+  drop_na()
+rownames(TNtoTPdataset) <- NULL
+
+TDNtoTDPdataset <- NtoPinsitu %>%
+  select(Datelake, TDNtoTDP) %>%
+  drop_na()
+rownames(TDNtoTDPdataset) <- NULL
+
+PPdataset <- NtoPinsitu %>%
+  select(Datelake, PP) %>%
+  drop_na()
+rownames(PPdataset) <- NULL
+
+# Pettitt's test: detects a single changepoint in hydrological/climate series with continuous data
+
+TNtoTPvec <- as.vector(TNtoTPdataset$TNtoTP)
+pettitt.test(TNtoTPvec)
+    # data:  TNtoTPvec
+    # U* = 30578, p-value = 3.796e-06
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 470 
+
+TDNtoTDPvec <- as.vector(TDNtoTDPdataset$TDNtoTDP)
+pettitt.test(TDNtoTDPvec)
+    # data:  TDNtoTDPvec
+    # U* = 27951, p-value = 0.0001079
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 120 
+
+PPvec <- as.vector(PPdataset$PP)
+pettitt.test(PPvec)
+    # data:  PPvec
+    # U* = 31464, p-value = 1.245e-05
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 179 
+
+Cyanovec <- as.vector(CyanoPercent$Nfixcyano.percent)
+pettitt.test(Cyanovec)
+    # data:  Cyanovec
+    # U* = 40536, p-value < 2.2e-16
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 87 
+
+# Using shannon index requires running the phytoplankton portion of Unusual Year Analysis.
+Shannonvec <- as.vector(Shannondataset$ShannonIndex)
+pettitt.test(Shannonvec)
+    # data:  Shannonvec
+    # U* = 33428, p-value = 3.019e-15
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 232 
+
+Shannonmeanvec <- as.vector(MeanShannon$shannon)
+pettitt.test(Shannonmeanvec)
+    # U* = 344, p-value = 0.0009788
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 16 
+
+# Mann-Kendall test: detect monotonic trends in series of environmental/climate/hydrological data
+mk.test(TNtoTPvec[1:469])
+    # data:  TNtoTPvec[1:469]
+    # z = 4.0215, n = 469, p-value = 5.782e-05
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 1.363800e+04 1.149894e+07 1.242727e-01 
+
+mk.test(TNtoTPvec[470:752])
+    # data:  TNtoTPvec[470:752]
+    # z = 0.77053, n = 283, p-value = 0.441
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 1.227000e+03 2.531613e+06 3.075342e-02 
+
+mk.test(TDNtoTDPvec[1:119])
+    # data:  TDNtoTDPvec[1:119]
+    # z = 1.4424, n = 119, p-value = 0.1492
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 6.290000e+02 1.895640e+05 8.960752e-02 
+
+mk.test(TDNtoTDPvec[120:781])
+    # data:  TDNtoTDPvec[120:781]
+    # z = -3.5267, n = 662, p-value = 0.0004207
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -2.004700e+04  3.230782e+07 -9.167299e-02 
+
+mk.test(PPvec[1:178])
+    # data:  PPvec[1:178]
+    # z = 1.3246, n = 178, p-value = 0.1853
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 1.053000e+03 6.307977e+05 6.781124e-02 
+
+mk.test(PPvec[179:774])
+    # data:  PPvec[179:774]
+    # z = -6.4515, n = 596, p-value = 1.108e-10
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -3.131600e+04  2.356052e+07 -1.787924e-01 
+
+mk.test(Cyanovec[1:86])
+    # data:  Cyanovec[1:86]
+    # z = 4.1489, n = 86, p-value = 3.34e-05
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 4.910000e+02 1.394833e+04 3.650356e-01 
+
+mk.test(Cyanovec[87:611])
+    # data:  Cyanovec[87:611]
+    # z = -1.4936, n = 525, p-value = 0.1353
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -5.998000e+03  1.612026e+07 -4.370521e-02 
+
+mk.test(Shannonvec[1:231])
+    # data:  Shannonvec[1:231]
+    # z = 4.5977, n = 231, p-value = 4.272e-06
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 5.399000e+03 1.378428e+06 2.032373e-01 
+
+mk.test(Shannonvec[232:581])
+    # data:  Shannonvec[232:581]
+    # z = 3.5962, n = 350, p-value = 0.0003228
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 7.867000e+03 4.784208e+06 1.288088e-01 
+
+
+# Sen's slope: computes slope and intercept, plus confidence limits
+# sens.slope in trend does not provide intercept
+
+library(colormap)
+colormap(colormap = colormaps$viridis, nshades = 72, format = "hex",
+         alpha = 1, reverse = FALSE)
+scales::show_col(colormap(colormap = colormaps$magma, nshades=15))
+
+TNtoTPearly <- TNtoTPdataset[1:469,]
+TNtoTPlate <- TNtoTPdataset[470:752,]
+TNtoTPplot <- 
+  ggplot() +
+  geom_point(data = TNtoTPearly, aes(x = Datelake, y = TNtoTP), size = 0.5, color = "#fc986cff") + #significant positive slope
+  geom_point(data = TNtoTPlate, aes(x = Datelake, y = TNtoTP), size = 0.5, color = "gray40") + #non-significant slope
+  ylim(0,200) +
+  ylab(expression(TN:TP)) +
+  xlab(" ") +
+  theme(axis.text.x=element_blank()) + 
+  geom_vline(xintercept = as.numeric(TNtoTPdataset$Datelake[470]), lty = 5)
+
+TDNtoTDPearly <- TDNtoTDPdataset[1:119,]
+TDNtoTDPlate <- TDNtoTDPdataset[120:781,]
+TDNtoTDPplot <- 
+  ggplot() +
+  geom_point(data = TDNtoTDPearly, aes(x = Datelake, y = TDNtoTDP), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = TDNtoTDPlate, aes(x = Datelake, y = TDNtoTDP), size = 0.5, color = "#5d177dff") + #non-significant slope
+  ylim(0,300) +
+  ylab(expression(TDN:TDP)) +
+  xlab(" ") +
+  theme(axis.text.x=element_blank()) + 
+  geom_vline(xintercept = as.numeric(TDNtoTDPdataset$Datelake[120]), lty = 5)
+
+PPearly <- PPdataset[1:178,]
+PPlate <- PPdataset[179:774,]
+PPplot <- 
+  ggplot() +
+  geom_line(data = PPdataset, aes(x = Datelake, y = PP), color = "#b5367aff") +
+  geom_point(data = PPearly, aes(x = Datelake, y = PP), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = PPlate, aes(x = Datelake, y = PP), size = 0.5, color = "#5d177dff") + #non-significant slope
+  #ylim(0,200) +
+  ylab(expression(PP)) +
+  xlab(" ") +
+  theme() + 
+  geom_vline(xintercept = as.numeric(PPdataset$Datelake[179]), lty = 5)
+
+cyanoplot <- 
+  ggplot() +
+  geom_point(data = CyanoPercent, aes(x = Date, y = Nfixcyano.percent), size = 0.5) +
+  ylab(expression("Prop Cyano")) + 
+  xlab("") + 
+  theme(axis.text.x=element_blank())
+
+Shannonearly <- Shannondataset[1:231,]
+Shannonlate <- Shannondataset[232:581,]
+Shannonearly$ShannonIndex <- round(Shannonearly$ShannonIndex, digits = 2)
+Shannonlate$ShannonIndex <- round(Shannonlate$ShannonIndex, digits = 2)
+
+Shannonplot <- 
+  ggplot() +
+  geom_point(data = Shannonearly, aes(x = Date, y = ShannonIndex), size = 0.5, color = "#fc986cff") + #significant positive slope
+  geom_point(data = Shannonlate, aes(x = Date, y = ShannonIndex), size = 0.5, color = "#fc986cff") + #non-significant slope
+  #ylim(0,200) +
+  ylab(expression("Shannon Index")) +
+  xlab(" ") +
+  theme(axis.text.x=element_blank()) + 
+  geom_vline(xintercept = as.numeric(Shannondataset$Date[232]), lty = 5)
+
+Shannonmeanplot <- 
+  ggplot(MeanShannon, aes(x = Year, y = shannon)) +
+  geom_point(size = 0.5) + 
+  geom_errorbar(aes(ymin = shannon - sdshannon, ymax = shannon + sdshannon)) + 
+  ylab(expression("Shannon Index")) +
+  xlab(" ")
+
+
+library(gridExtra)
+library(ggpubr)
+library(gtable)
+grid.arrange(FertNtoPplot, TNtoTPplot, cyanoplot, TDNtoTDPplot, Shannonplot, PPplot,  ncol = 2)
+
+g = rbind(FertNtoPplot, TNtoTPplot, cyanoplot, TDNtoTDPplot, Shannonplot, PPplot, size = "first")
+g$widths = unit.pmax(FertNtoPplot$widths, TNtoTPplot$widths, cyanoplot$widths, TDNtoTDPplot$widths, Shannonplot$widths, PPplot$widths)

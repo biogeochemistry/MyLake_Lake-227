@@ -284,9 +284,14 @@ shan$sampling <- substring(shan$site, 6)
 
 MeanShannon <- aggregate(shan, list(Year = shan$year), mean)
 MeanShannon <- select(MeanShannon, Year:shannon)
-MeanShannon <- mutate(MeanShannon, Date = as.Date(MeanShannon$Year, "%Y"), Class = 0)
+#MeanShannon <- mutate(MeanShannon, Date = as.Date(MeanShannon$Year, "%Y"), Class = 0)
+SDShannon <- aggregate(shan, list(Year = shan$year), sd)
+SDShannon <- select(SDShannon, Year:shannon)
+#SDShannon <- mutate(SDShannon, Date = as.Date(MeanShannon$Year, "%Y"), Class = 0)
+MeanShannon <- mutate(MeanShannon, sdshannon = SDShannon$shannon)
+MeanShannon$Year <- as.numeric(MeanShannon$Year)
 
-MeanShannon$Year <- as.numeric(format(MeanShannon$Year, "%Y"))
+MeanShannon$Year <- as.numeric(format(as.date(MeanShannon$Year, "%Y"))
 inflowdata <- mutate(inflowdata, Year = as.numeric(format(inflowdata$Date, "%Y")))  %>% 
   mutate(inflowdata, Class = 0)
 MeanShannon$Year <- format(MeanShannon$Year , "%Y"))
@@ -306,7 +311,13 @@ MeanShannon$Class <- ifelse(MeanShannon$Year == 1987 | MeanShannon$Year == 1980 
                                      MeanShannon$Year == 2015 | MeanShannon$Year == 2001, 
                                    "Low", "Typical"))  
 
-                            
+shan$sampling <- as.numeric(shan$sampling)
+shan <- shan %>%
+  arrange(year, sampling)
+Shannondataset <- as.data.frame(sampling.dates[, "start.date"])
+Shannondataset <- mutate(Shannondataset, ShannonIndex = shan$shannon)
+colnames(Shannondataset) <- c("Date", "ShannonIndex")
+
 #### Plots of variables over time ----
 
 InflowVolumeplot <- 
