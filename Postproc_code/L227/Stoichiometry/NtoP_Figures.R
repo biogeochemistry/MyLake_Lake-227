@@ -635,6 +635,22 @@ Shannonmeanplot <-
   ylab(expression("Shannon Index")) +
   xlab(" ")
 
+var.test(Shannondataset$ShannonIndex[Shannondataset$Date < "1975-01-01"], 
+         Shannondataset$ShannonIndex[Shannondataset$Date > "1989-12-31"])
+var.test(Shannondataset$ShannonIndex[Shannondataset$Date < "1975-01-01"], 
+         Shannondataset$ShannonIndex[Shannondataset$Date > "1975-01-01" & Shannondataset$Date < "1989-12-31"])
+var.test(Shannondataset$ShannonIndex[Shannondataset$Date > "1975-01-01" & Shannondataset$Date < "1989-12-31"], 
+         Shannondataset$ShannonIndex[Shannondataset$Date > "1989-12-31"])
+var.test(Shannondataset$ShannonIndex[Shannondataset$Date < "1989-12-31"], 
+         Shannondataset$ShannonIndex[Shannondataset$Date > "1989-12-31"])
+var.test(PPdataset$PP[PPdataset$Datelake < "1989-12-31"], 
+         PPdataset$PP[PPdataset$Datelake > "1989-12-31"])
+var.test(PPdataset$PP[PPdataset$Datelake < "1975-01-01"], 
+         PPdataset$PP[PPdataset$Datelake > "1989-12-31"])
+var.test(PPdataset$PP[PPdataset$Datelake > "1975-01-01" & PPdataset$Datelake < "1989-12-31"], 
+         PPdataset$PP[PPdataset$Datelake > "1989-12-31"])
+var.test(PPdataset$PP[PPdataset$Datelake < "1975-01-01"], 
+         PPdataset$PP[PPdataset$Datelake > "1975-01-01" & PPdataset$Datelake < "1989-12-31"])
 
 library(gridExtra)
 library(ggpubr)
