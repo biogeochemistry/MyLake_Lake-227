@@ -35,8 +35,8 @@ Data = loadData(MyL_dates);
 varyindexes = [25 73 74 75 76 77 78 85 124]; %I_scO, k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2, accel
 
 % Setting up the min and max boundaries for each covarying set of parameters.
-minparam = [0.5, 0.2, 0.02, 0.01, 0.04, 0.01, 0.004, 0.015,  1];
-maxparam = [1.2, 0.8, 0.08, 0.02, 0.08, 0.04, 0.016, 0.006, 30];
+minparam = [0.5, 0.2, 0.02, 0.01, 0.02, 0.01, 0.004, 0.004,  1];
+maxparam = [1.2, 0.8, 0.08, 0.04, 0.08, 0.04, 0.016, 0.016, 30];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
