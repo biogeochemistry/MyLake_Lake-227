@@ -12,8 +12,8 @@ population_size = 48;
 max_generations = 32;
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
-m_start = [1979, 6, 27];
-m_stop = [1979, 12, 31];
+m_start = [1979, 1, 1];
+m_stop = [1981, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
@@ -35,12 +35,12 @@ Data = loadData(MyL_dates);
 varyindexes = [25 73 74 75 76 77 78 85 124]; %I_scO, k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2, accel
 
 % Setting up the min and max boundaries for each covarying set of parameters.
-minparam = [0.5, 0.04, 0.04, 0.175, 0.104, 0.002, 0.0031, 0.0329, 10];
-maxparam = [1, 4, 4, 17.5, 10.4, 0.2, 0.31, 3.29, 30];
+minparam = [0.5, 0.2, 0.02, 0.01, 0.04, 0.01, 0.004, 0.015,  1];
+maxparam = [1.2, 0.8, 0.08, 0.02, 0.08, 0.04, 0.016, 0.006, 30];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
-initial_guess = [1, 0.4, 0.4, 1.75, 1.04, 0.021, 0.031, 0.329, 21.5];
+initial_guess = [1, 0.4, 0.04, 0.02, 0.04, 0.02, 0.008, 0.008, 35];
 
 modeleval      = @MyLake_227_model_evaluation;
 errfun         = @error_function_oxygen;
@@ -54,7 +54,7 @@ do_MyLake_optimization(m_start, m_stop, K_sediments, K_lake, Data, ...
 
 function Data = loadData(MyL_dates)
     rawcsvdata = csvread('Postproc_code/L227/OutputForOptimization.csv', 1, 1);
-    rawdatadates = datenum(rawcsvdata(:,8:10));
+    rawdatadates = datenum(rawcsvdata(:,9:11));
     withinmodelrange = (rawdatadates >= MyL_dates(1)) & (rawdatadates <= MyL_dates(end));
     rawO24m = rawcsvdata(:,4);
     rawO24m(rawO24m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
