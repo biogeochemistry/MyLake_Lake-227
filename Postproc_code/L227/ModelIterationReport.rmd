@@ -82,7 +82,7 @@ mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
 
 # Convert time object
 obs$date <- as.Date(obs$date, format = "%Y-%m-%d") #Converts data to date structure
-obs_temp$date <- as.Date(obs_temp$date) #, format = "%Y-%m-%d") #Converts data to date structure
+obs_temp$date <- as.Date(obs_temp$date, format = "%m/%d/%y") #Converts data to date structure
 obs_O2$date <- as.Date(obs_O2$date, format = "%d/%m/%y") #Converts data to date structure
 obs_Fe$date <- as.Date(obs_Fe$date, format = "%d/%m/%y") #Converts data to date structure
 mod$date <- as.Date(mod$date, format = "%Y-%m-%d") #Converts data to date structure
@@ -293,17 +293,19 @@ mod.match.daily$Month <- as.numeric(format(mod.match.daily$date, "%m"))
 mod.match.daily$Year <- format(mod.match.daily$date, "%Y")
 mod.match.daily <- mod.match.daily %>% 
   mutate(Day = as.numeric(format(mod.match.daily$date, "%d")))  %>% 
+  filter(Year != 1969) %>% #remove spinup year
   filter(Year != 1996) %>% #1996 was the pike year
   filter(Month > 4 & Month < 11)  %>% 
   filter(Month == 5 & Day > 15 | Month > 5 )
+mod.match.daily[845, 5] <- 0
 
 mod.match.daily$obs.PP[mod.match.daily$Month == 5 & mod.match.daily$Day == 16] <- 0
 obs.PP.interpolated <- na.approx(mod.match.daily$obs.PP)
 # remove dates before and after the first and last measured values, respectively
-mod.match.daily <- mod.match.daily[-c(1, 4341:4373),]
+#mod.match.daily <- mod.match.daily[-c(837:845),]
 mod.match.daily$obs.PP <- obs.PP.interpolated
 mod.match.cumulative <- ddply(mod.match.daily, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
-mod.match.cumulative <- filter(mod.match.cumulative, Year > 1990)
+#mod.match.cumulative <- filter(mod.match.cumulative, Year > 1990)
 # calculate end-of season comparison between cumulative modeled vs. observed PP
 end.of.season.cumulative <- as.data.frame(mod.match.cumulative) %>%
   filter(Day == 31 & Month == 10) %>%
@@ -312,6 +314,10 @@ end.of.season.cumulative <- as.data.frame(mod.match.cumulative) %>%
   mutate(mod.divided.obs.PP = Cum.Sum.mod.PP/Cum.Sum.obs.PP)
 summary(end.of.season.cumulative$mod.divided.obs.PP)
 sd(end.of.season.cumulative$mod.divided.obs.PP)
+
+cumPPregression <- lm (end.of.season.cumulative$Cum.Sum.obs.PP ~ end.of.season.cumulative$Cum.Sum.mod.PP)
+summary(cumPPregression)$adj.r.squared
+mse.cumPP <- mean(residuals(cumPPregression)^2); rmse.cumPP <- sqrt(mse.cumPP); rmse.cumPP
 
 PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 0.5) +
