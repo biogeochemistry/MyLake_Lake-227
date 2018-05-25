@@ -7,13 +7,13 @@
 % population_size than it is to have a large max_generations since it is
 % important to sample a large part of the parameter space before starting
 % to sample around the best fits.
-population_size = 48;  
+population_size = 36;  % 3 params 
 % Max generations to run. The maximal amount of runs is population_size*max_generations.
-max_generations = 32;
+max_generations = 8; % 
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
-m_start = [1979, 1, 1];
-m_stop = [1981, 12, 31];
+m_start = [1971, 1, 1];
+m_stop = [1975, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
@@ -32,15 +32,15 @@ Data = loadData(MyL_dates);
 
 % Example: (g_twty (parameter nr 50) is always given the same value as
 % g_twty2 (parameter nr 58) and so on ..)
-varyindexes = [25 73 74 75 76 77 78 85 124]; %I_scO, k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2, accel
+varyindexes = [25 71 73 74 75 76 77 78 85]; %I_scO, wc_factor k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2 
 
 % Setting up the min and max boundaries for each covarying set of parameters.
-minparam = [0.5, 0.2, 0.02, 0.01, 0.02, 0.01, 0.004, 0.004,  1];
-maxparam = [1.2, 0.8, 0.08, 0.04, 0.08, 0.04, 0.016, 0.016, 30];
+minparam = [0.5, 0.05,  1, 1, 1, 1, 0.1, 0.003, 0.008];
+maxparam = [1.2, 0.2, 1, 1, 1, 1, 0.6, 0.003, 0.008];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
-initial_guess = [1, 0.4, 0.04, 0.02, 0.04, 0.02, 0.008, 0.008, 35];
+initial_guess = [1, 0.1, 1, 1, 1, 1, 0.04, 0.003, 0.008];
 
 modeleval      = @MyLake_227_model_evaluation;
 errfun         = @error_function_oxygen;
@@ -91,8 +91,8 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     [MyLake_results, Sediment_results]  = fn_MyL_application(m_start, m_stop, sediment_params, lake_params, use_INCA, run_INCA, run_ID, clim_ID, save_initial_conditions); % runs the model and outputs obs and sim
     
     ModelResult.O24m = transpose(MyLake_results.basin1.concentrations.O2(8,:)/1000);
-    ModelResult.O26m = transpose(MyLake_results.basin1.concentrations.O2(12,:)/1000);
-    ModelResult.O28m = transpose(MyLake_results.basin1.concentrations.O2(16,:)/1000);
+ %   ModelResult.O26m = transpose(MyLake_results.basin1.concentrations.O2(12,:)/1000);
+ %   ModelResult.O28m = transpose(MyLake_results.basin1.concentrations.O2(16,:)/1000);
     ModelResult.O210m = transpose(MyLake_results.basin1.concentrations.O2(20,:)/1000);
 end
 
@@ -104,10 +104,11 @@ end
 function err = error_function_oxygen(ModelResult, Data)
     
     MatchedModelO24m = ModelResult.O24m(Data.date_mask);
-    MatchedModelO26m = ModelResult.O26m(Data.date_mask);
-    MatchedModelO28m = ModelResult.O28m(Data.date_mask);
+   % MatchedModelO26m = ModelResult.O26m(Data.date_mask);
+   % MatchedModelO28m = ModelResult.O28m(Data.date_mask);
     MatchedModelO210m = ModelResult.O210m(Data.date_mask);
-    err = nansum (((MatchedModelO24m - Data.O24m).^2) + ((MatchedModelO26m - Data.O26m).^2)+ ((MatchedModelO28m - Data.O28m).^2) + ((MatchedModelO210m - Data.O210m).^2));
+%   err = nansum (((MatchedModelO24m - Data.O24m).^2) + ((MatchedModelO26m - Data.O26m).^2)+ ((MatchedModelO28m - Data.O28m).^2) + ((MatchedModelO210m - Data.O210m).^2));
+   err = nansum (((MatchedModelO24m - Data.O24m).^2) + ((MatchedModelO210m - Data.O210m).^2)); % TOOK OUT 6 AND 8 M DEPTH
 end
 
 %% END project specific evaluation functions
