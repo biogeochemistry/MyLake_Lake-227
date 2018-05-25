@@ -623,27 +623,114 @@ NashSutcliffe.O210m <- NSE(mod3.match$mod.Oxy10m, mod3.match$obs.O2.10m); NashSu
 # summary(Feregression10m)
 # mse <- mean(residuals(Feregression10m)^2); rmse <- sqrt(mse); rmse
 ```
+# Overall model performance: Target plot
+```{r}
+# Temperature 1 m
+model.mean.temp1m <- mean(mod2.match$mod.Temp1m)
+obs.mean.temp1m <- mean(mod2.match$obs.Temp1m)
+model.sd.temp1m <- sd(mod2.match$mod.Temp1m)
+obs.sd.temp1m <- sd(mod2.match$obs.Temp1m)
+model.residuals.temp1m <- mod2.match$mod.Temp1m - model.mean.temp1m
+obs.residuals.temp1m <- mod2.match$obs.Temp1m - obs.mean.temp1m
+unbiased.RMSD.temp1m <- sqrt(mean((model.residuals.temp1m - obs.residuals.temp1m)^2))
+normalized.bias.temp1m <- (model.mean.temp1m - obs.mean.temp1m )/obs.sd.temp1m
+normalized.unbiased.RMSD.temp1m <- ((model.sd.temp1m - obs.sd.temp1m)/obs.sd.temp1m) * unbiased.RMSD.temp1m
+
+model.mean.temp4m <- mean(mod2.match$mod.Temp4m)
+obs.mean.temp4m <- mean(mod2.match$obs.Temp4m)
+model.sd.temp4m <- sd(mod2.match$mod.Temp4m)
+obs.sd.temp4m <- sd(mod2.match$obs.Temp4m)
+model.residuals.temp4m <- mod2.match$mod.Temp4m - model.mean.temp4m
+obs.residuals.temp4m <- mod2.match$obs.Temp4m - obs.mean.temp4m
+unbiased.RMSD.temp4m <- sqrt(mean((model.residuals.temp4m - obs.residuals.temp4m)^2))
+normalized.bias.temp4m <- (model.mean.temp4m - obs.mean.temp4m )/obs.sd.temp4m
+normalized.unbiased.RMSD.temp4m <- ((model.sd.temp4m - obs.sd.temp4m)/obs.sd.temp4m) * unbiased.RMSD.temp4m
+
+model.mean.temp9m <- mean(mod2.match$mod.Temp9m)
+obs.mean.temp9m <- mean(mod2.match$obs.Temp9m)
+model.sd.temp9m <- sd(mod2.match$mod.Temp9m)
+obs.sd.temp9m <- sd(mod2.match$obs.Temp9m)
+model.residuals.temp9m <- mod2.match$mod.Temp9m - model.mean.temp9m
+obs.residuals.temp9m <- mod2.match$obs.Temp9m - obs.mean.temp9m
+unbiased.RMSD.temp9m <- sqrt(mean((model.residuals.temp9m - obs.residuals.temp9m)^2))
+normalized.bias.temp9m <- (model.mean.temp9m - obs.mean.temp9m )/obs.sd.temp9m
+normalized.unbiased.RMSD.temp9m <- ((model.sd.temp9m - obs.sd.temp9m)/obs.sd.temp9m) * unbiased.RMSD.temp9m
+
+mod3.match <- select(mod3.match, obs.O2.4m, mod.Oxy4m)
+mod3.match <- na.omit(mod3.match)
+model.mean.O24m <- mean(mod3.match$mod.Oxy4m)
+obs.mean.O24m <- mean(mod3.match$obs.O2.4m)
+model.sd.O24m <- sd(mod3.match$mod.Oxy4m)
+obs.sd.O24m <- sd(mod3.match$obs.O2.4m)
+model.residuals.O24m <- mod3.match$mod.Oxy4m - model.mean.O24m
+obs.residuals.O24m <- mod3.match$obs.O2.4m - obs.mean.O24m
+unbiased.RMSD.O24m <- sqrt(mean((model.residuals.O24m  - obs.residuals.O24m)^2))
+normalized.bias.O24m <- (model.mean.O24m - obs.mean.O24m)/obs.sd.O24m
+normalized.unbiased.RMSD.O24m <- ((model.sd.O24m - obs.sd.O24m)/obs.sd.O24m) * unbiased.RMSD.O24m
+
+DOC.match <- select(mod.match, obs.DOC, mod.DOC)
+DOC.match <- na.omit(DOC.match)
+model.mean.DOC<- mean(DOC.match$mod.DOC)
+obs.mean.DOC <- mean(DOC.match$obs.DOC)
+model.sd.DOC <- sd(DOC.match$mod.DOC)
+obs.sd.DOC <- sd(DOC.match$obs.DOC)
+model.residuals.DOC <- DOC.match$mod.DOC - model.mean.DOC
+obs.residuals.DOC <- DOC.match$obs.DOC - obs.mean.DOC
+unbiased.RMSD.DOC <- sqrt(mean((model.residuals.DOC - obs.residuals.DOC)^2))
+normalized.bias.DOC <- (model.mean.DOC - obs.mean.DOC)/obs.sd.DOC
+normalized.unbiased.RMSD.DOC <- ((model.sd.DOC - obs.sd.DOC)/obs.sd.DOC) * unbiased.RMSD.DOC
+
+TDP.match <- select(mod.match, obs.TDP, mod.TDP)
+TDP.match <- na.omit(TDP.match)
+model.mean.TDP <- mean(TDP.match$mod.TDP)
+obs.mean.TDP <- mean(TDP.match$obs.TDP)
+model.sd.TDP <- sd(TDP.match$mod.TDP)
+obs.sd.TDP <- sd(TDP.match$obs.TDP)
+model.residuals.TDP <- TDP.match$mod.TDP - model.mean.TDP
+obs.residuals.TDP <- TDP.match$obs.TDP - obs.mean.TDP
+unbiased.RMSD.TDP <- sqrt(mean((model.residuals.TDP - obs.residuals.TDP)^2))
+normalized.bias.TDP <- (model.mean.TDP - obs.mean.TDP)/obs.sd.TDP
+normalized.unbiased.RMSD.TDP <- ((model.sd.TDP - obs.sd.TDP)/obs.sd.TDP) * unbiased.RMSD.TDP
+
+PP.match <- select(mod.match, obs.PP, mod.PP)
+PP.match <- na.omit(PP.match)
+model.mean.PP <- mean(PP.match$mod.PP)
+obs.mean.PP <- mean(PP.match$obs.PP)
+model.sd.PP <- sd(PP.match$mod.PP)
+obs.sd.PP <- sd(PP.match$obs.PP)
+model.residuals.PP <- PP.match$mod.PP - model.mean.PP
+obs.residuals.PP <- PP.match$obs.PP - obs.mean.PP
+unbiased.RMSD.PP <- sqrt(mean((model.residuals.PP- obs.residuals.PP)^2))
+normalized.bias.PP <- (model.mean.PP - obs.mean.PP)/obs.sd.PP
+normalized.unbiased.RMSD.PP <- ((model.sd.PP - obs.sd.PP)/obs.sd.PP) * unbiased.RMSD.PP
+
+TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP"), 
+                                Period = c("High N:P","High N:P", "High N:P", "High N:P", "High N:P", "High N:P", "High N:P"), 
+                                Normalized.Bias = c(normalized.bias.temp1m, normalized.bias.temp4m, normalized.bias.temp9m, normalized.bias.O24m, normalized.bias.DOC, normalized.bias.TDP, normalized.bias.PP), 
+                                Normalized.Unbiased.RMSD = c(normalized.unbiased.RMSD.temp1m, normalized.unbiased.RMSD.temp4m, normalized.unbiased.RMSD.temp9m, normalized.unbiased.RMSD.O24m, normalized.unbiased.RMSD.DOC, normalized.unbiased.RMSD.TDP, normalized.unbiased.RMSD.PP)) 
+
+# Target Plot
+#TargetPlot <- 
+  ggplot(TargetDiagramData, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias, shape = Variable, color = Period)) + 
+  geom_point() + 
+  annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
+  annotate("path", x=0+0.75*cos(seq(0,2*pi,length.out=100)), y=0+0.75*sin(seq(0,2*pi,length.out=100))) +
+    xlim(-12, 12) +
+    ylim(-2, 2) +
+    #scale_color_viridis(discrete=TRUE) +
+    scale_color_manual(values = c("black")) +
+    scale_shape_manual(values = c(0, 1, 2, 5, 15, 16, 17))
+    
+
+```
 
 # Stoichiometric indicators of N fixer shift in L227
-We need to come up with a stoichoimetric indicator to act as a switch for N fixer vs. non-N fixer growth in Lake 227. The key challenge here is that N fixers show up after 1975, but they don't dominate the entire season. Is there  stoichiometric indicator that can capture intra-annual changes in the relative availability of N for phytoplankton? 
 
-I suggest using either 
-
-1. Combined fertilizer and inflow N:P ratios (low on fertilizer days, higher on non-fertilizer days)
-2. DIN concentration 
-
-We would need to choose a threshold value, in either case, to serve as the switch point of a sigmoid function that dictates the proportion of phytoplankton growth allocated to N fixers vs. non-N fixers.
 
 ![N:P ratios in various pools in Lake 227. Vertical lines represent calculated breakpoints for linear regressions. Linear regressions with a slope significantly different than zero are represented with a blue line, and those with a slope not significantly different from zero are represented with a black line.](/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227/Stoichiometryplot.png)
 
 \newpage
 
 # Next steps and follow-up questions
-1. I propose using TPP and TDP as the optimization variables for phosphorus, rather than TP, TDP, and chl. I would have liked to optimize with only phytoplankton-associated PP, but the observation data from L227 contain only aggregate PP.
 
-2. We need to determine ways to make the parameterization for both P and oxygen to be more successful. Any ideas for parameters we have not tried?
-
-3. The next step after parameterization is to add a sigmoid function to parse phytoplankton growth between the two pools of phytoplankton. I will need help with the code on this. I suggest 16 for N:P and 1 uM for DIN concentration as a starting point for the switch point.
-
-4. I will need to generate several years of data for simulated weather conditions plus changes to fertilization regime. Is there an algorithm of some sort that can generate simulated data?
 
