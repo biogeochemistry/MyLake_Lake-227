@@ -20,12 +20,9 @@ setwd("/Users/krsalkgu/Documents/SourceTree/Lake227/Postproc_code/L227")
 
 # Load packages for the document
 library(tidyverse)
-#library(ggplot2)
 library(knitr)
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
-#library(tidyr)
 library(magrittr)
-library(dplyr)
 library(plyr)
 library(hydroGOF)
 library(gridExtra)
@@ -646,12 +643,14 @@ unbiased.RMSD.temp4m <- sqrt(mean((model.residuals.temp4m - obs.residuals.temp4m
 normalized.bias.temp4m <- (model.mean.temp4m - obs.mean.temp4m )/obs.sd.temp4m
 normalized.unbiased.RMSD.temp4m <- ((model.sd.temp4m - obs.sd.temp4m)/obs.sd.temp4m) * unbiased.RMSD.temp4m
 
-model.mean.temp9m <- mean(mod2.match$mod.Temp9m)
-obs.mean.temp9m <- mean(mod2.match$obs.Temp9m)
-model.sd.temp9m <- sd(mod2.match$mod.Temp9m)
-obs.sd.temp9m <- sd(mod2.match$obs.Temp9m)
-model.residuals.temp9m <- mod2.match$mod.Temp9m - model.mean.temp9m
-obs.residuals.temp9m <- mod2.match$obs.Temp9m - obs.mean.temp9m
+O29m.match <- select(mod2.match, mod.Temp9m, obs.Temp9m)
+O29m.match <- na.omit(O29m.match)
+model.mean.temp9m <- mean(O29m.match$mod.Temp9m)
+obs.mean.temp9m <- mean(O29m.match$obs.Temp9m)
+model.sd.temp9m <- sd(O29m.match$mod.Temp9m)
+obs.sd.temp9m <- sd(O29m.match$obs.Temp9m)
+model.residuals.temp9m <- O29m.match$mod.Temp9m - model.mean.temp9m
+obs.residuals.temp9m <- O29m.match$obs.Temp9m - obs.mean.temp9m
 unbiased.RMSD.temp9m <- sqrt(mean((model.residuals.temp9m - obs.residuals.temp9m)^2))
 normalized.bias.temp9m <- (model.mean.temp9m - obs.mean.temp9m )/obs.sd.temp9m
 normalized.unbiased.RMSD.temp9m <- ((model.sd.temp9m - obs.sd.temp9m)/obs.sd.temp9m) * unbiased.RMSD.temp9m
@@ -715,7 +714,7 @@ TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m"
   geom_point() + 
   annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   annotate("path", x=0+0.75*cos(seq(0,2*pi,length.out=100)), y=0+0.75*sin(seq(0,2*pi,length.out=100))) +
-    xlim(-15, 15) +
+    xlim(-7, 7) +
     ylim(-2, 2) +
     #scale_color_viridis(discrete=TRUE) +
     scale_color_manual(values = c("black")) +

@@ -1,0 +1,198 @@
+#### Information ----
+
+#### Setup ----
+library(tidyverse)
+library(knitr)
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+library(magrittr)
+library(plyr)
+library(hydroGOF)
+library(gridExtra)
+library(zoo)
+library(colormap)
+
+theme_std <- function (base_size = 12, base_family = "") {
+  theme_grey(base_size = base_size, base_family = base_family) %+replace% 
+    theme(axis.ticks = element_line(colour = "black", size = 1), 
+          legend.key = element_rect(colour = "white"), 
+          panel.background = element_rect(fill = "white", colour = NA), 
+          panel.border = element_rect(fill = NA, colour = NA),
+          axis.line = element_line(size = 0.5, colour = "black"),
+          panel.grid.major = element_line(NA), 
+          panel.grid.minor = element_line(NA), 
+          strip.background = element_rect(fill = "grey80", colour = "grey50", size = 0.2),
+          axis.text  = element_text(size=rel(0.9)),
+          axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size=rel(1)),
+          axis.title.y = element_text(margin = unit(c(0, 3, 0, 0), "mm"),size=rel(1), angle = 90),
+          strip.text = element_text(size = rel(1.15), colour = "black", face = "bold"),
+          plot.margin=unit(c(10,10,10,10),"pt"))}
+theme_set(theme_std())
+
+scales::show_col(colormap(colormap = colormaps$plasma, nshades=15))
+
+#### Historical Data Analysis ----
+# Figures 1 and S1 for manuscript
+# Code taken from 
+#### Stoichiometry ==== 
+#### Cyano % of biomass ====
+#### Phytoplankton ====
+#### Long-term drivers ====
+
+#### Model Performance Analysis ----
+# Code taken from ModelIterationReport
+#### Spreadsheet Import ====
+# Read in data
+obsinit <- read.csv("Observed_IntegratedEpi_icefree_lateMay.csv", header = T)
+colnames(obsinit) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs.TDP", "obs.PP", "obs.DOC")
+obsinit$obs.DOC <- obsinit$obs.DOC * 12 # concentrations are in umol/L and need to be in ug/L)
+obs_temp <- read.csv("Observed_Temperature.csv")
+obs_O2 <- read.csv("Observed_Oxygen.csv")
+mod <- read.csv("Output_IntegratedEpi.csv", header = F)
+colnames(mod) <- c("Year", "Month", "Day", "mod.TDP", "mod.PP", "mod.DOC")
+mod2 <- read.csv("Output_Depths.csv", header = F)
+colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy6m", "mod.Oxy8m", "mod.Oxy10m", "mod.Fe4m", "mod.Fe6m", "mod.Fe8m", "mod.Fe10m")
+obs.ice <- read.csv("Lake_239_ice-on_ice-off.csv", header = T)
+out.ice <- read.csv("Output_Ice.csv", header = F)
+
+# Tidy
+obs <- obsinit %>% 
+  unite(date, Year, Month, Day, sep = '-') #%>%
+obs <- data.frame(obs, obsinit$Month, obsinit$Year)
+#obs <- na.omit(obs)
+obs <- obs[,-1]
+colnames(obs) <- c("date", "obs.TP","obs.chla","obs.TDP", "obs.PP", "obs.DOC", "Month", "Year")
+mod <- mod %>% unite(date, Year, Month, Day, sep = '-')
+mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
+colnames(out.ice) <- c("Year.Break", "Month.Break", "Day.Break", "Year.Freeze", "Month.Freeze", "Day.Freeze")
+out.ice.edit <- out.ice %>% unite(Ice.Off.Date, Year.Break, Month.Break, Day.Break, sep = '-')
+out.ice.edit <- out.ice.edit %>% unite(Ice.On.Date, Year.Freeze, Month.Freeze, Day.Freeze, sep = '-')
+
+# Convert date structure
+obs$date <- as.Date(obs$date, format = "%Y-%m-%d") 
+obs_temp$date <- as.Date(obs_temp$date, format = "%m/%d/%y") 
+obs_O2$date <- as.Date(obs_O2$date, format = "%d/%m/%y")
+mod$date <- as.Date(mod$date, format = "%Y-%m-%d") 
+mod2$date <- as.Date(mod2$date, format = "%Y-%m-%d") 
+obs.ice$Ice.Off.Date <- as.Date(obs.ice$Ice.Off.Date, format = "%m/%d/%y")
+obs.ice$Ice.On.Date <- as.Date(obs.ice$Ice.On.Date, format = "%m/%d/%y")
+obs.daybreak <- strftime(obs.ice$Ice.Off.Date, format = "%j")
+obs.dayfreeze <- strftime(obs.ice$Ice.On.Date, format = "%j")
+obs.year <- format(obs.ice$Ice.On.Date, "%Y")
+out.ice.edit$Ice.Off.Date <- as.Date(out.ice.edit$Ice.Off.Date, format = "%Y-%m-%d")
+out.ice.edit$Ice.On.Date <- as.Date(out.ice.edit$Ice.On.Date, format = "%Y-%m-%d")
+out.daybreak <- strftime(out.ice.edit$Ice.Off.Date, format = "%j")
+out.dayfreeze <- strftime(out.ice.edit$Ice.On.Date, format = "%j")
+out.year <- as.character(out.ice$Year.Freeze)
+
+# Tidy
+mod.match <- inner_join(obs,mod, by = "date") 
+mod2.match <- inner_join(obs_temp, mod2, by = "date")
+mod3.match <- inner_join(obs_O2, mod2, by = "date")
+obs.ice.edit <- cbind(obs.year, obs.ice[4], obs.ice[5], obs.daybreak, obs.dayfreeze)
+colnames(obs.ice.edit) <- c("Year", "Ice.Off.Date", "Ice.On.Date", "obs.daybreak", "obs.dayfreeze")
+out.ice.edit2 <- cbind(out.year, out.ice.edit, out.daybreak, out.dayfreeze)
+colnames(out.ice.edit2) <- c("Year", "Ice.Off.Date", "Ice.On.Date", "out.daybreak", "out.dayfreeze")
+match.ice <- inner_join(obs.ice.edit, out.ice.edit2, by = "Year") 
+match.ice$obs.daybreak <- as.numeric(as.character(match.ice$obs.daybreak))
+match.ice$out.daybreak <- as.numeric(as.character(match.ice$out.daybreak))
+match.ice$obs.dayfreeze <- as.numeric(as.character(match.ice$obs.dayfreeze))
+match.ice$out.dayfreeze <- as.numeric(as.character(match.ice$out.dayfreeze))
+match.ice$Year <- as.numeric(match.ice$Year)
+
+
+#### Ice ====
+# Fit metrics
+icebreakregression <- lm (match.ice$obs.daybreak ~ match.ice$out.daybreak)
+summary(icebreakregression)$adj.r.squared
+msebreak <- mean(residuals(icebreakregression)^2); rmsebreak <- sqrt(msebreak); rmsebreak
+
+icefreezeregression <- lm (match.ice$obs.dayfreeze ~ match.ice$out.dayfreeze)
+summary(icefreezeregression)$adj.r.squared
+msefreeze <- mean(residuals(icefreezeregression)^2); rmsefreeze <- sqrt(msefreeze); rmsefreeze
+
+# Plot
+icedateplot <- 
+  ggplot(data = match.ice, aes(x = Year, group = 1)) +
+  geom_line(aes(y = obs.daybreak, col = "Ice Break")) +
+  geom_point(aes(y = obs.daybreak, col = "Ice Break")) +
+  geom_line(aes(y = obs.dayfreeze, col = "Ice Freeze")) +
+  geom_point(aes(y = obs.dayfreeze, col = "Ice Freeze")) + 
+  scale_y_reverse() + 
+  ylab("Julian Day") +
+  scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f9a13aff", "#300596ff")) +
+  theme(legend.position = "top")
+print(icedateplot)
+
+#### Temperature ====
+# Fit metrics
+temp1m.regression <- lm(mod2.match$obs.Temp1m ~ mod2.match$mod.Temp1m)
+summary(temp1m.regression)$adj.r.squared
+mse.temp1m <- mean(residuals(temp1m.regression)^2); rmse.temp1m <- sqrt(mse.temp1m); rmse.temp1m
+
+temp4m.regression <- lm(mod2.match$obs.Temp4m ~ mod2.match$mod.Temp4m)
+summary(temp4m.regression)$adj.r.squared
+mse.temp4m <- mean(residuals(temp4m.regression)^2); rmse.temp4m <- sqrt(mse.temp4m); rmse.temp4m
+
+temp9m.regression <- lm(mod2.match$obs.Temp9m ~ mod2.match$mod.Temp9m)
+summary(temp9m.regression)$adj.r.squared
+mse.temp9m <- mean(residuals(temp9m.regression)^2); rmse.temp9m <- sqrt(mse.temp9m); rmse.temp9m
+
+# Plot
+tempplot <- ggplot(mod2.match, aes(x = date)) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "1 m"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "4 m"), size = 0.5) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "9 m"), size = 0.5) +  
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp1m, col = "1 m"), pch = 19, size = 1) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp4m, col = "4 m"), pch = 19, size = 1) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp9m, col = "9 m"), pch = 19, size = 1) +
+  ylab(expression("Temperature " ( degree*C))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("1 m", "4 m", "9 m"), values = c("#f9a13aff", "#cb4679ff", "#300596ff")) +
+  theme(legend.position = "top")
+print(tempplot)
+
+#### PP ====
+# Fit Metrics
+
+# Plot 
+
+#### Cumulative PP ====
+# Fit Metrics
+
+# Plot 
+
+#### Model PP residuals ====
+# Fit Metrics
+
+# Plot 
+
+#### TDP ====
+# Fit Metrics
+
+# Plot 
+
+#### O2 ====
+# Fit Metrics
+
+# Plot 
+
+#### DOC ====
+# Fit Metrics
+
+# Plot 
+DOCplot <- ggplot() +
+  geom_line(data = mod, aes(x = date, y = mod.DOC, col = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.DOC, col = "Observed"), pch = 19, size = 1) +
+  #ylim(0,100) +
+  ylab(expression(Dissolved ~ Organic ~ Carbon ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#b6308aff", "#300596ff")) +
+  theme(legend.position = "top") 
+print(DOCplot)
+
+#### Combined Plot ====
+grid.arrange(icedateplot, tempplot, DOCplot, ncol = 1)
+
+#### Target Diagram ====
+
+

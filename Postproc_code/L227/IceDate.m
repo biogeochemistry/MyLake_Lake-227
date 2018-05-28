@@ -39,7 +39,7 @@ for a = 1:maxo-1;
 end
 
 DatesFreeze2=DatesFreeze(any(DatesFreeze,2),:);
-IceDates = [DatesBreak2(:,1:3), DatesFreeze2(:,1:3)];
+IceDates = [DatesBreak2(2:28,1:3), DatesFreeze2(:,1:3)];
 
 
 

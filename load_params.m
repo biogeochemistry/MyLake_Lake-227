@@ -25,7 +25,7 @@ lake_params = {
     1, 'I_scTP',               % 20    scaling factor for inflow concentration of total P (-)
     1, 'I_scDOP',              % 21    scaling factor for inflow concentration of diss. organic P (-)
     1, 'I_scChl',              % 22    scaling factor for inflow concentration of Chl a (-)
-    0.537, 'I_scDOC',              % 23    scaling factor for inflow concentration of DOC  (-)
+    0.5, 'I_scDOC',              % 23    scaling factor for inflow concentration of DOC  (-)
     1, 'I_scPOP',              % 24    scaling factor for inflow concentration of POP  (-)
     1, 'I_scO',                % 25    Scaling factor for inflow concentration of O2 (-)
     1 , 'I_scDIC',             % 26    Scaling factor for inflow concentration of DOC  (-)
@@ -73,7 +73,7 @@ lake_params = {
     4, 'BOD_temp_switch',      % 68    NOTE: NOT USED: Threshold for bod or bod_ice °C
     7.5, 'pH',                 % 69    Lake water pH
     2, 'Q10_wc',               % 70    Q10 for reactions of respiration
-    0.17, 'wc_factor',            % 71    Scaling factor for rates in WC
+    0.1, 'wc_factor',            % 71    Scaling factor for rates in WC
     4.8497, 'T_ref_wc'};       % 72    Reference Temperature for rates
 
 
