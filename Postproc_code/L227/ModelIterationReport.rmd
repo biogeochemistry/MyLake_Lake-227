@@ -230,7 +230,7 @@ NashSutcliffe.DOC <-NSE(mod.match$mod.DOC, mod.match$obs.DOC); NashSutcliffe.DOC
 PPplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 1) +
-  ylim(0,100) +
+ # ylim(0,100) +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("black", "blue")) +
@@ -410,7 +410,7 @@ rmseconc
 ## Total Dissolved Phosphorus
 
 ```{r, fig.cap = "Total dissolved phosphorus concentrations in the epilimnion (observed = blue points, modeled = black lines).", echo = FALSE, fig.height = 3}
-mod.match <- filter(mod.match, obs.TDP < 100)
+mod.match <- filter(mod.match, obs.TDP < 50)
 
 TDPplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.TDP, col = "Modeled"), size = 0.5) +
@@ -715,7 +715,7 @@ TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m"
   geom_point() + 
   annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   annotate("path", x=0+0.75*cos(seq(0,2*pi,length.out=100)), y=0+0.75*sin(seq(0,2*pi,length.out=100))) +
-    xlim(-12, 12) +
+    xlim(-15, 15) +
     ylim(-2, 2) +
     #scale_color_viridis(discrete=TRUE) +
     scale_color_manual(values = c("black")) +
