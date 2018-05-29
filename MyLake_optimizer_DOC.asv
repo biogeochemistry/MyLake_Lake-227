@@ -36,7 +36,7 @@ varyindexes = [23 71 77 78 85]; %I_scDOC, wc_factor, k_DOC, Km_O2, Kin_O2
 
 % Setting up the min and max boundaries for each covarying set of parameters.
 minparam = [0.5, 0.1,  0.01, 0.003, 0.008];
-maxparam = [1, 0.9, 0.5, 0.003, 0.008];
+maxparam = [1, 1, 1, 0.003, 0.008];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
@@ -84,7 +84,7 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     clim_ID = 0;
     [MyLake_results, Sediment_results]  = fn_MyL_application(m_start, m_stop, sediment_params, lake_params, use_INCA, run_INCA, run_ID, clim_ID, save_initial_conditions); % runs the model and outputs obs and sim
     
-    % ModelResult.O24m = transpose(MyLake_results.basin1.concentrations.O2(8,:)/1000);    
+    ModelResult.O24m = transpose(MyLake_results.basin1.concentrations.O2(8,:)/1000);    
 
     epidepth = floor(MyLake_results.basin1.MixStat(12,:)*2)/2;
     epidepth(isnan(epidepth)) = 10;
@@ -150,22 +150,20 @@ function err = MyLake_optimizer_single_run(m_start, m_stop, K_sediments, K_lake,
             end
         end
     end
-    
-    try
+
+    try 
     % Running the model
     ModelResult = modeleval(m_start, m_stop, K_sediments, K_lake);
 
     % Evaluating the error
     err = errfun(ModelResult, Data);
     
-    catch me
-         
-    
-    disp("Model crash - imposing error");
+    catch
+        
     err = 9e9;
     
     end
-     
+    
     % Debug output.
     nf = java.text.DecimalFormat;
     ssstr = char(nf.format(err));
