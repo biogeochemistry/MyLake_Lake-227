@@ -32,19 +32,19 @@ Data = loadData(MyL_dates);
 
 % Example: (g_twty (parameter nr 50) is always given the same value as
 % g_twty2 (parameter nr 58) and so on ..)
-varyindexes = [25 71 73 74 75 76 77 78 85]; %I_scO, wc_factor k_chl, k_POP, k_POC, k_DOP, k_DOC, Km_O2, Kin_O2 
+varyindexes = [23 71 77 78 85]; %I_scDOC, wc_factor, k_DOC, Km_O2, Kin_O2 
 
 % Setting up the min and max boundaries for each covarying set of parameters.
-minparam = [0.5, 0.05,  1, 1, 1, 1, 0.1, 0.003, 0.008];
-maxparam = [1.2, 0.2, 1, 1, 1, 1, 0.6, 0.003, 0.008];
+minparam = [0.5, 0.1,  0.01, 0.003, 0.008];
+maxparam = [1,   1,       1, 0.003, 0.008];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
-initial_guess = [1, 0.1, 1, 1, 1, 1, 0.4, 0.003, 0.008];
+initial_guess = [1, 0.1, 0.04, 0.003, 0.008];
 
 modeleval      = @MyLake_227_model_evaluation;
 errfun         = @error_function_oxygen;
-filenameprefix = 'O2'; % Prefix for the .mat file where the optimal parameters are saved in the end.
+filenameprefix = 'DOC'; % Prefix for the .mat file where the optimal parameters are saved in the end.
 
 do_MyLake_optimization(m_start, m_stop, K_sediments, K_lake, Data, ...
     varyindexes, minparam, maxparam, initial_guess, modeleval, errfun,...
@@ -56,12 +56,12 @@ function Data = loadData(MyL_dates)
     rawcsvdata = csvread('Postproc_code/L227/OutputForOptimization.csv', 1, 1);
     rawdatadates = datenum(rawcsvdata(:,9:11));
     withinmodelrange = (rawdatadates >= MyL_dates(1)) & (rawdatadates <= MyL_dates(end));
-    rawO24m = rawcsvdata(:,4);
-    rawO24m(rawO24m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
-    Data.O24m = rawO24m(withinmodelrange);
+ %   rawO24m = rawcsvdata(:,4);
+ %   rawO24m(rawO24m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
+ %   Data.O24m = rawO24m(withinmodelrange);
     rawDOC = rawcsvdata(:,12);
     rawDOC(rawDOC == 0) = NaN;
-    Data.DOC = rawDOC(withinmodelrange)
+    Data.DOC = rawDOC(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
     Data.date_mask = getmask(dateswithinrange, MyL_dates); % Used later to match model data to observed data by correct date.
 end
@@ -106,9 +106,9 @@ end
 % number err, which is smaller the better fit the model is to the data.
 function err = error_function_oxygen(ModelResult, Data)
     
-    MatchedModelO24m = ModelResult.O24m(Data.date_mask);
+ %   MatchedModelO24m = ModelResult.O24m(Data.date_mask);
     MatchedModelDOC = ModelResult.DOCintegratedepi(Data.date_mask);
-    err = nansum (((MatchedModelO24m - Data.O24m).^2) + ((MatchedModelDOC -Data.DOC).^2));
+    err = nansum ((MatchedModelDOC -Data.DOC).^2);
 end
 
 %% END project specific evaluation functions
@@ -151,11 +151,18 @@ function err = MyLake_optimizer_single_run(m_start, m_stop, K_sediments, K_lake,
         end
     end
 
+    try 
     % Running the model
     ModelResult = modeleval(m_start, m_stop, K_sediments, K_lake);
 
     % Evaluating the error
     err = errfun(ModelResult, Data);
+    
+    catch
+        
+    err = 9e9;
+    
+    end
     
     % Debug output.
     nf = java.text.DecimalFormat;
