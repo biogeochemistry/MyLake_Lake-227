@@ -29,6 +29,8 @@ theme_std <- function (base_size = 12, base_family = "") {
 theme_set(theme_std())
 
 scales::show_col(colormap(colormap = colormaps$plasma, nshades=15))
+scales::show_col(colormap(colormap = colormaps$inferno, nshades=15))
+scales::show_col(colormap(colormap = colormaps$viridis, nshades=15))
 
 #### Historical Data Analysis ----
 # Figures 1 and S1 for manuscript
@@ -113,13 +115,13 @@ msefreeze <- mean(residuals(icefreezeregression)^2); rmsefreeze <- sqrt(msefreez
 # Plot
 icedateplot <- 
   ggplot(data = match.ice, aes(x = Year, group = 1)) +
-  geom_line(aes(y = obs.daybreak, col = "Ice Break")) +
+  geom_line(aes(y = out.daybreak, col = "Ice Break")) +
   geom_point(aes(y = obs.daybreak, col = "Ice Break")) +
-  geom_line(aes(y = obs.dayfreeze, col = "Ice Freeze")) +
+  geom_line(aes(y = out.dayfreeze, col = "Ice Freeze")) +
   geom_point(aes(y = obs.dayfreeze, col = "Ice Freeze")) + 
   scale_y_reverse() + 
   ylab("Julian Day") +
-  scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f9a13aff", "#300596ff")) +
+  scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f99d15ff", "#240c4cff")) +
   theme(legend.position = "top")
 print(icedateplot)
 
@@ -139,15 +141,15 @@ mse.temp9m <- mean(residuals(temp9m.regression)^2); rmse.temp9m <- sqrt(mse.temp
 
 # Plot
 tempplot <- ggplot(mod2.match, aes(x = date)) +
-  geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "1 m"), size = 0.5) +
-  geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "4 m"), size = 0.5) +
-  geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "9 m"), size = 0.5) +  
-  geom_point(data = mod2.match, aes(x = date, y = obs.Temp1m, col = "1 m"), pch = 19, size = 1) +
-  geom_point(data = mod2.match, aes(x = date, y = obs.Temp4m, col = "4 m"), pch = 19, size = 1) +
-  geom_point(data = mod2.match, aes(x = date, y = obs.Temp9m, col = "9 m"), pch = 19, size = 1) +
-  ylab(expression("Temperature " ( degree*C))) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "1 m"), size = 0.25) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "4 m"), size = 0.25) +
+  geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "9 m"), size = 0.25) +  
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp1m, col = "1 m"), pch = 19, size = 0.5) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp4m, col = "4 m"), pch = 19, size = 0.5) +
+  geom_point(data = mod2.match, aes(x = date, y = obs.Temp9m, col = "9 m"), pch = 19, size = 0.5) +
+  ylab(expression("Temp " ( degree*C))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("1 m", "4 m", "9 m"), values = c("#f9a13aff", "#cb4679ff", "#300596ff")) +
+  scale_colour_manual("", breaks = c("1 m", "4 m", "9 m"), values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   theme(legend.position = "top")
 print(tempplot)
 
@@ -181,12 +183,12 @@ print(tempplot)
 
 # Plot 
 DOCplot <- ggplot() +
-  geom_line(data = mod, aes(x = date, y = mod.DOC, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod.match, aes(x = date, y = obs.DOC, col = "Observed"), pch = 19, size = 1) +
-  #ylim(0,100) +
-  ylab(expression(Dissolved ~ Organic ~ Carbon ~ (mu*g / L))) +
+  geom_line(data = mod, aes(x = date, y = mod.DOC, col = "Modeled"), size = 0.25) +
+  geom_point(data = mod.match, aes(x = date, y = obs.DOC, col = "Observed"), pch = 19, size = 0.5) +
+  ylab(expression(DOC ~ (mu*g / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#b6308aff", "#300596ff")) +
+  #scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#cb4679ff", "#300596ff")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
   theme(legend.position = "top") 
 print(DOCplot)
 
