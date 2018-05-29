@@ -100,25 +100,48 @@ match.ice$out.daybreak <- as.numeric(as.character(match.ice$out.daybreak))
 match.ice$obs.dayfreeze <- as.numeric(as.character(match.ice$obs.dayfreeze))
 match.ice$out.dayfreeze <- as.numeric(as.character(match.ice$out.dayfreeze))
 match.ice$Year <- as.numeric(match.ice$Year)
+match.ice$obs.daybreak[1] <- NA
+mod$mod.DOC <- mod$mod.DOC/1000 #convert DOC to mg/L instead of ug/L
+mod.match$obs.DOC <- mod.match$obs.DOC/1000 #convert DOC to mg/L instead of ug/L
+mod.match$mod.DOC <- mod.match$mod.DOC/1000 #convert DOC to mg/L instead of ug/L
+mod.match <- mutate(mod.match, Year = format(mod.match$date, "%Y"))
+mod2.match <- mutate(mod2.match, Year = format(mod2.match$date, "%Y"))
+mod3.match <- mutate(mod3.match, Year = format(mod3.match$date, "%Y"))
 
 
 #### Ice ====
-# Fit metrics
-icebreakregression <- lm (match.ice$obs.daybreak ~ match.ice$out.daybreak)
-summary(icebreakregression)$adj.r.squared
-msebreak <- mean(residuals(icebreakregression)^2); rmsebreak <- sqrt(msebreak); rmsebreak
+#### Fit metrics ####
+icebreakregression.period1 <- lm (match.ice$obs.daybreak[match.ice$Year < 1975] ~ match.ice$out.daybreak[match.ice$Year < 1975])
+summary(icebreakregression.period1)$adj.r.squared
+msebreak.period1 <- mean(residuals(icebreakregression.period1)^2); rmsebreak.period1 <- sqrt(msebreak.period1); rmsebreak.period1
 
-icefreezeregression <- lm (match.ice$obs.dayfreeze ~ match.ice$out.dayfreeze)
-summary(icefreezeregression)$adj.r.squared
-msefreeze <- mean(residuals(icefreezeregression)^2); rmsefreeze <- sqrt(msefreeze); rmsefreeze
+icefreezeregression.period1 <- lm (match.ice$obs.dayfreeze[match.ice$Year < 1975] ~ match.ice$out.dayfreeze[match.ice$Year < 1975])
+summary(icefreezeregression.period1)$adj.r.squared
+msefreeze.period1 <- mean(residuals(icefreezeregression.period1)^2); rmsefreeze.period1 <- sqrt(msefreeze.period1); rmsefreeze.period1
 
-# Plot
+icebreakregression.period2 <- lm (match.ice$obs.daybreak[match.ice$Year > 1974 & match.ice$Year < 1990] ~ match.ice$out.daybreak[match.ice$Year > 1974 & match.ice$Year < 1990])
+summary(icebreakregression.period2)$adj.r.squared
+msebreak.period2 <- mean(residuals(icebreakregression.period2)^2); rmsebreak.period2 <- sqrt(msebreak.period2); rmsebreak.period2
+
+icefreezeregression.period2 <- lm (match.ice$obs.dayfreeze[match.ice$Year > 1974 & match.ice$Year < 1990] ~ match.ice$out.dayfreeze[match.ice$Year > 1974 & match.ice$Year < 1990])
+summary(icefreezeregression.period2)$adj.r.squared
+msefreeze.period2 <- mean(residuals(icefreezeregression.period2)^2); rmsefreeze.period2 <- sqrt(msefreeze.period2); rmsefreeze.period2
+
+icebreakregression.period3 <- lm (match.ice$obs.daybreak[match.ice$Year > 1989] ~ match.ice$out.daybreak[match.ice$Year > 1989])
+summary(icebreakregression.period3)$adj.r.squared
+msebreak.period3 <- mean(residuals(icebreakregression.period3)^2); rmsebreak.period3 <- sqrt(msebreak.period3); rmsebreak.period3
+
+icefreezeregression.period3 <- lm (match.ice$obs.dayfreeze[match.ice$Year > 1989] ~ match.ice$out.dayfreeze[match.ice$Year > 1989])
+summary(icefreezeregression.period3)$adj.r.squared
+msefreeze.period3 <- mean(residuals(icefreezeregression.period3)^2); rmsefreeze.period3 <- sqrt(msefreeze.period3); rmsefreeze.period3
+
+#### Plot ####
 icedateplot <- 
   ggplot(data = match.ice, aes(x = Year, group = 1)) +
-  geom_line(aes(y = out.daybreak, col = "Ice Break")) +
-  geom_point(aes(y = obs.daybreak, col = "Ice Break")) +
-  geom_line(aes(y = out.dayfreeze, col = "Ice Freeze")) +
-  geom_point(aes(y = obs.dayfreeze, col = "Ice Freeze")) + 
+  geom_line(aes(y = out.daybreak, col = "Ice Break"), size = 0.5) +
+  geom_point(aes(y = obs.daybreak, col = "Ice Break"), size = 0.5) +
+  geom_line(aes(y = out.dayfreeze, col = "Ice Freeze"), size = 0.5) +
+  geom_point(aes(y = obs.dayfreeze, col = "Ice Freeze"), size = 0.5) + 
   scale_y_reverse() + 
   ylab("Julian Day") +
   scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f99d15ff", "#240c4cff")) +
@@ -126,21 +149,45 @@ icedateplot <-
 print(icedateplot)
 
 #### Temperature ====
-# Fit metrics
-temp1m.regression <- lm(mod2.match$obs.Temp1m ~ mod2.match$mod.Temp1m)
-summary(temp1m.regression)$adj.r.squared
-mse.temp1m <- mean(residuals(temp1m.regression)^2); rmse.temp1m <- sqrt(mse.temp1m); rmse.temp1m
+#### Fit metrics ####
+temp1m.regression.period1 <- lm(mod2.match$obs.Temp1m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp1m[mod2.match$Year < 1975])
+summary(temp1m.regression.period1)$adj.r.squared
+mse.temp1m.period1 <- mean(residuals(temp1m.regression.period1)^2); rmse.temp1m.period1 <- sqrt(mse.temp1m.period1); rmse.temp1m.period1
 
-temp4m.regression <- lm(mod2.match$obs.Temp4m ~ mod2.match$mod.Temp4m)
-summary(temp4m.regression)$adj.r.squared
-mse.temp4m <- mean(residuals(temp4m.regression)^2); rmse.temp4m <- sqrt(mse.temp4m); rmse.temp4m
+temp4m.regression.period1 <- lm(mod2.match$obs.Temp4m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp4m[mod2.match$Year < 1975])
+summary(temp4m.regression.period1)$adj.r.squared
+mse.temp4m.period1 <- mean(residuals(temp4m.regression.period1)^2); rmse.temp4m.period1 <- sqrt(mse.temp4m.period1); rmse.temp4m.period1
 
-temp9m.regression <- lm(mod2.match$obs.Temp9m ~ mod2.match$mod.Temp9m)
-summary(temp9m.regression)$adj.r.squared
-mse.temp9m <- mean(residuals(temp9m.regression)^2); rmse.temp9m <- sqrt(mse.temp9m); rmse.temp9m
+temp9m.regression.period1 <- lm(mod2.match$obs.Temp9m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp9m[mod2.match$Year < 1975])
+summary(temp9m.regression.period1)$adj.r.squared
+mse.temp9m.period1 <- mean(residuals(temp9m.regression.period1)^2); rmse.temp9m.period1 <- sqrt(mse.temp9m.period1); rmse.temp9m.period1
 
-# Plot
-tempplot <- ggplot(mod2.match, aes(x = date)) +
+temp1m.regression.period2 <- lm(mod2.match$obs.Temp1m[mod2.match$Year > 1974 & mod2.match$Year < 1990] ~ mod2.match$mod.Temp1m[mod2.match$Year > 1974 & mod2.match$Year < 1990])
+summary(temp1m.regression.period2)$adj.r.squared
+mse.temp1m.period2 <- mean(residuals(temp1m.regression.period2)^2); rmse.temp1m.period2 <- sqrt(mse.temp1m.period2); rmse.temp1m.period2
+
+temp4m.regression.period2 <- lm(mod2.match$obs.Temp4m[mod2.match$Year > 1974 & mod2.match$Year < 1990] ~ mod2.match$mod.Temp4m[mod2.match$Year > 1974 & mod2.match$Year < 1990])
+summary(temp4m.regression.period2)$adj.r.squared
+mse.temp4m.period2 <- mean(residuals(temp4m.regression.period2)^2); rmse.temp4m.period2 <- sqrt(mse.temp4m.period2); rmse.temp4m.period2
+
+temp9m.regression.period2 <- lm(mod2.match$obs.Temp9m[mod2.match$Year > 1974 & mod2.match$Year < 1990] ~ mod2.match$mod.Temp9m[mod2.match$Year > 1974 & mod2.match$Year < 1990])
+summary(temp9m.regression.period2)$adj.r.squared
+mse.temp9m.period2 <- mean(residuals(temp9m.regression.period2)^2); rmse.temp9m.period2 <- sqrt(mse.temp9m.period2); rmse.temp9m.period2
+
+temp1m.regression.period3 <- lm(mod2.match$obs.Temp1m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp1m[mod2.match$Year > 1989])
+summary(temp1m.regression.period3)$adj.r.squared
+mse.temp1m.period3 <- mean(residuals(temp1m.regression.period3)^2); rmse.temp1m.period3 <- sqrt(mse.temp1m.period3); rmse.temp1m.period3
+
+temp4m.regression.period3 <- lm(mod2.match$obs.Temp4m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp4m[mod2.match$Year > 1989])
+summary(temp4m.regression.period3)$adj.r.squared
+mse.temp4m.period3 <- mean(residuals(temp4m.regression.period3)^2); rmse.temp4m.period3 <- sqrt(mse.temp4m.period3); rmse.temp4m.period3
+
+temp9m.regression.period3 <- lm(mod2.match$obs.Temp9m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp9m[mod2.match$Year > 1989])
+summary(temp9m.regression.period3)$adj.r.squared
+mse.temp9m.period3 <- mean(residuals(temp9m.regression.period3)^2); rmse.temp9m.period3 <- sqrt(mse.temp9m.period3); rmse.temp9m.period3
+
+#### Plot ####
+tempplot <- ggplot() +
   geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "1 m"), size = 0.25) +
   geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "4 m"), size = 0.25) +
   geom_line(data = mod2, aes(x = date, y = mod.Temp9m, col = "9 m"), size = 0.25) +  
@@ -150,6 +197,8 @@ tempplot <- ggplot(mod2.match, aes(x = date)) +
   ylab(expression("Temp " ( degree*C))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("1 m", "4 m", "9 m"), values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
+  #geom_vline(xintercept = 1975-01-01, lty = 5) +
+  geom_vline(xintercept = 1990-01-01, lty = 5) +
   theme(legend.position = "top")
 print(tempplot)
 
@@ -185,9 +234,8 @@ print(tempplot)
 DOCplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.DOC, col = "Modeled"), size = 0.25) +
   geom_point(data = mod.match, aes(x = date, y = obs.DOC, col = "Observed"), pch = 19, size = 0.5) +
-  ylab(expression(DOC ~ (mu*g / L))) +
+  ylab(expression(DOC ~ (mg / L))) +
   xlab(" ") +
-  #scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#cb4679ff", "#300596ff")) +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
   theme(legend.position = "top") 
 print(DOCplot)
