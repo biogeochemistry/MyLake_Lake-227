@@ -82,8 +82,8 @@ sediment_params = {
     1,  'k_POP',                 % 2       % 1
     1, 'k_POC',                  % 3       % 0.01
     1,  'k_DOP',                 % 4       % 1
-    0.333, 'k_DOC',                  % 5       % 1
-    0.0031, 'Km_O2',                 % 6       % Canavan, R. W (2006) rho=2.5
+    0.04, 'k_DOC',                  % 5       % 1
+    0.003, 'Km_O2',                 % 6       % Canavan, R. W (2006) rho=2.5
     0.01,  'Km_NO3',                % 7       % Canavan, R. W (2006) rho=2.5
     3.92,  'Km_Fe(OH)3',         % 8       % Canavan, R. W (2006) rho=2.5
     2415,  'Km_FeOOH',           % 9       % Canavan, R. W (2006) rho=2.5
