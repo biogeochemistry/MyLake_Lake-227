@@ -268,8 +268,8 @@ sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1
 
 #### Plot ####
 PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
-  geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 0.25) +
-  geom_point(aes(x = date, y = Cum.Sum.obs.PP, col = "Observed"), size = 0.25, alpha = 0.5) +
+  geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 0.5) +
+  geom_point(aes(x = date, y = Cum.Sum.obs.PP, col = "Observed"), size = 0.1, alpha = 0.5) +
   ylab(expression(Cumulative ~ PP ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
@@ -297,6 +297,16 @@ sd(PPresiduals$residuals.PP[PPresiduals$Year > 1989])
 var.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
 var.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
 var.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+
+# Variance of PP residuals is significantly lower in period 3 than in period 1 or 2.
+# Variance of PP in periods 1 and 2 does not differ significantly.
+
+t.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
+t.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+t.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+
+# PP residuals are significantly lower in period 3 than in period 1 or 2.
+# PP residuals do not differ significantly in periods 1 and 2.
 
 #### Plot ####
 PPresidualsplot <- ggplot() +
@@ -352,7 +362,7 @@ mse.O2.period3 <- mean(residuals(O2.regression.period3)^2); rmse.O2.period3 <- s
 O2plot <- ggplot() +
   geom_line(data = mod2, aes(x = date, y = mod.Oxy4m, col = "Modeled"), size = 0.25) +
   geom_point(data = mod3.match, aes(x = date, y = obs.O2.4m, col = "Observed"), pch = 19, size = 0.5) +
-  ylab(expression(DOC ~ (mg / L))) +
+  ylab(expression(DO ~ (mg / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
   geom_vline(xintercept = as.numeric(as.Date("1975-01-01")), lty = 5) +
@@ -390,7 +400,7 @@ print(DOCplot)
 grid.arrange(icedateplot, tempplot, TDPplot, PPplot, PPcumulativeplot, PPresidualsplot,  ncol = 2)
 
 #### Target Diagram ====
-# Temperature 1 m
+#### Temperature 1 m ####
 model.mean.Temp1m.period1 <- mean(mod2.match$mod.Temp1m[mod2.match$Year < 1975])
 obs.mean.Temp1m.period1 <- mean(mod2.match$obs.Temp1m[mod2.match$Year < 1975])
 model.sd.Temp1m.period1 <- sd(mod2.match$mod.Temp1m[mod2.match$Year < 1975])
@@ -421,7 +431,7 @@ unbiased.RMSD.Temp1m.period3 <- sqrt(mean((model.residuals.Temp1m.period3 - obs.
 normalized.bias.Temp1m.period3 <- (model.mean.Temp1m.period3 - obs.mean.Temp1m.period3)/obs.sd.Temp1m.period3
 normalized.unbiased.RMSD.Temp1m.period3 <- ((model.sd.Temp1m.period3 - obs.sd.Temp1m.period3)/obs.sd.Temp1m.period3) * unbiased.RMSD.Temp1m.period3
 
-# Temp 4 m
+#### Temp 4 m ####
 model.mean.Temp4m.period1 <- mean(mod2.match$mod.Temp4m[mod2.match$Year < 1975])
 obs.mean.Temp4m.period1 <- mean(mod2.match$obs.Temp4m[mod2.match$Year < 1975])
 model.sd.Temp4m.period1 <- sd(mod2.match$mod.Temp4m[mod2.match$Year < 1975])
@@ -452,7 +462,7 @@ unbiased.RMSD.Temp4m.period3 <- sqrt(mean((model.residuals.Temp4m.period3 - obs.
 normalized.bias.Temp4m.period3 <- (model.mean.Temp4m.period3 - obs.mean.Temp4m.period3)/obs.sd.Temp4m.period3
 normalized.unbiased.RMSD.Temp4m.period3 <- ((model.sd.Temp4m.period3 - obs.sd.Temp4m.period3)/obs.sd.Temp4m.period3) * unbiased.RMSD.Temp4m.period3
 
-# Temp 9 m
+#### Temp 9 m ####
 Temp9m.match <- select(mod2.match, obs.Temp9m, mod.Temp9m, Year)
 Temp9m.match <- na.omit(Temp9m.match)
 
@@ -486,7 +496,7 @@ unbiased.RMSD.Temp9m.period3 <- sqrt(mean((model.residuals.Temp9m.period3 - obs.
 normalized.bias.Temp9m.period3 <- (model.mean.Temp9m.period3 - obs.mean.Temp9m.period3)/obs.sd.Temp9m.period3
 normalized.unbiased.RMSD.Temp9m.period3 <- ((model.sd.Temp9m.period3 - obs.sd.Temp9m.period3)/obs.sd.Temp9m.period3) * unbiased.RMSD.Temp9m.period3
 
-# O2 4 m
+#### O2 4 m ####
 mod3.match <- select(mod3.match, obs.O2.4m, mod.Oxy4m, Year)
 mod3.match <- na.omit(mod3.match)
 
@@ -520,7 +530,7 @@ unbiased.RMSD.O24m.period3 <- sqrt(mean((model.residuals.O24m.period3  - obs.res
 normalized.bias.O24m.period3 <- (model.mean.O24m.period3 - obs.mean.O24m.period3)/obs.sd.O24m.period3
 normalized.unbiased.RMSD.O24m.period3 <- ((model.sd.O24m.period3 - obs.sd.O24m.period3)/obs.sd.O24m.period3) * unbiased.RMSD.O24m.period3
 
-# DOC integrated epi
+#### DOC integrated epi ####
 DOC.match <- select(mod.match, obs.DOC, mod.DOC, Year)
 DOC.match <- na.omit(DOC.match)
 
@@ -554,7 +564,7 @@ unbiased.RMSD.DOC.period3 <- sqrt(mean((model.residuals.DOC.period3 - obs.residu
 normalized.bias.DOC.period3 <- (model.mean.DOC.period3 - obs.mean.DOC.period3)/obs.sd.DOC.period3
 normalized.unbiased.RMSD.DOC.period3 <- ((model.sd.DOC.period3 - obs.sd.DOC.period3)/obs.sd.DOC.period3) * unbiased.RMSD.DOC.period3
 
-# TDP integrated epi
+#### TDP integrated epi ####
 TDP.match <- select(mod.match, obs.TDP, mod.TDP, Year)
 TDP.match <- na.omit(TDP.match)
 
@@ -588,7 +598,7 @@ unbiased.RMSD.TDP.period3 <- sqrt(mean((model.residuals.TDP.period3 - obs.residu
 normalized.bias.TDP.period3 <- (model.mean.TDP.period3 - obs.mean.TDP.period3)/obs.sd.TDP.period3
 normalized.unbiased.RMSD.TDP.period3 <- ((model.sd.TDP.period3 - obs.sd.TDP.period3)/obs.sd.TDP.period3) * unbiased.RMSD.TDP.period3
 
-# PP integrated epi
+#### PP integrated epi ####
 PP.match <- select(mod.match, obs.PP, mod.PP, Year)
 PP.match <- na.omit(PP.match)
 
@@ -622,6 +632,7 @@ unbiased.RMSD.PP.period3 <- sqrt(mean((model.residuals.PP.period3 - obs.residual
 normalized.bias.PP.period3 <- (model.mean.PP.period3 - obs.mean.PP.period3)/obs.sd.PP.period3
 normalized.unbiased.RMSD.PP.period3 <- ((model.sd.PP.period3 - obs.sd.PP.period3)/obs.sd.PP.period3) * unbiased.RMSD.PP.period3
 
+#### Combined dataframe ####
 TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP",
                                              "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP",
                                              "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP"), 
@@ -641,8 +652,8 @@ TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m"
                                                              normalized.unbiased.RMSD.Temp1m.period3, normalized.unbiased.RMSD.Temp4m.period3, normalized.unbiased.RMSD.Temp9m.period3,
                                                              normalized.unbiased.RMSD.O24m.period3, normalized.unbiased.RMSD.DOC.period3, normalized.unbiased.RMSD.TDP.period3, normalized.unbiased.RMSD.PP.period3)) 
 
-# Target Plot
-#TargetPlot <- 
+#### Target Plot ####
+TargetPlot <- 
 ggplot(TargetDiagramData, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias, shape = Variable, color = Period)) + 
   geom_point() + 
   annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
@@ -651,4 +662,4 @@ ggplot(TargetDiagramData, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias,
   ylim(-2, 2) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   scale_shape_manual(values = c(0, 1, 2, 5, 15, 16, 17))
-
+print(TargetPlot)
