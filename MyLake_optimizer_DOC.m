@@ -59,7 +59,7 @@ function Data = loadData(MyL_dates)
  %   rawO24m = rawcsvdata(:,4);
  %   rawO24m(rawO24m == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data. 
  %   Data.O24m = rawO24m(withinmodelrange);
-    rawDOC = rawcsvdata(:,12);
+    rawDOC = rawcsvdata(:,12)*12;
     rawDOC(rawDOC == 0) = NaN;
     Data.DOC = rawDOC(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
