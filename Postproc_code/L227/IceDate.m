@@ -8,7 +8,7 @@ C=[B;MyLake_results.basin1.His(7,:)]'; % matrix date and ice on or off
 j=1; % initialize for matrix ice off
 k=1; % initialize for ice on
 for i=1:length(C)-1
-    if C(i,2)~=C(i+1,2) && C(i,2)==1 && str2num(datestr(C(i,1),'mm'))<6 && str2num(datestr(C(i,1),'mm'))>3.5 % conditions for break-up
+    if C(i,2)~=C(i+1,2) && C(i,2)==1 && str2num(datestr(C(i,1),'mm'))<6 && str2num(datestr(C(i,1),'mm'))>2 % conditions for break-up
         D(j,1)=C(i+1,1); %new colums = date breakup
         j=j+1; %next line
     elseif C(i,2)~=C(i+1,2) && C(i,2)==0 && str2num(datestr(C(i,1),'mm'))>9% conditions for freezing
@@ -39,7 +39,7 @@ for a = 1:maxo-1;
 end
 
 DatesFreeze2=DatesFreeze(any(DatesFreeze,2),:);
-IceDates = [DatesBreak2(2:28,1:3), DatesFreeze2(:,1:3)];
+IceDates = [DatesBreak2(:,1:3), DatesFreeze2(:,1:3)];
 
 
 
