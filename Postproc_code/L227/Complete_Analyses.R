@@ -10,6 +10,8 @@ library(hydroGOF)
 library(gridExtra)
 library(zoo)
 library(colormap)
+library(trend)
+library(png)
 
 theme_std <- function (base_size = 12, base_family = "") {
   theme_grey(base_size = base_size, base_family = base_family) %+replace% 
@@ -35,8 +37,293 @@ scales::show_col(colormap(colormap = colormaps$viridis, nshades=15))
 #### Historical Data Analysis ----
 # Figures 1 and S1 for manuscript
 # Code taken from 
+#### Spreadsheet Import ====
+NtoPLake <- read.csv("./Stoichiometry/NP_Stoichiometry_L227.csv")
+attach(NtoPLake)
+head(NtoPLake)
+NtoPInflow <- read.csv("./Stoichiometry/NP_Stoichiometry_Inflow.csv")
+attach(NtoPInflow)
+head(NtoPInflow)
+CyanoPercent <- read.csv("./Phytoplankton/L227_cyanopercent.csv")
+
+# Convert dates from factor to date format, add month 
+Datelake <- as.Date(NtoPLake$Date, "%m/%d/%y")
+Dateinflow <- as.Date(NtoPInflow$Date, "%m/%d/%y")
+Monthlake <- as.numeric(format(Datelake, "%m"))
+Monthinflow <- as.numeric(format(Dateinflow, "%m"))
+CyanoPercent$Date <- as.Date(CyanoPercent$Date, "%m/%d/%y")
+
 #### Stoichiometry ==== 
+# Change concentrations from mass (ug/L or mg/d) to molar (umol/L or mmol/d)
+Fert_TP_molar <- Fert_TP_mg.d/30.97
+Inflow_TP_molar <- Inflow_TP_mg.d/30.97
+Fert_TN_molar <- Fert_TN_mg.d/14.01
+Inflow_TN_molar <- Inflow_TN_mg.d/14.01
+NO3_molar <- NO3/14.01
+NH4_molar <- NH4/14.01
+DIN_molar <- NO3_molar + NH4_molar
+PN_molar <- PN/14.01
+TDN_molar <- TDN/14.01
+PP_molar <- PP/30.97
+TDP_molar <- TDP/30.97
+TN_molar <- TDN_molar + PN_molar
+TP_molar <- TDP_molar + PP_molar
+chl <- NtoPLake$Chl
+
+# Combine inflows + fertilization
+Input_TN_molar <- Fert_TN_molar + Inflow_TN_molar
+Input_TP_molar <- Fert_TP_molar + Inflow_TP_molar
+
+# Create N:P stoichiometric ratios in lake and inputs
+Fert_NtoP <- Fert_TN_molar/Fert_TP_molar
+Inflow_NtoP <- Inflow_TN_molar/Inflow_TP_molar
+Input_NtoP <- Input_TN_molar/Input_TP_molar
+DINtoTDP <- DIN_molar/TDP_molar
+TDNtoTDP <- TDN_molar/TDP_molar
+PNtoPP <- PN_molar/PP_molar
+TNtoTP <- TN_molar/TP_molar
+
+# Create data frames for N:P stoichiometry in lake and inflows for May-October
+NtoPinsitu <- data.frame(Datelake, Monthlake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP, DIN_molar, PP, chl)
+NtoPinsitu <- filter(NtoPinsitu, Monthlake > 4 & Monthlake < 11)
+NtoPinput <- data.frame(Dateinflow, Monthinflow, Fert_NtoP, Inflow_NtoP, Input_NtoP, Input_TN_molar)
+NtoPinput <- filter(NtoPinput, Monthinflow > 4 & Monthinflow < 11)
+
+# Test for normality
+shapiro.test(NtoPinsitu$TNtoTP)
+shapiro.test(NtoPinsitu$TDNtoTDP)
+shapiro.test(NtoPinsitu$PP)
+shapiro.test(NtoPinsitu$chl)
+
+# Separate datasets and eliminate NAs
+TNtoTPdataset <- NtoPinsitu %>%
+  select(Datelake, TNtoTP) %>%
+  drop_na()
+rownames(TNtoTPdataset) <- NULL
+
+TDNtoTDPdataset <- NtoPinsitu %>%
+  select(Datelake, TDNtoTDP) %>%
+  drop_na()
+rownames(TDNtoTDPdataset) <- NULL
+
+PPdataset <- NtoPinsitu %>%
+  select(Datelake, PP) %>%
+  drop_na()
+rownames(PPdataset) <- NULL
+
+chldataset <- NtoPinsitu %>%
+  select(Datelake, chl) %>%
+  drop_na()
+rownames(chldataset) <- NULL
+
+# Pettitt's test: detects a single changepoint in hydrological/climate series with continuous data
+TNtoTPvec <- as.vector(TNtoTPdataset$TNtoTP)
+pettitt.test(TNtoTPvec)
+    # data:  TNtoTPvec
+    # U* = 30578, p-value = 3.796e-06
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 470 
+
+TDNtoTDPvec <- as.vector(TDNtoTDPdataset$TDNtoTDP)
+pettitt.test(TDNtoTDPvec)
+    # data:  TDNtoTDPvec
+    # U* = 27951, p-value = 0.0001079
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 120 
+
+PPvec <- as.vector(PPdataset$PP)
+pettitt.test(PPvec)
+    # data:  PPvec
+    # U* = 31464, p-value = 1.245e-05
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 179 
+
+chlvec <- as.vector(chldataset$chl)
+pettitt.test(chlvec)
+    # data:  chlvec
+    # U* = 33080, p-value = 0.0003617
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 435 
+
+# Mann-Kendall test: detect monotonic trends in series of environmental/climate/hydrological data
+mk.test(TNtoTPvec[1:469])
+# data:  TNtoTPvec[1:469]
+# z = 4.0215, n = 469, p-value = 5.782e-05
+# alternative hypothesis: true S is not equal to 0
+# sample estimates:
+#   S         varS          tau 
+# 1.363800e+04 1.149894e+07 1.242727e-01 
+
+mk.test(TNtoTPvec[470:752])
+# data:  TNtoTPvec[470:752]
+# z = 0.77053, n = 283, p-value = 0.441
+# alternative hypothesis: true S is not equal to 0
+# sample estimates:
+#   S         varS          tau 
+# 1.227000e+03 2.531613e+06 3.075342e-02 
+
+mk.test(TDNtoTDPvec[1:119])
+# data:  TDNtoTDPvec[1:119]
+# z = 1.4424, n = 119, p-value = 0.1492
+# alternative hypothesis: true S is not equal to 0
+# sample estimates:
+#   S         varS          tau 
+# 6.290000e+02 1.895640e+05 8.960752e-02 
+
+mk.test(TDNtoTDPvec[120:781])
+# data:  TDNtoTDPvec[120:781]
+# z = -3.5267, n = 662, p-value = 0.0004207
+# alternative hypothesis: true S is not equal to 0
+# sample estimates:
+#   S          varS           tau 
+# -2.004700e+04  3.230782e+07 -9.167299e-02 
+
+mk.test(PPvec[1:178])
+# data:  PPvec[1:178]
+# z = 1.3246, n = 178, p-value = 0.1853
+# alternative hypothesis: true S is not equal to 0
+# sample estimates:
+#   S         varS          tau 
+# 1.053000e+03 6.307977e+05 6.781124e-02 
+
+mk.test(PPvec[179:791])
+# Mann-Kendall trend test
+# 
+# data:  PPvec[179:791]
+# z = -6.7774, n = 613, p-value = 1.223e-11
+# alternative hypothesis: true S is not equal to 0
+# sample estimates:
+#   S          varS           tau 
+# -3.431400e+04  2.563227e+07 -1.852262e-01 
+
+mk.test(chlvec[1:434])
+    # Mann-Kendall trend test
+    # 
+    # data:  chlvec[1:434]
+    # z = -5.0183, n = 434, p-value = 5.212e-07
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -1.515100e+04  9.113908e+06 -1.614472e-01 
+
+mk.test(chlvec[435:913])
+    # Mann-Kendall trend test
+    # 
+    # data:  chlvec[435:913]
+    # z = -3.7101, n = 479, p-value = 0.0002072
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -1.298600e+04  1.224942e+07 -1.134540e-01 
+
+# Plots
+TNtoTPearly <- TNtoTPdataset[1:469,]
+TNtoTPlate <- TNtoTPdataset[470:752,]
+TNtoTPplot <- 
+  ggplot(TNtoTPearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = TNtoTPearly, aes(x = Datelake, y = TNtoTP), size = 0.5, color = "#f99d15ff") + #significant positive slope
+  geom_point(data = TNtoTPlate, aes(x = Datelake, y = TNtoTP), size = 0.5, color = "gray40") + #non-significant slope
+  ylim(0,200) +
+  ylab(expression(TN:TP)) +
+  xlab(" ") +
+  theme(axis.text.x=element_blank()) + 
+  geom_vline(xintercept = as.numeric(TNtoTPdataset$Datelake[470]), lty = 5)
+print(TNtoTPplot)
+
+TDNtoTDPearly <- TDNtoTDPdataset[1:119,]
+TDNtoTDPlate <- TDNtoTDPdataset[120:781,]
+TDNtoTDPplot <- 
+  ggplot(TDNtoTDPearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = TDNtoTDPearly, aes(x = Datelake, y = TDNtoTDP), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = TDNtoTDPlate, aes(x = Datelake, y = TDNtoTDP), size = 0.5, color = "#240c4cff") + #significant negative slope
+  ylim(0,300) +
+  ylab(expression(TDN:TDP)) +
+  xlab(" ") +
+  theme(axis.text.x=element_blank()) + 
+  geom_vline(xintercept = as.numeric(TDNtoTDPdataset$Datelake[120]), lty = 5)
+print(TDNtoTDPplot)
+
+PPearly <- PPdataset[1:178,]
+PPlate <- PPdataset[179:791,]
+PPplot <- 
+  ggplot(PPearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = PPearly, aes(x = Datelake, y = PP), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = PPlate, aes(x = Datelake, y = PP), size = 0.5, color = "#240c4cff") + #significant negative slope
+  ylab(expression(PP)) +
+  xlab(" ") +
+  theme() + 
+  geom_vline(xintercept = as.numeric(PPdataset$Datelake[179]), lty = 5)
+print(PPplot)
+
+chlearly <- chldataset[1:434,]
+chllate <- chldataset[435:913,]
+chlplot <- 
+  ggplot(chlearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = chlearly, aes(x = Datelake, y = chl), size = 0.5, color = "#240c4cff") + #significant negative slope
+  geom_point(data = chllate, aes(x = Datelake, y = chl), size = 0.5, color = "#240c4cff") + #significant negative slope
+  ylab(expression(chl)) +
+  xlab(" ") +
+  theme() + 
+  geom_vline(xintercept = as.numeric(chldataset$Datelake[435]), lty = 5)
+print(chlplot)
+
+FertNtoPplot <-
+  ggplot(NtoPinput, aes(x = Dateinflow, y = Fert_NtoP)) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(size = 0.5) +
+  #ylim(0,40) +
+  ylab(expression(FertN:FertP)) +
+  xlab(" ") +
+  annotate("text", x = as.Date("1968-01-01"), y = 40, hjust = 0, label = "Period 1", fontface = "bold") +
+  annotate("text", x = as.Date("1980-01-01"), y = 40, hjust = 0, label = "Period 2", fontface = "bold") +
+  annotate("text", x = as.Date("2003-01-01"), y = 40, hjust = 0, label = "Period 3", fontface = "bold") +
+  annotation_custom(rasterGrob(pike)) +
+  theme(axis.text.x=element_blank()) 
+
+pike <- readPNG("Stoichiometry/PikeIcon.png", TRUE)
+fire <- readPNG("Stoichiometry/FireIcon.png", TRUE)
+
+for(i in 1:nrow(NtoPinput)){
+  FertNtoPplot = FertNtoPplot + annotation_custom(
+    rasterGrob(pike),
+    xmin = NtoPinput$.fitted[i]-0.2, xmax = out_b$.fitted[i]+0.2, 
+    ymin = NtoPinput$.stdresid[i]-0.2, ymax = out_b$.stdresid[i]+0.2
+  ) 
+}
+
+print(FertNtoPplot)
+
 #### Cyano % of biomass ====
+# test for normality
+shapiro.test(CyanoPercent$Nfixcyano.percent)
+
+cyanoplot <- 
+  ggplot(CyanoPercent) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = CyanoPercent, aes(x = Date, y = Nfixcyano.percent), size = 0.5) +
+  ylab(expression("Prop Cyano")) + 
+  xlab("") + 
+  theme(axis.text.x=element_blank())
+print(cyanoplot)
+
 #### Phytoplankton ====
 #### Long-term drivers ====
 
@@ -108,10 +395,12 @@ mod.match$mod.DOC <- mod.match$mod.DOC/1000 #convert DOC to mg/L instead of ug/L
 mod.match <- mutate(mod.match, Year = format(mod.match$date, "%Y"))
 mod2.match <- mutate(mod2.match, Year = format(mod2.match$date, "%Y"))
 mod3.match <- mutate(mod3.match, Year = format(mod3.match$date, "%Y"))
+mod.match <- filter(mod.match, Year != 1969)
+mod2.match <- filter(mod2.match, Year != 1969)
+mod3.match <- filter(mod3.match, Year != 1969)
 
 
-#### Ice ====
-#### Fit metrics ####
+#### Ice Fit metrics ====
 icebreakregression.period1 <- lm (match.ice$obs.daybreak[match.ice$Year < 1975] ~ match.ice$out.daybreak[match.ice$Year < 1975])
 summary(icebreakregression.period1)$adj.r.squared
 msebreak.period1 <- mean(residuals(icebreakregression.period1)^2); rmsebreak.period1 <- sqrt(msebreak.period1); rmsebreak.period1
@@ -136,7 +425,7 @@ icefreezeregression.period3 <- lm (match.ice$obs.dayfreeze[match.ice$Year > 1989
 summary(icefreezeregression.period3)$adj.r.squared
 msefreeze.period3 <- mean(residuals(icefreezeregression.period3)^2); rmsefreeze.period3 <- sqrt(msefreeze.period3); rmsefreeze.period3
 
-#### Plot ####
+#### Ice Plot ====
 icedateplot <- 
   ggplot(data = match.ice, aes(x = Year, group = 1)) +
   geom_line(aes(y = out.daybreak, col = "Ice Break"), size = 0.5) +
@@ -152,8 +441,7 @@ icedateplot <-
   theme(legend.position = "top")
 print(icedateplot)
 
-#### Temperature ====
-#### Fit metrics ####
+#### Temperature Fit metrics ====
 temp1m.regression.period1 <- lm(mod2.match$obs.Temp1m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp1m[mod2.match$Year < 1975])
 summary(temp1m.regression.period1)$adj.r.squared
 mse.temp1m.period1 <- mean(residuals(temp1m.regression.period1)^2); rmse.temp1m.period1 <- sqrt(mse.temp1m.period1); rmse.temp1m.period1
@@ -190,7 +478,7 @@ temp9m.regression.period3 <- lm(mod2.match$obs.Temp9m[mod2.match$Year > 1989] ~ 
 summary(temp9m.regression.period3)$adj.r.squared
 mse.temp9m.period3 <- mean(residuals(temp9m.regression.period3)^2); rmse.temp9m.period3 <- sqrt(mse.temp9m.period3); rmse.temp9m.period3
 
-#### Plot ####
+#### Temperature Plot ====
 tempplot <- ggplot() +
   geom_line(data = mod2, aes(x = date, y = mod.Temp1m, col = "1 m"), size = 0.25) +
   geom_line(data = mod2, aes(x = date, y = mod.Temp4m, col = "4 m"), size = 0.25) +
@@ -206,8 +494,7 @@ tempplot <- ggplot() +
   theme(legend.position = "top")
 print(tempplot)
 
-#### PP ====
-#### Fit Metrics ####
+#### PP Fit Metrics ====
 PP.regression.period1 <- lm(mod.match$obs.PP[mod.match$Year < 1975] ~ mod.match$mod.PP[mod.match$Year < 1975])
 summary(PP.regression.period1)$adj.r.squared
 mse.PP.period1 <- mean(residuals(PP.regression.period1)^2); rmse.PP.period1 <- sqrt(mse.PP.period1); rmse.PP.period1
@@ -220,7 +507,7 @@ PP.regression.period3 <- lm(mod.match$obs.PP[mod.match$Year > 1989] ~ mod.match$
 summary(PP.regression.period3)$adj.r.squared
 mse.PP.period3 <- mean(residuals(PP.regression.period3)^2); rmse.PP.period3 <- sqrt(mse.PP.period3); rmse.PP.period3
 
-#### Plot ####
+#### PP Plot ====
 PPplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.25) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 0.5) +
@@ -232,8 +519,7 @@ PPplot <- ggplot() +
   theme(legend.position = "top") 
 print(PPplot)
 
-#### Cumulative PP ====
-#### Fit Metrics ####
+#### Cumulative PP Fit Metrics ====
 # Cumulative Sum of PP
 mod.match.daily <- right_join(obs, mod, by = "date")
 mod.match.daily$Month <- as.numeric(format(mod.match.daily$date, "%m"))
@@ -266,7 +552,7 @@ sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1
 summary(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1989])
 sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1989])
 
-#### Plot ####
+#### Cumulative PP Plot ====
 PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 0.5) +
   geom_point(aes(x = date, y = Cum.Sum.obs.PP, col = "Observed"), size = 0.1, alpha = 0.5) +
@@ -278,8 +564,7 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   theme(legend.position = "top") 
 print(PPcumulativeplot)
 
-#### Model PP residuals ====
-#### Fit Metrics ####
+#### Model PP residuals Fit Metrics ====
 PPresiduals <- mod.match %>%
   select(date, Year) %>%
   mutate(residuals.PP = mod.match$obs.PP - mod.match$mod.PP) %>%
@@ -308,7 +593,7 @@ t.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 199
 # PP residuals are significantly lower in period 3 than in period 1 or 2.
 # PP residuals do not differ significantly in periods 1 and 2.
 
-#### Plot ####
+#### Model PP residuals Plot ====
 PPresidualsplot <- ggplot() +
   geom_point(data = PPresiduals, aes(x = date, y = residuals.PP), size = 0.5, color = "#d14a42ff") + 
   ylab(expression(PP ~ residuals ~ (mu*g / L))) +
@@ -318,8 +603,7 @@ PPresidualsplot <- ggplot() +
   theme(legend.position = "none") 
 print(PPresidualsplot)
 
-#### TDP ====
-#### Fit Metrics ####
+#### TDP Fit Metrics ====
 TDP.regression.period1 <- lm(mod.match$obs.TDP[mod.match$Year < 1975] ~ mod.match$mod.TDP[mod.match$Year < 1975])
 summary(TDP.regression.period1)$adj.r.squared
 mse.TDP.period1 <- mean(residuals(TDP.regression.period1)^2); rmse.TDP.period1 <- sqrt(mse.TDP.period1); rmse.TDP.period1
@@ -332,7 +616,7 @@ TDP.regression.period3 <- lm(mod.match$obs.TDP[mod.match$Year > 1989] ~ mod.matc
 summary(TDP.regression.period3)$adj.r.squared
 mse.TDP.period3 <- mean(residuals(TDP.regression.period3)^2); rmse.TDP.period3 <- sqrt(mse.TDP.period3); rmse.TDP.period3
 
-#### Plot ####
+#### TDP Plot ====
 TDPplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.TDP, col = "Modeled"), size = 0.25) +
   geom_point(data = mod.match, aes(x = date, y = obs.TDP, col = "Observed"), pch = 19, size = 0.5) +
@@ -344,8 +628,7 @@ TDPplot <- ggplot() +
   theme(legend.position = "top") 
 print(TDPplot)
 
-#### O2 ====
-#### Fit Metrics ####
+#### O2 Fit Metrics ====
 O2.regression.period1 <- lm(mod3.match$obs.O2.4m[mod3.match$Year < 1975] ~ mod3.match$mod.Oxy4m[mod3.match$Year < 1975])
 summary(O2.regression.period1)$adj.r.squared
 mse.O2.period1 <- mean(residuals(O2.regression.period1)^2); rmse.O2.period1 <- sqrt(mse.O2.period1); rmse.O2.period1
@@ -358,7 +641,7 @@ O2.regression.period3 <- lm(mod3.match$obs.O2.4m[mod3.match$Year > 1989] ~ mod3.
 summary(O2.regression.period3)$adj.r.squared
 mse.O2.period3 <- mean(residuals(O2.regression.period3)^2); rmse.O2.period3 <- sqrt(mse.O2.period3); rmse.O2.period3
 
-#### Plot ####
+#### O2 Plot ====
 O2plot <- ggplot() +
   geom_line(data = mod2, aes(x = date, y = mod.Oxy4m, col = "Modeled"), size = 0.25) +
   geom_point(data = mod3.match, aes(x = date, y = obs.O2.4m, col = "Observed"), pch = 19, size = 0.5) +
@@ -370,8 +653,7 @@ O2plot <- ggplot() +
   theme(legend.position = "top") 
 print(O2plot)
 
-#### DOC ====
-#### Fit Metrics ####
+#### DOC Fit Metrics ====
 DOC.regression.period1 <- lm(mod.match$obs.DOC[mod.match$Year < 1975] ~ mod.match$mod.DOC[mod.match$Year < 1975])
 summary(DOC.regression.period1)$adj.r.squared
 mse.DOC.period1 <- mean(residuals(DOC.regression.period1)^2); rmse.DOC.period1 <- sqrt(mse.DOC.period1); rmse.DOC.period1
@@ -384,7 +666,7 @@ DOC.regression.period3 <- lm(mod.match$obs.DOC[mod.match$Year > 1989] ~ mod.matc
 summary(DOC.regression.period3)$adj.r.squared
 mse.DOC.period3 <- mean(residuals(DOC.regression.period3)^2); rmse.DOC.period3 <- sqrt(mse.DOC.period3); rmse.DOC.period3
 
-#### Plot ####
+#### DOC Plot ====
 DOCplot <- ggplot() +
   geom_line(data = mod, aes(x = date, y = mod.DOC, col = "Modeled"), size = 0.25) +
   geom_point(data = mod.match, aes(x = date, y = obs.DOC, col = "Observed"), pch = 19, size = 0.5) +
@@ -652,14 +934,19 @@ TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m"
                                                              normalized.unbiased.RMSD.Temp1m.period3, normalized.unbiased.RMSD.Temp4m.period3, normalized.unbiased.RMSD.Temp9m.period3,
                                                              normalized.unbiased.RMSD.O24m.period3, normalized.unbiased.RMSD.DOC.period3, normalized.unbiased.RMSD.TDP.period3, normalized.unbiased.RMSD.PP.period3)) 
 
+TargetDiagramData$Variable <- factor(TargetDiagramData$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP"))
+
 #### Target Plot ####
 TargetPlot <- 
-ggplot(TargetDiagramData, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias, shape = Variable, color = Period)) + 
-  geom_point() + 
+ggplot(TargetDiagramData, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias, shape = Variable, color = Period, fill = Period)) + 
+  geom_point(size = 3) + 
   annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   annotate("path", x=0+0.75*cos(seq(0,2*pi,length.out=100)), y=0+0.75*sin(seq(0,2*pi,length.out=100))) +
   xlim(-15, 15) +
   ylim(-2, 2) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  scale_shape_manual(values = c(0, 1, 2, 5, 15, 16, 17))
+  scale_shape_manual(values = c(0, 1, 2, 18, 15, 19, 17)) + 
+  ylab(expression(Normalized ~ Bias)) +
+  xlab(expression(Normalized ~ Unbiased ~ RMSD)) +
+  theme(legend.title = element_blank())
 print(TargetPlot)
