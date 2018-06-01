@@ -12,6 +12,8 @@ library(zoo)
 library(colormap)
 library(trend)
 library(png)
+library(reshape2)
+library(vegan)
 
 theme_std <- function (base_size = 12, base_family = "") {
   theme_grey(base_size = base_size, base_family = base_family) %+replace% 
@@ -40,20 +42,26 @@ scales::show_col(colormap(colormap = colormaps$viridis, nshades=15))
 #### Spreadsheet Import ====
 NtoPLake <- read.csv("./Stoichiometry/NP_Stoichiometry_L227.csv")
 attach(NtoPLake)
-head(NtoPLake)
 NtoPInflow <- read.csv("./Stoichiometry/NP_Stoichiometry_Inflow.csv")
 attach(NtoPInflow)
-head(NtoPInflow)
 CyanoPercent <- read.csv("./Phytoplankton/L227_cyanopercent.csv")
+InflowData <- read.csv("../../IO/Inflow_for_interpolation.csv")
+InflowData <- InflowData %>% unite(Date, Year, Month, Day, sep = '-')
+dat.tax1 <- read.csv("./PhytoDiversity/L227-phytocounts_19682012.csv", header = T) #1968 - 2012
+dat.tax3 <- read.csv("./PhytoDiversity/L227-phytocounts_20132015.csv", header = F)
 
-# Convert dates from factor to date format, add month 
+# Convert dates from factor to date format, add month or year
 Datelake <- as.Date(NtoPLake$Date, "%m/%d/%y")
 Dateinflow <- as.Date(NtoPInflow$Date, "%m/%d/%y")
 Monthlake <- as.numeric(format(Datelake, "%m"))
 Monthinflow <- as.numeric(format(Dateinflow, "%m"))
 CyanoPercent$Date <- as.Date(CyanoPercent$Date, "%m/%d/%y")
+InflowData$Date <- as.Date(InflowData$Date, format = "%Y-%m-%d")
+InflowData <- mutate(InflowData, Year = as.numeric(format(InflowData$Date, "%Y")))  %>% 
+  mutate(InflowData, Class = 0)
 
 #### Stoichiometry ==== 
+#### Data wrangling ####
 # Change concentrations from mass (ug/L or mg/d) to molar (umol/L or mmol/d)
 Fert_TP_molar <- Fert_TP_mg.d/30.97
 Inflow_TP_molar <- Inflow_TP_mg.d/30.97
@@ -116,6 +124,7 @@ chldataset <- NtoPinsitu %>%
   drop_na()
 rownames(chldataset) <- NULL
 
+#### Pettitt's test ####
 # Pettitt's test: detects a single changepoint in hydrological/climate series with continuous data
 TNtoTPvec <- as.vector(TNtoTPdataset$TNtoTP)
 pettitt.test(TNtoTPvec)
@@ -153,6 +162,7 @@ pettitt.test(chlvec)
     #   probable change point at time K 
     # 435 
 
+#### Mann-Kendall test ####
 # Mann-Kendall test: detect monotonic trends in series of environmental/climate/hydrological data
 mk.test(TNtoTPvec[1:469])
 # data:  TNtoTPvec[1:469]
@@ -224,7 +234,7 @@ mk.test(chlvec[435:913])
     #   S          varS           tau 
     # -1.298600e+04  1.224942e+07 -1.134540e-01 
 
-# Plots
+#### Plots ####
 TNtoTPearly <- TNtoTPdataset[1:469,]
 TNtoTPlate <- TNtoTPdataset[470:752,]
 TNtoTPplot <- 
@@ -265,7 +275,7 @@ PPplot <-
   geom_point(data = PPlate, aes(x = Datelake, y = PP), size = 0.5, color = "#240c4cff") + #significant negative slope
   ylab(expression(PP)) +
   xlab(" ") +
-  theme() + 
+  theme(axis.text.x=element_blank()) + 
   geom_vline(xintercept = as.numeric(PPdataset$Datelake[179]), lty = 5)
 print(PPplot)
 
@@ -291,23 +301,12 @@ FertNtoPplot <-
   #ylim(0,40) +
   ylab(expression(FertN:FertP)) +
   xlab(" ") +
-  annotate("text", x = as.Date("1968-01-01"), y = 40, hjust = 0, label = "Period 1", fontface = "bold") +
-  annotate("text", x = as.Date("1980-01-01"), y = 40, hjust = 0, label = "Period 2", fontface = "bold") +
-  annotate("text", x = as.Date("2003-01-01"), y = 40, hjust = 0, label = "Period 3", fontface = "bold") +
-  annotation_custom(rasterGrob(pike)) +
+  annotate("text", x = as.Date("1968-01-01"), y = 38, hjust = 0, label = "High N:P", fontface = "bold") +
+  annotate("text", x = as.Date("1980-01-01"), y = 38, hjust = 0, label = "Low N:P", fontface = "bold") +
+  annotate("text", x = as.Date("2003-01-01"), y = 38, hjust = 0, label = "P Only", fontface = "bold") +
+  annotate("point", x = as.Date("1980-01-01"), y = 30, pch = 14, size = 2) +
+  annotate("point", x = as.Date("1996-01-01"), y = 30, pch = 13, size = 2) +
   theme(axis.text.x=element_blank()) 
-
-pike <- readPNG("Stoichiometry/PikeIcon.png", TRUE)
-fire <- readPNG("Stoichiometry/FireIcon.png", TRUE)
-
-for(i in 1:nrow(NtoPinput)){
-  FertNtoPplot = FertNtoPplot + annotation_custom(
-    rasterGrob(pike),
-    xmin = NtoPinput$.fitted[i]-0.2, xmax = out_b$.fitted[i]+0.2, 
-    ymin = NtoPinput$.stdresid[i]-0.2, ymax = out_b$.stdresid[i]+0.2
-  ) 
-}
-
 print(FertNtoPplot)
 
 #### Cyano % of biomass ====
@@ -325,7 +324,406 @@ cyanoplot <-
 print(cyanoplot)
 
 #### Phytoplankton ====
+#### Data wrangling ####
+# Read in data from 1968-2012
+colnames(dat.tax1) <- c("year","data_set","sample.id","sequence.number","location","sublocation","station","station.type","start.date","start.time",
+                        "stratum","stratum.volume","sample.type","start.depth","end.depth","taxon.code","old.cell.volume","cell.volume","correction.factor","cell.count",
+                        "cell.count2","cell.length","cell.width","field.ref","cell.density","biomass","collection.authority","collection.method","analyst")
+dat.tax1$start.date <- as.Date(dat.tax1$start.date, format = "%Y-%m-%d")
+dat.tax1.minus96 <- dat.tax1[dat.tax1$year != 1996,] #1996 was the pike year
+
+# Read in data from 2013-2015
+dat.tax3 <- dat.tax3[3:1745,1:(ncol(dat.tax3)-1)]
+colnames(dat.tax3) <- c("location","start.date","stratum","start.depth","end.depth","taxon.code","species.name","subsample.volume","cell.count",
+                        "correction.factor","cell.length","cell.width","cell.volume","cell.density","biomass")
+dat.tax3$stratum.volume <- c(NA)
+dat.tax3$start.date <- as.Date(dat.tax3$start.date, format = "%Y-%m-%d") #Converts data to date structure
+dat.tax3$taxon.code <- paste0("P",dat.tax3$taxon.code) # Add P tp species code
+subset.cols <- c("start.date","stratum","stratum.volume","start.depth","end.depth","taxon.code","correction.factor","cell.count","cell.density","cell.volume","biomass")
+
+# select columns from each data frame
+dat.tax1.subset <- dplyr::select(dat.tax1.minus96, subset.cols)
+dat.tax3.subset <- dplyr::select(dat.tax3, subset.cols)
+phyto.species <- rbind(dat.tax1.subset,dat.tax3.subset)
+
+# data wrangling
+phyto.species[,c(3:5,7:11)]<- lapply(phyto.species[,c(3:5,7:11)], as.numeric)
+phyto.species$stratum <- as.factor(gsub("META","MET",phyto.species$stratum)) 
+phyto.species <- phyto.species %>%
+  mutate(year = as.numeric(format(start.date,'%Y'))) 
+phyto.species <- droplevels(phyto.species)
+sampling.dates <- phyto.species %>% 
+  filter(stratum == "EPI") %>%
+  arrange(start.date) %>%
+  distinct(start.date) %>%
+  mutate(yr = format(start.date,"%Y"))
+
+# create sampling sequence for each year
+yr.list <- c()
+samp.no.list <- c()
+for(i in unique(sampling.dates$yr)){
+  yr <- rep(i, length(sampling.dates$start.date[sampling.dates$yr == i]))
+  samp.no <- seq(1,length(sampling.dates$start.date[sampling.dates$yr == i]),1)
+  
+  yr.list <- append(yr, yr.list)
+  samp.no.list <- append(samp.no, samp.no.list)
+}
+
+# Create a new list of sampling numbers
+samp.list <- data.frame(yr.list, samp.no.list) %>%
+  mutate(samp.no = paste0(yr.list,"_",samp.no.list)) %>%
+  arrange(yr.list,samp.no.list) 
+
+beta.list <- samp.list
+samp.list <- data.frame(samp.list, sampling.dates$start.date)[,3:4]
+
+# use list to create species matrix
+epi.species.tab <- phyto.species %>% 
+  filter(stratum == "EPI") %>%    # Select EPI samples
+  arrange(start.date) %>%      # order dates 
+  left_join(samp.list, by = c("start.date"="sampling.dates.start.date")) %>% 
+  dplyr::select(samp.no, taxon.code, cell.count) # select appropriate columns; diversity uses count rather than density or biomass 
+
+epi.species.tab$samp.no <- as.factor(epi.species.tab$samp.no)
+
+# Convert long form data into matrix by sampling number
+epi.species.mat <- dcast(data = epi.species.tab,  samp.no ~ taxon.code, value.var = "cell.count", fun.aggregate = sum)
+row.names(epi.species.mat) <- epi.species.mat[,1]
+epi.species.mat <- epi.species.mat[,-1]
+epi.species.mat[is.na(epi.species.mat)] <- 0
+
+shan <- as.data.frame(diversity(epi.species.mat, index = "shannon"))
+colnames(shan) <- c("shannon")
+shan$site <- rownames(shan)
+shan$year <- substr(shan$site, 1, 4)
+shan$year <- as.factor(shan$year)
+shan$sampling <- substring(shan$site, 6)
+
+MeanShannon <- aggregate(shan, list(Year = shan$year), mean)
+MeanShannon <- select(MeanShannon, Year:shannon)
+SDShannon <- aggregate(shan, list(Year = shan$year), sd)
+SDShannon <- select(SDShannon, Year:shannon)
+MeanShannon <- mutate(MeanShannon, sdshannon = SDShannon$shannon)
+MeanShannon$Year <- as.Date(MeanShannon$Year, "%Y")
+
+shan$sampling <- as.numeric(shan$sampling)
+shan <- shan %>%
+  arrange(year, sampling)
+Shannondataset <- as.data.frame(sampling.dates[, "start.date"])
+Shannondataset <- mutate(Shannondataset, ShannonIndex = shan$shannon)
+colnames(Shannondataset) <- c("Date", "ShannonIndex")
+
+#### Pettitt's test ####
+Shannonvec <- as.vector(Shannondataset$ShannonIndex)
+pettitt.test(Shannonvec)
+    # data:  Shannonvec
+    # U* = 35268, p-value < 2.2e-16
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 232 
+
+Shannonmeanvec <- as.vector(MeanShannon$shannon)
+pettitt.test(Shannonmeanvec)
+    # data:  Shannonmeanvec
+    # U* = 380, p-value = 0.0001826
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 17 
+
+#### Mann-Kendall test ####
+mk.test(Shannonvec[1:231])
+    # data:  Shannonvec[1:231]
+    # z = 3.5535, n = 231, p-value = 0.0003802
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 4.173000e+03 1.378428e+06 1.570864e-01 
+
+mk.test(Shannonvec[232:581])
+    # data:  Shannonvec[232:581]
+    # z = 1.4566, n = 350, p-value = 0.1452
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 3.187000e+03 4.784208e+06 5.218174e-02 
+
+mk.test(Shannonmeanvec[1:16])
+    # data:  Shannonmeanvec[1:16]
+    # z = 1.3957, n = 16, p-value = 0.1628
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S        varS         tau 
+    # 32.0000000 493.3333333   0.2666667 
+
+mk.test(Shannonmeanvec[17:45])
+    # data:  Shannonmeanvec[17:45]
+    # z = 0.50647, n = 29, p-value = 0.6125
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 2.800000e+01 2.842000e+03 6.896552e-02 
+
+#### Plot ####
+Shannonearly <- Shannondataset[1:231,]
+Shannonlate <- Shannondataset[232:581,]
+Shannonearly$ShannonIndex <- round(Shannonearly$ShannonIndex, digits = 2)
+Shannonlate$ShannonIndex <- round(Shannonlate$ShannonIndex, digits = 2)
+
+Shannonplot <- 
+  ggplot(Shannonearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = Shannonearly, aes(x = Date, y = ShannonIndex), size = 0.5, color = "#f99d15ff") + #significant positive slope
+  geom_point(data = Shannonlate, aes(x = Date, y = ShannonIndex), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = MeanShannon, aes(x = Year, y = shannon), pch = 1) +
+  ylab(expression("Shannon Index")) +
+  xlab(" ") +
+  theme(axis.text.x=element_blank()) + 
+  geom_vline(xintercept = as.numeric(Shannondataset$Date[232]), lty = 5)
+print(Shannonplot)
+
+
 #### Long-term drivers ====
+#### Data Wrangling ####
+InflowData <- mutate(InflowData, DIN = NO3 + NH4)
+Inflowlimited <- sample_n(InflowData, 5000)
+
+# test for normality
+shapiro.test(Inflowlimited$AirTemp)
+shapiro.test(Inflowlimited$WindSpeed)
+shapiro.test(Inflowlimited$Precipitation)
+shapiro.test(InflowData$TP)
+shapiro.test(InflowData$DIN)
+
+# Separate datasets and eliminate NAs
+AirTempdataset <- InflowData %>%
+  select(Date, AirTemp) %>%
+  drop_na()
+rownames(AirTempdataset) <- NULL
+
+WindSpeeddataset <- InflowData %>%
+  select(Date, WindSpeed) %>%
+  drop_na()
+rownames(WindSpeeddataset) <- NULL
+
+Precipdataset <- InflowData %>%
+  select(Date, Precipitation) %>%
+  drop_na()
+rownames(Precipdataset) <- NULL
+
+TPinflowdataset <- InflowData %>%
+  select(Date, TP) %>%
+  drop_na()
+rownames(TPinflowdataset) <- NULL
+
+DINinflowdataset <- InflowData %>%
+  select(Date, DIN) %>%
+  drop_na()
+rownames(DINinflowdataset) <- NULL
+
+#### Pettitt's test ####
+# Pettitt's test: detects a single changepoint in hydrological/climate series with continuous data
+AirTempvec <- as.vector(AirTempdataset$AirTemp)
+pettitt.test(AirTempvec)
+    # data:  AirTempvec
+    # U* = 3696400, p-value = 2.699e-07
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 10121 
+
+WindSpeedvec <- as.vector(WindSpeeddataset$WindSpeed)
+pettitt.test(WindSpeedvec)
+    # data:  WindSpeedvec
+    # U* = 7456000, p-value < 2.2e-16
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 4430 
+
+Precipvec <- as.vector(Precipdataset$Precipitation)
+pettitt.test(Precipvec)
+    # data:  Precipvec
+    # U* = 3790800, p-value = 1.374e-07
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 11270 
+
+TPinflowvec <- as.vector(TPinflowdataset$TP)
+pettitt.test(TPinflowvec)
+    # data:  TPinflowvec
+    # U* = 153180, p-value < 2.2e-16
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 677 
+
+DINinflowvec <- as.vector(DINinflowdataset$DIN)
+pettitt.test(DINinflowvec)
+    # data:  DINinflowvec
+    # U* = 84911, p-value = 1.378e-10
+    # alternative hypothesis: two.sided
+    # sample estimates:
+    #   probable change point at time K 
+    # 308 
+
+#### Mann-Kendall test ####
+# Mann-Kendall test: detect monotonic trends in series of environmental/climate/hydrological data
+mk.test(AirTempvec[1:10120])
+    # data:  AirTempvec[1:10120]
+    # z = -0.79636, n = 10120, p-value = 0.4258
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -2.702660e+05  1.151746e+11 -5.286991e-03 
+
+mk.test(AirTempvec[10121:17305])
+    # data:  AirTempvec[10121:17305]
+    # z = -1.0596, n = 7185, p-value = 0.2893
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -2.151250e+05  4.122037e+10 -8.358701e-03 
+
+mk.test(WindSpeedvec[1:4429])
+    # data:  WindSpeedvec[1:4429]
+    # z = 4.7796, n = 4429, p-value = 1.757e-06
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 4.686810e+05 9.615581e+09 4.928511e-02 
+
+mk.test(WindSpeedvec[4430:15453])
+    # data:  WindSpeedvec[4430:15453]
+    # z = -20.828, n = 11024, p-value < 2.2e-16
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -8.022001e+06  1.483467e+11 -1.358043e-01 
+
+mk.test(Precipvec[1:11269])
+    # data:  Precipvec[1:11269]
+    # z = 0.29164, n = 11269, p-value = 0.7706
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 1.027980e+05 1.242402e+11 2.034715e-03 
+
+mk.test(Precipvec[11270:17355])
+    # data:  Precipvec[11270:17355]
+    # z = 1.496, n = 6086, p-value = 0.1347
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 2.173940e+05 2.111648e+10 1.399441e-02 
+
+mk.test(TPinflowvec[1:676])
+    # data:  TPinflowvec[1:676]
+    # z = 1.9682, n = 676, p-value = 0.04905
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 1.154200e+04 3.438425e+07 5.099094e-02 
+
+mk.test(TPinflowvec[677:1276])
+    # data:  TPinflowvec[677:1276]
+    # z = -0.12095, n = 600, p-value = 0.9037
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -5.940000e+02  2.403618e+07 -3.343057e-03 
+
+mk.test(DINinflowvec[1:307])
+    # data:  DINinflowvec[1:307]
+    # z = 1.3065, n = 307, p-value = 0.1914
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 2.349000e+03 3.229839e+06 5.022712e-02 
+
+mk.test(DINinflowvec[308:1227])
+    # data:  DINinflowvec[308:1227]
+    # z = -8.7875, n = 920, p-value < 2.2e-16
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -8.180400e+04  8.665817e+07 -1.938433e-01 
+
+#### Plots ####
+AirTempearly <- AirTempdataset[1:10120,]
+AirTemplate <- AirTempdataset[10121:17305,]
+AirTempplot <-
+  ggplot(AirTempearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = AirTempearly, aes(x = Date, y = AirTemp), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = AirTemplate, aes(x = Date, y = AirTemp), size = 0.5, color = "gray40") + #non-significant slope
+  ylab(expression(Air ~ Temperature)) +
+  xlab(" ") #+
+  #geom_vline(xintercept = as.numeric(AirTempdataset$Date[10121]), lty = 5) # took out because both periods have no trend
+print(AirTempplot)
+
+WindSpeedearly <- WindSpeeddataset[1:4429,]
+WindSpeedlate <- WindSpeeddataset[4430:15453,]
+WindSpeedplot <-
+  ggplot(WindSpeedearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = WindSpeedearly, aes(x = Date, y = WindSpeed), size = 0.5, color = "#f99d15ff") + #significant positive slope
+  geom_point(data = WindSpeedlate, aes(x = Date, y = WindSpeed), size = 0.5, color = "#240c4cff") + #significant negative slope
+  ylab(expression(Wind ~ Speed)) +
+  xlab(" ") +
+  geom_vline(xintercept = as.numeric(WindSpeeddataset$Date[4430]), lty = 5)
+print(WindSpeedplot)
+
+Precipearly <- Precipdataset[1:11269,]
+Preciplate <- Precipdataset[11270:17355,]
+Precipplot <-
+  ggplot(WindSpeedearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = Precipearly, aes(x = Date, y = Precipitation), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = Preciplate, aes(x = Date, y = Precipitation), size = 0.5, color = "gray40") + #non-significant slope
+  ylab(expression(Precipitation)) +
+  xlab(" ") #+
+  #geom_vline(xintercept = as.numeric(Precipdataset$Date[11270]), lty = 5) # took out because both periods have no trend
+print(Precipplot)
+
+TPinflowearly <- TPinflowdataset[1:676,]
+TPinflowlate <- TPinflowdataset[677:1276,]
+TPinflowplot <-
+  ggplot(TPinflowearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = TPinflowearly, aes(x = Date, y = TP), size = 0.5, color = "#f99d15ff") + #significant positive slope
+  geom_point(data = TPinflowlate, aes(x = Date, y = TP), size = 0.5, color = "gray40") + #non-significant slope
+  ylab(expression(TP)) +
+  xlab(" ") +
+  geom_vline(xintercept = as.numeric(TPinflowdataset$Date[677]), lty = 5) # took out because both periods have no trend
+print(TPinflowplot)
+
+DINinflowearly <- DINinflowdataset[1:307,]
+DINinflowlate <- DINinflowdataset[308:1227,]
+DINinflowplot <-
+  ggplot(DINinflowearly) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(data = DINinflowearly, aes(x = Date, y = DIN), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = DINinflowlate, aes(x = Date, y = DIN), size = 0.5, color = "#240c4cff") + #significant negative slope
+  ylab(expression(DIN)) +
+  xlab(" ") +
+  geom_vline(xintercept = as.numeric(DINinflowdataset$Date[308]), lty = 5) 
+print(DINinflowplot)
+
+grid.arrange(AirTempplot, WindSpeedplot, Precipplot, TPinflowplot, DINinflowplot, ncol = 1)
+
+
+#### Combined plots ====
+grid.arrange(FertNtoPplot, cyanoplot, Shannonplot, TNtoTPplot, TDNtoTDPplot, PPplot, chlplot,  ncol = 1)
+grid.arrange(PPplot, chlplot, ncol = 1)
 
 #### Model Performance Analysis ----
 # Code taken from ModelIterationReport
@@ -404,26 +802,32 @@ mod3.match <- filter(mod3.match, Year != 1969)
 icebreakregression.period1 <- lm (match.ice$obs.daybreak[match.ice$Year < 1975] ~ match.ice$out.daybreak[match.ice$Year < 1975])
 summary(icebreakregression.period1)$adj.r.squared
 msebreak.period1 <- mean(residuals(icebreakregression.period1)^2); rmsebreak.period1 <- sqrt(msebreak.period1); rmsebreak.period1
+rmsebreak.period1/sd(na.omit(match.ice$obs.daybreak[match.ice$Year < 1975]))
 
 icefreezeregression.period1 <- lm (match.ice$obs.dayfreeze[match.ice$Year < 1975] ~ match.ice$out.dayfreeze[match.ice$Year < 1975])
 summary(icefreezeregression.period1)$adj.r.squared
 msefreeze.period1 <- mean(residuals(icefreezeregression.period1)^2); rmsefreeze.period1 <- sqrt(msefreeze.period1); rmsefreeze.period1
+rmsefreeze.period1/sd(na.omit(match.ice$obs.dayfreeze[match.ice$Year < 1975]))
 
 icebreakregression.period2 <- lm (match.ice$obs.daybreak[match.ice$Year > 1974 & match.ice$Year < 1990] ~ match.ice$out.daybreak[match.ice$Year > 1974 & match.ice$Year < 1990])
 summary(icebreakregression.period2)$adj.r.squared
 msebreak.period2 <- mean(residuals(icebreakregression.period2)^2); rmsebreak.period2 <- sqrt(msebreak.period2); rmsebreak.period2
+rmsebreak.period2/sd(na.omit(match.ice$obs.daybreak[match.ice$Year > 1974 & match.ice$Year < 1990]))
 
 icefreezeregression.period2 <- lm (match.ice$obs.dayfreeze[match.ice$Year > 1974 & match.ice$Year < 1990] ~ match.ice$out.dayfreeze[match.ice$Year > 1974 & match.ice$Year < 1990])
 summary(icefreezeregression.period2)$adj.r.squared
 msefreeze.period2 <- mean(residuals(icefreezeregression.period2)^2); rmsefreeze.period2 <- sqrt(msefreeze.period2); rmsefreeze.period2
+rmsefreeze.period2/sd(na.omit(match.ice$obs.dayfreeze[match.ice$Year > 1974 & match.ice$Year < 1990]))
 
 icebreakregression.period3 <- lm (match.ice$obs.daybreak[match.ice$Year > 1989] ~ match.ice$out.daybreak[match.ice$Year > 1989])
 summary(icebreakregression.period3)$adj.r.squared
 msebreak.period3 <- mean(residuals(icebreakregression.period3)^2); rmsebreak.period3 <- sqrt(msebreak.period3); rmsebreak.period3
+rmsebreak.period3/sd(na.omit(match.ice$obs.daybreak[match.ice$Year > 1989]))
 
 icefreezeregression.period3 <- lm (match.ice$obs.dayfreeze[match.ice$Year > 1989] ~ match.ice$out.dayfreeze[match.ice$Year > 1989])
 summary(icefreezeregression.period3)$adj.r.squared
 msefreeze.period3 <- mean(residuals(icefreezeregression.period3)^2); rmsefreeze.period3 <- sqrt(msefreeze.period3); rmsefreeze.period3
+rmsefreeze.period3/sd(na.omit(match.ice$obs.dayfreeze[match.ice$Year > 1989]))
 
 #### Ice Plot ====
 icedateplot <- 
@@ -432,51 +836,62 @@ icedateplot <-
   geom_point(aes(y = obs.daybreak, col = "Ice Break"), size = 0.5) +
   geom_line(aes(y = out.dayfreeze, col = "Ice Freeze"), size = 0.5) +
   geom_point(aes(y = obs.dayfreeze, col = "Ice Freeze"), size = 0.5) + 
+  geom_linerange(aes(ymax = obs.daybreak-5, ymin = obs.daybreak, col = "Ice Break")) +
+  geom_linerange(aes(ymax = obs.dayfreeze-15, ymin = obs.dayfreeze, col = "Ice Freeze")) +
   scale_y_reverse() + 
   ylab("Julian Day") +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f99d15ff", "#240c4cff")) +
   geom_vline(xintercept = 1975, lty = 5) +
   geom_vline(xintercept = 1990, lty = 5) +
-  theme(legend.position = "top")
+  theme(legend.position = "top", axis.text.x = element_blank())
 print(icedateplot)
 
 #### Temperature Fit metrics ====
 temp1m.regression.period1 <- lm(mod2.match$obs.Temp1m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp1m[mod2.match$Year < 1975])
 summary(temp1m.regression.period1)$adj.r.squared
 mse.temp1m.period1 <- mean(residuals(temp1m.regression.period1)^2); rmse.temp1m.period1 <- sqrt(mse.temp1m.period1); rmse.temp1m.period1
+rmse.temp1m.period1/sd(na.omit(mod2.match$obs.Temp1m[mod2.match$Year < 1975]))
 
 temp4m.regression.period1 <- lm(mod2.match$obs.Temp4m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp4m[mod2.match$Year < 1975])
 summary(temp4m.regression.period1)$adj.r.squared
 mse.temp4m.period1 <- mean(residuals(temp4m.regression.period1)^2); rmse.temp4m.period1 <- sqrt(mse.temp4m.period1); rmse.temp4m.period1
+rmse.temp4m.period1/sd(na.omit(mod2.match$obs.Temp4m[mod2.match$Year < 1975]))
 
 temp9m.regression.period1 <- lm(mod2.match$obs.Temp9m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp9m[mod2.match$Year < 1975])
 summary(temp9m.regression.period1)$adj.r.squared
 mse.temp9m.period1 <- mean(residuals(temp9m.regression.period1)^2); rmse.temp9m.period1 <- sqrt(mse.temp9m.period1); rmse.temp9m.period1
+rmse.temp9m.period1/sd(na.omit(mod2.match$obs.Temp9m[mod2.match$Year < 1975]))
 
 temp1m.regression.period2 <- lm(mod2.match$obs.Temp1m[mod2.match$Year > 1974 & mod2.match$Year < 1990] ~ mod2.match$mod.Temp1m[mod2.match$Year > 1974 & mod2.match$Year < 1990])
 summary(temp1m.regression.period2)$adj.r.squared
 mse.temp1m.period2 <- mean(residuals(temp1m.regression.period2)^2); rmse.temp1m.period2 <- sqrt(mse.temp1m.period2); rmse.temp1m.period2
+rmse.temp1m.period2/sd(na.omit(mod2.match$obs.Temp1m[mod2.match$Year > 1974 & mod2.match$Year < 1990]))
 
 temp4m.regression.period2 <- lm(mod2.match$obs.Temp4m[mod2.match$Year > 1974 & mod2.match$Year < 1990] ~ mod2.match$mod.Temp4m[mod2.match$Year > 1974 & mod2.match$Year < 1990])
 summary(temp4m.regression.period2)$adj.r.squared
 mse.temp4m.period2 <- mean(residuals(temp4m.regression.period2)^2); rmse.temp4m.period2 <- sqrt(mse.temp4m.period2); rmse.temp4m.period2
+rmse.temp4m.period2/sd(na.omit(mod2.match$obs.Temp4m[mod2.match$Year > 1974 & mod2.match$Year < 1990]))
 
 temp9m.regression.period2 <- lm(mod2.match$obs.Temp9m[mod2.match$Year > 1974 & mod2.match$Year < 1990] ~ mod2.match$mod.Temp9m[mod2.match$Year > 1974 & mod2.match$Year < 1990])
 summary(temp9m.regression.period2)$adj.r.squared
 mse.temp9m.period2 <- mean(residuals(temp9m.regression.period2)^2); rmse.temp9m.period2 <- sqrt(mse.temp9m.period2); rmse.temp9m.period2
+rmse.temp9m.period2/sd(na.omit(mod2.match$obs.Temp9m[mod2.match$Year > 1974 & mod2.match$Year < 1990]))
 
 temp1m.regression.period3 <- lm(mod2.match$obs.Temp1m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp1m[mod2.match$Year > 1989])
 summary(temp1m.regression.period3)$adj.r.squared
 mse.temp1m.period3 <- mean(residuals(temp1m.regression.period3)^2); rmse.temp1m.period3 <- sqrt(mse.temp1m.period3); rmse.temp1m.period3
+rmse.temp1m.period3/sd(na.omit(mod2.match$obs.Temp1m[mod2.match$Year > 1989]))
 
 temp4m.regression.period3 <- lm(mod2.match$obs.Temp4m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp4m[mod2.match$Year > 1989])
 summary(temp4m.regression.period3)$adj.r.squared
 mse.temp4m.period3 <- mean(residuals(temp4m.regression.period3)^2); rmse.temp4m.period3 <- sqrt(mse.temp4m.period3); rmse.temp4m.period3
+rmse.temp4m.period3/sd(na.omit(mod2.match$obs.Temp4m[mod2.match$Year > 1989]))
 
 temp9m.regression.period3 <- lm(mod2.match$obs.Temp9m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp9m[mod2.match$Year > 1989])
 summary(temp9m.regression.period3)$adj.r.squared
 mse.temp9m.period3 <- mean(residuals(temp9m.regression.period3)^2); rmse.temp9m.period3 <- sqrt(mse.temp9m.period3); rmse.temp9m.period3
+rmse.temp9m.period3/sd(na.omit(mod2.match$obs.Temp9m[mod2.match$Year > 1989]))
 
 #### Temperature Plot ====
 tempplot <- ggplot() +
@@ -491,21 +906,24 @@ tempplot <- ggplot() +
   scale_colour_manual("", breaks = c("1 m", "4 m", "9 m"), values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   geom_vline(xintercept = as.numeric(as.Date("1975-01-01")), lty = 5) +
   geom_vline(xintercept = as.numeric(as.Date("1990-01-01")), lty = 5) +
-  theme(legend.position = "top")
+  theme(legend.position = "top", axis.text.x = element_blank())
 print(tempplot)
 
 #### PP Fit Metrics ====
 PP.regression.period1 <- lm(mod.match$obs.PP[mod.match$Year < 1975] ~ mod.match$mod.PP[mod.match$Year < 1975])
 summary(PP.regression.period1)$adj.r.squared
 mse.PP.period1 <- mean(residuals(PP.regression.period1)^2); rmse.PP.period1 <- sqrt(mse.PP.period1); rmse.PP.period1
+rmse.PP.period1/sd(na.omit(mod.match$obs.PP[mod.match$Year < 1975]))
 
 PP.regression.period2 <- lm(mod.match$obs.PP[mod.match$Year > 1974 & mod.match$Year < 1990] ~ mod.match$mod.PP[mod.match$Year > 1974 & mod.match$Year < 1990])
 summary(PP.regression.period2)$adj.r.squared
 mse.PP.period2 <- mean(residuals(PP.regression.period2)^2); rmse.PP.period2 <- sqrt(mse.PP.period2); rmse.PP.period2
+rmse.PP.period2/sd(na.omit(mod.match$obs.PP[mod.match$Year > 1974 & mod.match$Year < 1990]))
 
 PP.regression.period3 <- lm(mod.match$obs.PP[mod.match$Year > 1989] ~ mod.match$mod.PP[mod.match$Year > 1989])
 summary(PP.regression.period3)$adj.r.squared
 mse.PP.period3 <- mean(residuals(PP.regression.period3)^2); rmse.PP.period3 <- sqrt(mse.PP.period3); rmse.PP.period3
+rmse.PP.period3/sd(na.omit(mod.match$obs.PP[mod.match$Year > 1989]))
 
 #### PP Plot ====
 PPplot <- ggplot() +
@@ -516,7 +934,7 @@ PPplot <- ggplot() +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
   geom_vline(xintercept = as.numeric(as.Date("1975-01-01")), lty = 5) +
   geom_vline(xintercept = as.numeric(as.Date("1990-01-01")), lty = 5) +
-  theme(legend.position = "top") 
+  theme(legend.position = "top", axis.text.x = element_blank()) 
 print(PPplot)
 
 #### Cumulative PP Fit Metrics ====
@@ -561,7 +979,7 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
   geom_vline(xintercept = as.numeric(as.Date("1975-01-01")), lty = 5) +
   geom_vline(xintercept = as.numeric(as.Date("1990-01-01")), lty = 5) +
-  theme(legend.position = "top") 
+  theme(legend.position = "none", axis.text.x = element_blank()) 
 print(PPcumulativeplot)
 
 #### Model PP residuals Fit Metrics ====
@@ -607,14 +1025,17 @@ print(PPresidualsplot)
 TDP.regression.period1 <- lm(mod.match$obs.TDP[mod.match$Year < 1975] ~ mod.match$mod.TDP[mod.match$Year < 1975])
 summary(TDP.regression.period1)$adj.r.squared
 mse.TDP.period1 <- mean(residuals(TDP.regression.period1)^2); rmse.TDP.period1 <- sqrt(mse.TDP.period1); rmse.TDP.period1
+rmse.TDP.period1/sd(na.omit(mod.match$obs.TDP[mod.match$Year < 1975]))
 
 TDP.regression.period2 <- lm(mod.match$obs.TDP[mod.match$Year > 1974 & mod.match$Year < 1990] ~ mod.match$mod.TDP[mod.match$Year > 1974 & mod.match$Year < 1990])
 summary(TDP.regression.period2)$adj.r.squared
 mse.TDP.period2 <- mean(residuals(TDP.regression.period2)^2); rmse.TDP.period2 <- sqrt(mse.TDP.period2); rmse.TDP.period2
+rmse.TDP.period2/sd(na.omit(mod.match$obs.TDP[mod.match$Year > 1974 & mod.match$Year < 1990]))
 
 TDP.regression.period3 <- lm(mod.match$obs.TDP[mod.match$Year > 1989] ~ mod.match$mod.TDP[mod.match$Year > 1989])
 summary(TDP.regression.period3)$adj.r.squared
 mse.TDP.period3 <- mean(residuals(TDP.regression.period3)^2); rmse.TDP.period3 <- sqrt(mse.TDP.period3); rmse.TDP.period3
+rmse.TDP.period3/sd(na.omit(mod.match$obs.TDP[mod.match$Year > 1989]))
 
 #### TDP Plot ====
 TDPplot <- ggplot() +
@@ -632,14 +1053,17 @@ print(TDPplot)
 O2.regression.period1 <- lm(mod3.match$obs.O2.4m[mod3.match$Year < 1975] ~ mod3.match$mod.Oxy4m[mod3.match$Year < 1975])
 summary(O2.regression.period1)$adj.r.squared
 mse.O2.period1 <- mean(residuals(O2.regression.period1)^2); rmse.O2.period1 <- sqrt(mse.O2.period1); rmse.O2.period1
+rmse.O2.period1/sd(na.omit(mod3.match$obs.O2.4m[mod3.match$Year < 1975]))
 
 O2.regression.period2 <- lm(mod3.match$obs.O2.4m[mod3.match$Year > 1974 & mod3.match$Year < 1990] ~ mod3.match$mod.Oxy4m[mod3.match$Year > 1974 & mod3.match$Year < 1990])
 summary(O2.regression.period2)$adj.r.squared
 mse.O2.period2 <- mean(residuals(O2.regression.period2)^2); rmse.O2.period2 <- sqrt(mse.O2.period2); rmse.O2.period2
+rmse.O2.period2/sd(na.omit(mod3.match$obs.O2.4m[mod3.match$Year > 1974 & mod3.match$Year < 1990]))
 
 O2.regression.period3 <- lm(mod3.match$obs.O2.4m[mod3.match$Year > 1989] ~ mod3.match$mod.Oxy4m[mod3.match$Year > 1989])
 summary(O2.regression.period3)$adj.r.squared
 mse.O2.period3 <- mean(residuals(O2.regression.period3)^2); rmse.O2.period3 <- sqrt(mse.O2.period3); rmse.O2.period3
+rmse.O2.period3/sd(na.omit(mod3.match$obs.O2.4m[mod3.match$Year > 1989]))
 
 #### O2 Plot ====
 O2plot <- ggplot() +
@@ -657,14 +1081,17 @@ print(O2plot)
 DOC.regression.period1 <- lm(mod.match$obs.DOC[mod.match$Year < 1975] ~ mod.match$mod.DOC[mod.match$Year < 1975])
 summary(DOC.regression.period1)$adj.r.squared
 mse.DOC.period1 <- mean(residuals(DOC.regression.period1)^2); rmse.DOC.period1 <- sqrt(mse.DOC.period1); rmse.DOC.period1
+rmse.DOC.period1/sd(na.omit(mod.match$obs.DOC[mod.match$Year < 1975]))
 
 DOC.regression.period2 <- lm(mod.match$obs.DOC[mod.match$Year > 1974 & mod.match$Year < 1990] ~ mod.match$mod.DOC[mod.match$Year > 1974 & mod.match$Year < 1990])
 summary(DOC.regression.period2)$adj.r.squared
 mse.DOC.period2 <- mean(residuals(DOC.regression.period2)^2); rmse.DOC.period2 <- sqrt(mse.DOC.period2); rmse.DOC.period2
+rmse.DOC.period2/sd(na.omit(mod.match$obs.DOC[mod.match$Year > 1974 & mod.match$Year < 1990]))
 
 DOC.regression.period3 <- lm(mod.match$obs.DOC[mod.match$Year > 1989] ~ mod.match$mod.DOC[mod.match$Year > 1989])
 summary(DOC.regression.period3)$adj.r.squared
 mse.DOC.period3 <- mean(residuals(DOC.regression.period3)^2); rmse.DOC.period3 <- sqrt(mse.DOC.period3); rmse.DOC.period3
+rmse.DOC.period3/sd(na.omit(mod.match$obs.DOC[mod.match$Year > 1989]))
 
 #### DOC Plot ====
 DOCplot <- ggplot() +
@@ -679,8 +1106,8 @@ DOCplot <- ggplot() +
 print(DOCplot)
 
 #### Combined Plot ====
-grid.arrange(icedateplot, tempplot, TDPplot, PPplot, PPcumulativeplot, PPresidualsplot,  ncol = 2)
-
+grid.arrange(icedateplot, tempplot, PPplot, PPcumulativeplot, PPresidualsplot,  ncol = 1)
+grid.arrange(O2plot, DOCplot, TDPplot, ncol = 1)
 #### Target Diagram ====
 #### Temperature 1 m ####
 model.mean.Temp1m.period1 <- mean(mod2.match$mod.Temp1m[mod2.match$Year < 1975])
