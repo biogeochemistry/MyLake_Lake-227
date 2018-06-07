@@ -6,6 +6,7 @@ library(tidyverse)
 Zoop <- read.csv("Zooplankton_Biomass.csv")
 Zoop$Date <- as.Date(Zoop$Date, "%m/%d/%y")
 
+
 ZoopandStoic <- merge(NtoPLake, Zoop, by = "Date")
 ZoopandStoic <- select(ZoopandStoic, Date, PP, Chl:Total.biomass)
 ZoopandStoic <- na.omit(ZoopandStoic)
