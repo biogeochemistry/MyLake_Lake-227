@@ -338,6 +338,17 @@ FertNtoPplot <-
   theme(axis.text.x=element_blank()) 
 print(FertNtoPplot)
 
+#### test for equal sample number by year ####
+tapply(NtoPinsitu$TNtoTP, NtoPinsitu$Year, length)
+# range from 6 to 44
+tapply(NtoPinsitu$TDNtoTDP, NtoPinsitu$Year, length)
+# range from 6 to 44
+tapply(NtoPinsitu$PP, NtoPinsitu$Year, length)
+# range from 6 to 44
+tapply(NtoPinsitu$chl, NtoPinsitu$Year, length)
+# range from 6 to 44
+
+
 #### Cyano % of biomass ====
 # test for normality
 shapiro.test(CyanoPercent$Nfixcyano.percent)
@@ -533,6 +544,10 @@ t.test(Shannonmeanvec[1:16], Shannonmeanvec[17:45])
     #   mean of x mean of y 
     # 1.854406  1.343005 
 
+Shannondataset <- mutate(Shannondataset, Year = format(Shannondataset$Date, "%Y"))
+tapply(Shannondataset$ShannonIndex, Shannondataset$Year, length)
+# range from 5 to 20
+
 #### Plot ####
 Shannonearly <- Shannondataset[1:231,]
 Shannonlate <- Shannondataset[232:581,]
@@ -720,6 +735,18 @@ mk.test(DINinflowvec[308:1227])
     #   S          varS           tau 
     # -8.180400e+04  8.665817e+07 -1.938433e-01 
 
+#### test for equal sample number by year ####
+tapply(InflowData$AirTemp, InflowData$Year, length)
+# range from 365 to 366
+tapply(InflowData$WindSpeed, InflowData$Year, length)
+# range from 365 to 366
+tapply(InflowData$Precipitation, InflowData$Year, length)
+# range from 365 to 366
+tapply(InflowData$TP, InflowData$Year, length)
+# range from 365 to 366
+tapply(InflowData$DIN, InflowData$Year, length)
+# range from 365 to 366
+
 #### Plots ####
 AirTempearly <- AirTempdataset[1:10120,]
 AirTemplate <- AirTempdataset[10121:17305,]
@@ -787,6 +814,7 @@ DINinflowplot <-
 print(DINinflowplot)
 
 grid.arrange(AirTempplot, WindSpeedplot, Precipplot, TPinflowplot, DINinflowplot, ncol = 1)
+
 
 
 #### Combined plots ====
@@ -918,9 +946,9 @@ icedateplot <-
   ylab("Julian Day") +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f99d15ff", "#240c4cff")) +
-  geom_vline(xintercept = 1975, color = "white") +
-  geom_vline(xintercept = 1990, color = "white") +
-  theme(legend.position = "top", axis.text.x = element_blank())
+  geom_vline(xintercept = 1975, color = "white", alpha = 0) +
+  geom_vline(xintercept = 1990, color = "white", alpha = 0) +
+  theme(legend.position = "none", axis.text.x = element_blank())
 print(icedateplot)
 
 #### Temperature Fit metrics ====
@@ -991,7 +1019,7 @@ tempplot <- ggplot(mod2) +
   ylab(expression("Temp " ( degree*C))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("1 m", "4 m", "9 m"), values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "top", axis.text.x = element_blank())
+  theme(legend.position = "none", axis.text.x = element_blank())
 print(tempplot)
 
 #### PP Fit Metrics ====
@@ -1019,10 +1047,11 @@ PPmodelplot <- ggplot(mod) +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.25) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 0.5) +
+  ylim(c(0, 107)) +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "top", axis.text.x = element_blank()) 
+  theme(legend.position = "none", axis.text.x = element_blank()) 
 print(PPmodelplot)
 
 #### Cumulative PP Fit Metrics ====
@@ -1089,6 +1118,8 @@ var.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residual
 var.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
 var.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
 
+
+
 # Variance of PP residuals is significantly lower in period 3 than in period 1 or 2.
 # Variance of PP in periods 1 and 2 does not differ significantly.
 
@@ -1122,6 +1153,9 @@ mk.test(PPresiduals$residuals.PP[412:687])
     #   S         varS          tau 
     # 1.389000e+03 2.348676e+06 3.660417e-02 
 
+PPresiduals <- mutate(PPresiduals, abs.residuals.PP = abs(residuals.PP))
+tapply(PPresiduals$abs.residuals.PP, PPresiduals$Year, sum)
+min(tapply(PPresiduals$abs.residuals.PP, PPresiduals$Year, sum))
 
 #### Model PP residuals Plot ====
 PPresidualsearly <- PPresiduals[1:411,]
@@ -1138,15 +1172,37 @@ PPresidualsplot <- ggplot(PPresiduals) +
   theme(legend.position = "none") 
 print(PPresidualsplot)
 
-#PPresidualsplot <- ggplot(PPresiduals) +
-  # geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
-  # geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  # geom_point(data = PPresiduals, aes(x = date, y = residuals.PP), size = 0.5, color = "#d14a42ff") + 
-  # ylab(expression(PP ~ residuals ~ (mu*g / L))) +
-  # xlab(" ") +
-  # scale_y_continuous(limits = c(-75, 75), breaks = c(-75, -50, -25, 0, 25, 50, 75)) +
-  # theme(legend.position = "none") 
-#print(PPresidualsplot)
+PPresiduals.bestyear <- filter(PPresiduals, Year == 1992)
+PPresidualsplot.bestyear <- ggplot(PPresiduals.bestyear) +
+  geom_point(aes(x = date, y = residuals.PP), size = 0.5, color = "#f99d15ff") + 
+  geom_point(aes(x = date, y = residuals.PP), size = 0.5, color = "gray40") + 
+  ylab(expression(PP ~ residuals ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_y_continuous(limits = c(-75, 75), breaks = c(-75, -50, -25, 0, 25, 50, 75)) +
+  theme(legend.position = "none") 
+print(PPresidualsplot.bestyear)
+
+mod.bestyear <- filter(mod, date > "1991-12-31" & date < "1993-01-01")
+mod.match.bestyear <- filter(mod.match, Year == 1992)
+
+PPmodelplot.bestyear <- ggplot() +
+  geom_line(data = mod.bestyear, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.25) +
+  geom_point(data = mod.match.bestyear, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 0.5) +
+  ylab(expression(PP ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
+  theme(legend.position = "top") 
+print(PPmodelplot.bestyear)
+
+PPresidualsplot <- ggplot(PPresiduals) +
+geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+geom_point(data = PPresiduals, aes(x = date, y = residuals.PP), size = 0.5, color = "#d14a42ff") +
+ylab(expression(PP ~ residuals ~ (mu*g / L))) +
+xlab(" ") +
+scale_y_continuous(limits = c(-75, 75), breaks = c(-75, -50, -25, 0, 25, 50, 75)) +
+theme(legend.position = "none")
+print(PPresidualsplot)
 
 #### TDP Fit Metrics ====
 TDP.regression.period1 <- lm(mod.match$obs.TDP[mod.match$Year < 1975] ~ mod.match$mod.TDP[mod.match$Year < 1975])
