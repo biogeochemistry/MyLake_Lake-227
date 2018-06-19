@@ -137,8 +137,8 @@ sediment_params = {
     0.5,    'X_b',                  % 57
     1,      'tortuosity',           % 58
     0.1,    'w',                    % 59
-    151,    'n',                    % 60
-    15,     'depth',                % 61
+    300,    'n',                    % 60
+    30,     'depth',                % 61
     14.4/2,   'alfa0',                % 62
     236,    'Cx1',                  % 63           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
     20,     'Ny1',                  % 64           % OM composition, it also defines rates of reaction (lower number - slower the reaction)
