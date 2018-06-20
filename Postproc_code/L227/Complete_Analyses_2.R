@@ -340,6 +340,16 @@ FertNtoPplot <-
   theme(axis.text.x=element_blank()) 
 print(FertNtoPplot)
 
+#### test for equal sample number by year ####
+tapply(NtoPinsitu$TNtoTP, NtoPinsitu$Year, length)
+# range from 6 to 44
+tapply(NtoPinsitu$TDNtoTDP, NtoPinsitu$Year, length)
+# range from 6 to 44
+tapply(NtoPinsitu$PP, NtoPinsitu$Year, length)
+# range from 6 to 44
+tapply(NtoPinsitu$chl, NtoPinsitu$Year, length)
+# range from 6 to 44
+
 #### Cyano % of biomass ====
 # test for normality
 shapiro.test(CyanoPercent$Nfixcyano.percent)
@@ -379,6 +389,7 @@ cyanoplot <-
 print(cyanoplot)
 
 #ggsave("PropCyano.jpg", cyanoplot, dpi = 300)
+
 #### Phytoplankton ====
 #### Data wrangling ####
 # Read in data from 1968-2012
@@ -535,6 +546,10 @@ t.test(Shannonmeanvec[1:16], Shannonmeanvec[17:45])
     # sample estimates:
     #   mean of x mean of y 
     # 1.854406  1.343005 
+
+Shannondataset <- mutate(Shannondataset, Year = format(Shannondataset$Date, "%Y"))
+tapply(Shannondataset$ShannonIndex, Shannondataset$Year, length)
+# range from 5 to 20
 
 #### Plot ####
 Shannonearly <- Shannondataset[1:231,]
@@ -754,6 +769,18 @@ mk.test(Radiationvec[11112:14923])
     #   S          varS           tau 
     # -4.785600e+04  6.157252e+09 -6.588474e-03 
 
+#### test for equal sample number by year ####
+tapply(InflowData$AirTemp, InflowData$Year, length)
+# range from 365 to 366
+tapply(InflowData$WindSpeed, InflowData$Year, length)
+# range from 365 to 366
+tapply(InflowData$Precipitation, InflowData$Year, length)
+# range from 365 to 366
+tapply(InflowData$TP, InflowData$Year, length)
+# range from 365 to 366
+tapply(InflowData$DIN, InflowData$Year, length)
+# range from 365 to 366
+
 #### Plots ####
 AirTempearly <- AirTempdataset[1:10120,]
 AirTemplate <- AirTempdataset[10121:17305,]
@@ -782,7 +809,6 @@ WindSpeedplot <-
   geom_vline(xintercept = as.numeric(WindSpeeddataset$Date[4430]), lty = 5)
 print(WindSpeedplot)
 #ggsave("WindSpeed.jpg", WindSpeedplot, dpi = 300)
-
 
 Precipearly <- Precipdataset[1:11269,]
 Preciplate <- Precipdataset[11270:17355,]
@@ -837,7 +863,6 @@ Radiationplot <-
 #geom_vline(xintercept = as.numeric(AirTempdataset$Date[10121]), lty = 5) # took out because both periods have no trend
 print(Radiationplot)
 #ggsave("Radiation.jpg", Radiationplot, dpi = 300)
-
 
 grid.arrange(AirTempplot, WindSpeedplot, Precipplot, TPinflowplot, DINinflowplot, ncol = 1)
 
@@ -977,6 +1002,7 @@ icedateplot <-
 print(icedateplot)
 
 #ggsave("Ice.jpg", icedateplot, dpi = 300)
+
 #### Temperature Fit metrics ====
 temp1m.regression.period1 <- lm(mod2.match$obs.Temp1m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp1m[mod2.match$Year < 1975])
 summary(temp1m.regression.period1)$adj.r.squared
@@ -1128,7 +1154,6 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
 print(PPcumulativeplot)
 
 #ggsave("PPcumulative.jpg", PPcumulativeplot, dpi = 300)
-
 
 #### Model PP residuals Fit Metrics ====
 PPresiduals <- mod.match %>%
@@ -1633,4 +1658,4 @@ TargetPlot2 <-
   theme(legend.title = element_blank())
 print(TargetPlot2)
 
-ggsave("Target.jpg", TargetPlot2, dpi = 300)
+#ggsave("Target.jpg", TargetPlot2, dpi = 300)
