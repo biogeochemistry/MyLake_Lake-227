@@ -15,7 +15,7 @@ library(png)
 library(reshape2)
 library(vegan)
 
-theme_std <- function (base_size = 18, base_family = "") {
+theme_std <- function (base_size = 11, base_family = "") {
   theme_grey(base_size = base_size, base_family = base_family) %+replace% 
     theme(axis.ticks = element_line(colour = "black", size = 1), 
           legend.key = element_rect(colour = "white"), 
@@ -277,9 +277,11 @@ TNtoTPplot <-
   ylim(0,200) +
   ylab(expression(TN:TP)) +
   xlab(" ") +
-  #theme(axis.text.x=element_blank()) + 
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) + 
   geom_vline(xintercept = as.numeric(TNtoTPdataset$Datelake[470]), lty = 5)
 print(TNtoTPplot)
+
+#ggsave("TNtoTP.jpg", TNtoTPplot, dpi = 300)
 
 TDNtoTDPearly <- TDNtoTDPdataset[1:119,]
 TDNtoTDPlate <- TDNtoTDPdataset[120:781,]
@@ -292,9 +294,11 @@ TDNtoTDPplot <-
   ylim(0,300) +
   ylab(expression(TDN:TDP)) +
   xlab(" ") +
-  #theme(axis.text.x=element_blank()) + 
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) + 
   geom_vline(xintercept = as.numeric(TDNtoTDPdataset$Datelake[120]), lty = 5)
 print(TDNtoTDPplot)
+
+#ggsave("TDNtoTDP.jpg", TDNtoTDPplot, dpi = 300)
 
 PPearly <- PPdataset[1:178,]
 PPlate <- PPdataset[179:791,]
@@ -304,9 +308,9 @@ PPplot <-
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(data = PPearly, aes(x = Datelake, y = PP), size = 0.5, color = "gray40") + #non-significant slope
   geom_point(data = PPlate, aes(x = Datelake, y = PP), size = 0.5, color = "#240c4cff") + #significant negative slope
-  ylab(expression(PP)) +
+  ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
-  theme(axis.text.x=element_blank()) + 
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) + 
   geom_vline(xintercept = as.numeric(PPdataset$Datelake[179]), lty = 5)
 print(PPplot)
 
@@ -318,9 +322,9 @@ chlplot <-
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(data = chlearly, aes(x = Datelake, y = chl), size = 0.5, color = "#240c4cff") + #significant negative slope
   geom_point(data = chllate, aes(x = Datelake, y = chl), size = 0.5, color = "#240c4cff") + #significant negative slope
-  ylab(expression(chl)) +
+  ylab(expression(chl ~ (mu*g / L))) +
   xlab(" ") +
-  theme() + 
+  theme(plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) + 
   geom_vline(xintercept = as.numeric(chldataset$Datelake[435]), lty = 5)
 print(chlplot)
 
@@ -330,14 +334,14 @@ FertNtoPplot <-
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(size = 0.5) +
   #ylim(0,40) +
-  ylab(expression(FertN:FertP)) +
+  ylab(expression(N:P ~ Loading)) +
   xlab(" ") +
-  annotate("text", x = as.Date("1968-01-01"), y = 38, hjust = 0, label = "High N:P", fontface = "bold") +
-  annotate("text", x = as.Date("1980-01-01"), y = 38, hjust = 0, label = "Low N:P", fontface = "bold") +
-  annotate("text", x = as.Date("2003-01-01"), y = 38, hjust = 0, label = "P Only", fontface = "bold") +
-  annotate("point", x = as.Date("1980-01-01"), y = 30, pch = 14, size = 2) +
-  annotate("point", x = as.Date("1996-01-01"), y = 30, pch = 13, size = 2) +
-  theme(axis.text.x=element_blank()) 
+  #annotate("text", x = as.Date("1968-01-01"), y = 38, hjust = 0, label = "High N:P", fontface = "bold") +
+  #annotate("text", x = as.Date("1980-01-01"), y = 38, hjust = 0, label = "Low N:P", fontface = "bold") +
+  #annotate("text", x = as.Date("2003-01-01"), y = 38, hjust = 0, label = "P Only", fontface = "bold") +
+  #annotate("point", x = as.Date("1980-01-01"), y = 30, pch = 14, size = 2) +
+  #annotate("point", x = as.Date("1996-01-01"), y = 30, pch = 13, size = 2) +
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0.5, 0.1, -0.25, 0), "cm")) 
 print(FertNtoPplot)
 
 #### test for equal sample number by year ####
@@ -382,10 +386,10 @@ cyanoplot <-
   ggplot(CyanoPercent) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = CyanoPercent, aes(x = Date, y = Nfixcyano.percent), size = 1) +
-  ylab(expression("Prop. Diazotrophs")) + 
-  xlab("") #+ 
- # theme(axis.text.x=element_blank())
+  geom_point(data = CyanoPercent, aes(x = Date, y = Nfixcyano.percent), size = 0.5) +
+  ylab(expression("Prop. N fixer")) + 
+  xlab("") + 
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"))
 print(cyanoplot)
 
 #ggsave("PropCyano.jpg", cyanoplot, dpi = 300)
@@ -563,13 +567,14 @@ Shannonplot <-
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(data = Shannonearly, aes(x = Date, y = ShannonIndex), size = 0.5, color = "#f99d15ff") + #significant positive slope
   geom_point(data = Shannonlate, aes(x = Date, y = ShannonIndex), size = 0.5, color = "gray40") + #non-significant slope
-  geom_point(data = MeanShannon, aes(x = Year, y = shannon), pch = 1) +
-  ylab(expression("Shannon Index")) +
+  geom_point(data = MeanShannon, aes(x = Year, y = shannon), size = 1) +
+  ylab(expression("Shannon")) +
   xlab(" ") +
-  #theme(axis.text.x=element_blank()) + 
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) + 
   geom_vline(xintercept = as.numeric(Shannondataset$Date[232]), lty = 5)
 print(Shannonplot)
 
+#ggsave("Shannon.jpg", Shannonplot, dpi = 300)
 
 #### Long-term drivers ====
 #### Data Wrangling ####
@@ -871,6 +876,24 @@ grid.arrange(AirTempplot, WindSpeedplot, Precipplot, TPinflowplot, DINinflowplot
 grid.arrange(FertNtoPplot, cyanoplot, Shannonplot, TNtoTPplot, TDNtoTDPplot, PPplot, chlplot,  ncol = 1)
 grid.arrange(PPplot, chlplot, ncol = 1)
 
+library(gtable)
+library(grid)
+FertNtoPplot2 <- ggplotGrob(FertNtoPplot)
+cyanoplot2 <- ggplotGrob(cyanoplot)
+Shannonplot2 <- ggplotGrob(Shannonplot)
+TNtoTPplot2 <- ggplotGrob(TNtoTPplot)
+TDNtoTDPplot2 <- ggplotGrob(TDNtoTDPplot)
+PPplot2 <- ggplotGrob(PPplot)
+chlplot2 <- ggplotGrob(chlplot)
+historical.combined <- rbind(FertNtoPplot2, cyanoplot2, Shannonplot2, TNtoTPplot2, 
+                             TDNtoTDPplot2, PPplot2, chlplot2, size = "first")
+historical.combined$widths <- unit.pmax(FertNtoPplot2$widths, cyanoplot2$widths, Shannonplot2$widths, TNtoTPplot2$widths, 
+                                        TDNtoTDPplot2$widths, PPplot2$widths, chlplot2$widths)
+grid.newpage()
+grid.draw(historical.combined)
+
+#ggsave("historical.combined.pdf", historical.combined, dpi = 300, width = 3.25, height = 7, units = "in")
+
 #### Model Performance Analysis ----
 # Code taken from ModelIterationReport
 #### Spreadsheet Import ====
@@ -945,6 +968,18 @@ mod3.match <- filter(mod3.match, Year != 1969)
 
 
 #### Ice Fit metrics ====
+icebreakregression <- lm (match.ice$obs.daybreak ~ match.ice$out.daybreak)
+summary(icebreakregression)$adj.r.squared
+msebreak <- mean(residuals(icebreakregression)^2); rmsebreak <- sqrt(msebreak); rmsebreak
+rmsebreak/sd(na.omit(match.ice$obs.daybreak))
+NashSutcliffe.icebreak <- NSE(match.ice$out.daybreak, match.ice$obs.daybreak); NashSutcliffe.icebreak
+
+icefreezeregression <- lm (match.ice$obs.dayfreeze ~ match.ice$out.dayfreeze)
+summary(icefreezeregression)$adj.r.squared
+msefreeze <- mean(residuals(icefreezeregression)^2); rmsefreeze <- sqrt(msefreeze); rmsefreeze
+rmsefreeze/sd(na.omit(match.ice$obs.dayfreeze))
+NashSutcliffe.icefreeze <- NSE(match.ice$out.dayfreeze, match.ice$obs.dayfreeze); NashSutcliffe.icefreeze
+
 icebreakregression.period1 <- lm (match.ice$obs.daybreak[match.ice$Year < 1975] ~ match.ice$out.daybreak[match.ice$Year < 1975])
 summary(icebreakregression.period1)$adj.r.squared
 msebreak.period1 <- mean(residuals(icebreakregression.period1)^2); rmsebreak.period1 <- sqrt(msebreak.period1); rmsebreak.period1
@@ -1004,6 +1039,24 @@ print(icedateplot)
 #ggsave("Ice.jpg", icedateplot, dpi = 300)
 
 #### Temperature Fit metrics ====
+temp1m.regression <- lm(mod2.match$obs.Temp1m~ mod2.match$mod.Temp1m)
+summary(temp1m.regression)$adj.r.squared
+mse.temp1m <- mean(residuals(temp1m.regression)^2); rmse.temp1m <- sqrt(mse.temp1m); rmse.temp1m
+rmse.temp1m/sd(na.omit(mod2.match$obs.Temp1m))
+NashSutcliffe.temp1m <- NSE(mod2.match$mod.Temp1m, mod2.match$obs.Temp1m); NashSutcliffe.temp1m
+
+temp4m.regression <- lm(mod2.match$obs.Temp4m ~ mod2.match$mod.Temp4m)
+summary(temp4m.regression)$adj.r.squared
+mse.temp4m <- mean(residuals(temp4m.regression)^2); rmse.temp4m <- sqrt(mse.temp4m); rmse.temp4m
+rmse.temp4m/sd(na.omit(mod2.match$obs.Temp4m))
+NashSutcliffe.temp4m <- NSE(mod2.match$mod.Temp4m, mod2.match$obs.Temp4m); NashSutcliffe.temp4m
+
+temp9m.regression <- lm(mod2.match$obs.Temp9m ~ mod2.match$mod.Temp9m)
+summary(temp9m.regression)$adj.r.squared
+mse.temp9m <- mean(residuals(temp9m.regression)^2); rmse.temp9m <- sqrt(mse.temp9m); rmse.temp9m
+rmse.temp9m/sd(na.omit(mod2.match$obs.Temp9m))
+NashSutcliffe.temp9m <- NSE(mod2.match$mod.Temp9m, mod2.match$obs.Temp9m); NashSutcliffe.temp9m
+
 temp1m.regression.period1 <- lm(mod2.match$obs.Temp1m[mod2.match$Year < 1975] ~ mod2.match$mod.Temp1m[mod2.match$Year < 1975])
 summary(temp1m.regression.period1)$adj.r.squared
 mse.temp1m.period1 <- mean(residuals(temp1m.regression.period1)^2); rmse.temp1m.period1 <- sqrt(mse.temp1m.period1); rmse.temp1m.period1
@@ -1612,20 +1665,27 @@ TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m"
 
 TargetDiagramData$Variable <- factor(TargetDiagramData$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP"))
 
-TargetDiagramData2 <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "PP",
-                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "PP",
-                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "PP"), 
-                                Period = c("High N:P","High N:P", "High N:P", "High N:P", 
-                                           "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P", 
-                                           "P only", "P only", "P only", "P only"), 
-                                Normalized.Bias = c(normalized.bias.Temp1m.period1, normalized.bias.Temp4m.period1, normalized.bias.Temp9m.period1, normalized.bias.PP.period1,
-                                                    normalized.bias.Temp1m.period2, normalized.bias.Temp4m.period2, normalized.bias.Temp9m.period2,  normalized.bias.PP.period2,
-                                                    normalized.bias.Temp1m.period3, normalized.bias.Temp4m.period3, normalized.bias.Temp9m.period3, normalized.bias.PP.period3), 
-                                Normalized.Unbiased.RMSD = c(normalized.unbiased.RMSD.Temp1m.period1, normalized.unbiased.RMSD.Temp4m.period1, normalized.unbiased.RMSD.Temp9m.period1,normalized.unbiased.RMSD.PP.period1,
-                                                             normalized.unbiased.RMSD.Temp1m.period2, normalized.unbiased.RMSD.Temp4m.period2, normalized.unbiased.RMSD.Temp9m.period2,normalized.unbiased.RMSD.PP.period2,
-                                                             normalized.unbiased.RMSD.Temp1m.period3, normalized.unbiased.RMSD.Temp4m.period3, normalized.unbiased.RMSD.Temp9m.period3,normalized.unbiased.RMSD.PP.period3)) 
+TargetDiagramData2 <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m","TDP", "PP",
+                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m","TDP", "PP",
+                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m","TDP", "PP"), 
+                                Period = c("High N:P","High N:P", "High N:P", "High N:P", "High N:P", "High N:P",
+                                           "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P", "Low N:P", "Low N:P",
+                                           "P only", "P only", "P only", "P only", "P only","P only"), 
+                                Normalized.Bias = c(normalized.bias.Temp1m.period1, normalized.bias.Temp4m.period1, normalized.bias.Temp9m.period1,
+                                                    normalized.bias.O24m.period1, normalized.bias.TDP.period1, normalized.bias.PP.period1,
+                                                    normalized.bias.Temp1m.period2, normalized.bias.Temp4m.period2, normalized.bias.Temp9m.period2,  
+                                                    normalized.bias.O24m.period2, normalized.bias.TDP.period2,normalized.bias.PP.period2,
+                                                    normalized.bias.Temp1m.period3, normalized.bias.Temp4m.period3, normalized.bias.Temp9m.period3, 
+                                                    normalized.bias.O24m.period3, normalized.bias.TDP.period3, normalized.bias.PP.period3), 
+                                Normalized.Unbiased.RMSD = c(normalized.unbiased.RMSD.Temp1m.period1, normalized.unbiased.RMSD.Temp4m.period1, normalized.unbiased.RMSD.Temp9m.period1,
+                                                             normalized.unbiased.RMSD.O24m.period1, normalized.unbiased.RMSD.TDP.period1, normalized.unbiased.RMSD.PP.period1,
+                                                             normalized.unbiased.RMSD.Temp1m.period2, normalized.unbiased.RMSD.Temp4m.period2, normalized.unbiased.RMSD.Temp9m.period2,
+                                                             normalized.unbiased.RMSD.O24m.period2, normalized.unbiased.RMSD.TDP.period2, normalized.unbiased.RMSD.PP.period2,
+                                                             normalized.unbiased.RMSD.Temp1m.period3, normalized.unbiased.RMSD.Temp4m.period3, normalized.unbiased.RMSD.Temp9m.period3,
+                                                             normalized.unbiased.RMSD.O24m.period3, normalized.unbiased.RMSD.TDP.period3, normalized.unbiased.RMSD.PP.period3)) 
 
-TargetDiagramData$Variable <- factor(TargetDiagramData$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "PP"))
+TargetDiagramData$Variable <- factor(TargetDiagramData$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP"))
+TargetDiagramData2$Variable <- factor(TargetDiagramData2$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP"))
 
 #### Target Plot ####
 TargetPlot <- 
@@ -1633,8 +1693,8 @@ ggplot(TargetDiagramData, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias,
   geom_point(size = 3) + 
   annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   annotate("path", x=0+0.75*cos(seq(0,2*pi,length.out=100)), y=0+0.75*sin(seq(0,2*pi,length.out=100))) +
-  xlim(-15, 15) +
-  ylim(-2, 2) +
+  xlim(-13, 13) +
+  ylim(-3, 3) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   scale_shape_manual(values = c(0, 1, 2, 18, 15, 19, 17)) + 
   ylab(expression(Normalized ~ Bias)) +
@@ -1644,13 +1704,13 @@ print(TargetPlot)
 
 TargetPlot2 <- 
   ggplot(TargetDiagramData2, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias, shape = Variable, color = Period, fill = Period)) + 
-  geom_point(size = 3) + 
+  geom_point(size = 4) + 
   annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
-  annotate("path", x=0+0.75*cos(seq(0,2*pi,length.out=100)), y=0+0.75*sin(seq(0,2*pi,length.out=100))) +
-  xlim(-12, 1.5) +
-  ylim(-1.5, 1.5) +
+  #annotate("path", x=0+0.75*cos(seq(0,2*pi,length.out=100)), y=0+0.75*sin(seq(0,2*pi,length.out=100))) +
+  xlim(-13, 13) +
+  ylim(-3, 3) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  scale_shape_manual(values = c(19, 1, 0, 2)) + 
+  scale_shape_manual(values = c(0, 1, 2, 15, 19, 17)) + 
   ylab(expression(Normalized ~ Bias)) +
   xlab(expression(Normalized ~ Unbiased ~ RMSD)) +
   geom_vline(xintercept = 0, lty = 5) +
@@ -1658,4 +1718,4 @@ TargetPlot2 <-
   theme(legend.title = element_blank())
 print(TargetPlot2)
 
-#ggsave("Target.jpg", TargetPlot2, dpi = 300)
+ggsave("Target.jpg", TargetPlot2, dpi = 300)
