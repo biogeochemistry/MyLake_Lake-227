@@ -14,6 +14,8 @@ library(trend)
 library(png)
 library(reshape2)
 library(vegan)
+library(gtable)
+library(grid)
 
 theme_std <- function (base_size = 11, base_family = "") {
   theme_grey(base_size = base_size, base_family = base_family) %+replace% 
@@ -96,7 +98,7 @@ TNtoTP <- TN_molar/TP_molar
 # Create data frames for N:P stoichiometry in lake and inflows for May-October
 NtoPinsitu <- data.frame(Datelake, Monthlake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP, DIN_molar, PP, chl)
 NtoPinsitu <- filter(NtoPinsitu, Monthlake > 4 & Monthlake < 11)
-NtoPinput <- data.frame(Dateinflow, Monthinflow, Fert_NtoP, Inflow_NtoP, Input_NtoP, Input_TN_molar)
+NtoPinput <- data.frame(Dateinflow, Monthinflow, Fert_NtoP, Inflow_NtoP, Input_NtoP, Input_TN_molar, Inflow_TP_mg.d, Inflow_TN_mg.d)
 NtoPinput <- filter(NtoPinput, Monthinflow > 4 & Monthinflow < 11)
 
 # Add Year to datasets
@@ -131,23 +133,34 @@ chldataset <- NtoPinsitu %>%
 rownames(chldataset) <- NULL
 
 # Test differences among fertilization periods
-var.test(NtoPinsitu$PP[NtoPinsitu$Year < 1975], NtoPinsitu$PP[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990])
-var.test(NtoPinsitu$PP[NtoPinsitu$Year < 1975], NtoPinsitu$PP[NtoPinsitu$Year > 1989])
-var.test(NtoPinsitu$PP[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990], NtoPinsitu$PP[NtoPinsitu$Year > 1989])
+NtoPinsitu <- mutate(NtoPinsitu, Period = NA)
+NtoPinsitu$Period[1:126] <- "1"
+NtoPinsitu$Period[127:552] <- "2"
+NtoPinsitu$Period[553:972] <- "3"
+NtoPinsitu$Period <- as.factor(NtoPinsitu$Period)
 
-# Variance of PP   Period 3 < Period 1 < Period 2
+# variance test assumes normal distribution. Fligner-Killen test is robust against departures from normality.
+# var.test(NtoPinsitu$PP[NtoPinsitu$Year < 1975], NtoPinsitu$PP[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990])
+# var.test(NtoPinsitu$PP[NtoPinsitu$Year < 1975], NtoPinsitu$PP[NtoPinsitu$Year > 1989])
+# var.test(NtoPinsitu$PP[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990], NtoPinsitu$PP[NtoPinsitu$Year > 1989])
+
+fligner.test(NtoPinsitu$PP, NtoPinsitu$Period)
+# data:  NtoPinsitu$PP and NtoPinsitu$Period
+# Fligner-Killeen:med chi-squared = 33.891, df = 2, p-value = 4.371e-08
 
 wilcox.test(NtoPinsitu$PP[NtoPinsitu$Year < 1975], NtoPinsitu$PP[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990])
 wilcox.test(NtoPinsitu$PP[NtoPinsitu$Year < 1975], NtoPinsitu$PP[NtoPinsitu$Year > 1989])
 wilcox.test(NtoPinsitu$PP[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990], NtoPinsitu$PP[NtoPinsitu$Year > 1989])
-
 # PP   Period 1 < Period 3 < Period 2
 
-var.test(NtoPinsitu$chl[NtoPinsitu$Year < 1975], NtoPinsitu$chl[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990])
-var.test(NtoPinsitu$chl[NtoPinsitu$Year < 1975], NtoPinsitu$chl[NtoPinsitu$Year > 1989])
-var.test(NtoPinsitu$chl[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990], NtoPinsitu$chl[NtoPinsitu$Year > 1989])
+# variance test assumes normal distribution. Fligner-Killen test is robust against departures from normality.
+# var.test(NtoPinsitu$chl[NtoPinsitu$Year < 1975], NtoPinsitu$chl[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990])
+# var.test(NtoPinsitu$chl[NtoPinsitu$Year < 1975], NtoPinsitu$chl[NtoPinsitu$Year > 1989])
+# var.test(NtoPinsitu$chl[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990], NtoPinsitu$chl[NtoPinsitu$Year > 1989])
 
-# Variance of chl   Period 1 > Period 2 and 3
+fligner.test(NtoPinsitu$chl, NtoPinsitu$Period)
+# data:  NtoPinsitu$chl and NtoPinsitu$Period
+# Fligner-Killeen:med chi-squared = 10.843, df = 2, p-value = 0.004421
 
 wilcox.test(NtoPinsitu$chl[NtoPinsitu$Year < 1975], NtoPinsitu$chl[NtoPinsitu$Year > 1974 & NtoPinsitu$Year < 1990])
 wilcox.test(NtoPinsitu$chl[NtoPinsitu$Year < 1975], NtoPinsitu$chl[NtoPinsitu$Year > 1989])
@@ -694,6 +707,18 @@ mk.test(AirTempvec[10121:17305])
     #   S          varS           tau 
     # -2.151250e+05  4.122037e+10 -8.358701e-03 
 
+mk.test(AirTempvec)
+    # data:  AirTempvec
+    # z = 4.2279, n = 17305, p-value = 2.359e-05
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 3.208302e+06 5.758386e+11 2.147113e-02 
+
+AirTempts <- ts(AirTempvec, start = c(1969, 6), end = c(2016, 12), frequency = 12)
+smk.test(AirTempts)
+summary(smk.test(AirTempts))
+
 mk.test(WindSpeedvec[1:4429])
     # data:  WindSpeedvec[1:4429]
     # z = 4.7796, n = 4429, p-value = 1.757e-06
@@ -709,6 +734,14 @@ mk.test(WindSpeedvec[4430:15453])
     # sample estimates:
     #   S          varS           tau 
     # -8.022001e+06  1.483467e+11 -1.358043e-01 
+
+mk.test(WindSpeedvec)
+    # data:  WindSpeedvec
+    # z = -0.16284, n = 15453, p-value = 0.8706
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -1.040840e+05  4.085297e+11 -8.971985e-04 
 
 mk.test(Precipvec[1:11269])
     # data:  Precipvec[1:11269]
@@ -726,6 +759,14 @@ mk.test(Precipvec[11270:17355])
     #   S         varS          tau 
     # 2.173940e+05 2.111648e+10 1.399441e-02 
 
+mk.test(Precipvec)
+    # data:  Precipvec
+    # z = 6.0034, n = 17355, p-value = 1.932e-09
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 4.103710e+06 4.672624e+11 3.356808e-02 
+
 mk.test(TPinflowvec[1:676])
     # data:  TPinflowvec[1:676]
     # z = 1.9682, n = 676, p-value = 0.04905
@@ -741,6 +782,14 @@ mk.test(TPinflowvec[677:1276])
     # sample estimates:
     #   S          varS           tau 
     # -5.940000e+02  2.403618e+07 -3.343057e-03 
+
+mk.test(TPinflowvec)
+    # data:  TPinflowvec
+    # z = -9.3519, n = 1276, p-value < 2.2e-16
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -1.421320e+05  2.309814e+08 -1.762646e-01 
 
 mk.test(DINinflowvec[1:307])
     # data:  DINinflowvec[1:307]
@@ -758,6 +807,14 @@ mk.test(DINinflowvec[308:1227])
     #   S          varS           tau 
     # -8.180400e+04  8.665817e+07 -1.938433e-01 
 
+mk.test(DINinflowvec)
+    # data:  DINinflowvec
+    # z = 0.33582, n = 1227, p-value = 0.737
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S         varS          tau 
+    # 4.815000e+03 2.054955e+08 6.414509e-03 
+
 mk.test(Radiationvec[1:1111])
     # data:  Radiationvec[1:1111]
     # z = 0.031331, n = 1111, p-value = 0.975
@@ -774,6 +831,14 @@ mk.test(Radiationvec[11112:14923])
     #   S          varS           tau 
     # -4.785600e+04  6.157252e+09 -6.588474e-03 
 
+mk.test(Radiationvec)
+    # data:  Radiationvec
+    # z = -13.733, n = 14923, p-value < 2.2e-16
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S          varS           tau 
+    # -8.345609e+06  3.692912e+11 -7.498112e-02 
+
 #### test for equal sample number by year ####
 tapply(InflowData$AirTemp, InflowData$Year, length)
 # range from 365 to 366
@@ -787,97 +852,91 @@ tapply(InflowData$DIN, InflowData$Year, length)
 # range from 365 to 366
 
 #### Plots ####
-AirTempearly <- AirTempdataset[1:10120,]
-AirTemplate <- AirTempdataset[10121:17305,]
+# For all climate and inflow drivers, I will not use changepoints. 
+# I will display the data for the whole period with the results of the Mann-Kendall test for the entire period 
+
+# AirTempearly <- AirTempdataset[1:10120,]
+# AirTemplate <- AirTempdataset[10121:17305,]
 AirTempplot <-
-  ggplot(AirTempearly) +
+  ggplot(AirTempdataset) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = AirTempearly, aes(x = Date, y = AirTemp), size = 0.5, color = "gray40") + #non-significant slope
-  geom_point(data = AirTemplate, aes(x = Date, y = AirTemp), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = AirTempdataset, aes(x = Date, y = AirTemp), size = 0.25, color = "#f99d15ff") + #positive slope
   ylab(expression(Air ~ Temp ~(degree*C))) +
-  xlab(" ") #+
-  #geom_vline(xintercept = as.numeric(AirTempdataset$Date[10121]), lty = 5) # took out because both periods have no trend
+  xlab(" ") +
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(AirTempplot)
 #ggsave("AirTemp.jpg", AirTempplot, dpi = 300)
 
-WindSpeedearly <- WindSpeeddataset[1:4429,]
-WindSpeedlate <- WindSpeeddataset[4430:15453,]
+#WindSpeedearly <- WindSpeeddataset[1:4429,]
+#WindSpeedlate <- WindSpeeddataset[4430:15453,]
 WindSpeedplot <-
-  ggplot(WindSpeedearly) +
+  ggplot(WindSpeeddataset) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = WindSpeedearly, aes(x = Date, y = WindSpeed), size = 0.5, color = "#f99d15ff") + #significant positive slope
-  geom_point(data = WindSpeedlate, aes(x = Date, y = WindSpeed), size = 0.5, color = "#240c4cff") + #significant negative slope
-  ylab(expression(Wind ~ Speed ~ (m/s))) +
+  geom_point(data = WindSpeeddataset, aes(x = Date, y = WindSpeed), size = 0.25, color = "gray40") + #non-significant slope
+  ylab(expression(Wind ~ (m/s))) +
   xlab(" ") +
-  geom_vline(xintercept = as.numeric(WindSpeeddataset$Date[4430]), lty = 5)
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(WindSpeedplot)
 #ggsave("WindSpeed.jpg", WindSpeedplot, dpi = 300)
 
-Precipearly <- Precipdataset[1:11269,]
-Preciplate <- Precipdataset[11270:17355,]
+# Precipearly <- Precipdataset[1:11269,]
+# Preciplate <- Precipdataset[11270:17355,]
 Precipplot <-
-  ggplot(WindSpeedearly) +
+  ggplot(Precipdataset) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = Precipearly, aes(x = Date, y = Precipitation), size = 0.5, color = "gray40") + #non-significant slope
-  geom_point(data = Preciplate, aes(x = Date, y = Precipitation), size = 0.5, color = "gray40") + #non-significant slope
-  ylab(expression(Precipitation ~ (mm/d))) +
-  xlab(" ") #+
-  #geom_vline(xintercept = as.numeric(Precipdataset$Date[11270]), lty = 5) # took out because both periods have no trend
+  geom_point(data = Precipdataset, aes(x = Date, y = Precipitation), size = 0.25, color = "#f99d15ff") + #significant positive slope
+  ylab(expression(Precip. ~ (mm/d))) +
+  xlab(" ") +
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(Precipplot)
 #ggsave("Precip.jpg", Precipplot, dpi = 300)
 
-TPinflowearly <- TPinflowdataset[1:676,]
-TPinflowlate <- TPinflowdataset[677:1276,]
+# TPinflowearly <- TPinflowdataset[1:676,]
+# TPinflowlate <- TPinflowdataset[677:1276,]
 TPinflowplot <-
-  ggplot(TPinflowearly) +
+  ggplot(TPinflowdataset) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = TPinflowearly, aes(x = Date, y = TP), size = 0.5, color = "#f99d15ff") + #significant positive slope
-  geom_point(data = TPinflowlate, aes(x = Date, y = TP), size = 0.5, color = "gray40") + #non-significant slope
-  ylab(expression(TP)) +
+  geom_point(data = TPinflowdataset, aes(x = Date, y = TP), size = 0.25, color = "#240c4cff") + #significant negative slope
+  ylab(expression(TP ~ (mu*g / L))) +
   xlab(" ") +
-  geom_vline(xintercept = as.numeric(TPinflowdataset$Date[677]), lty = 5) # took out because both periods have no trend
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(TPinflowplot)
 
-DINinflowearly <- DINinflowdataset[1:307,]
-DINinflowlate <- DINinflowdataset[308:1227,]
+# DINinflowearly <- DINinflowdataset[1:307,]
+# DINinflowlate <- DINinflowdataset[308:1227,]
 DINinflowplot <-
-  ggplot(DINinflowearly) +
+  ggplot(DINinflowdataset) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = DINinflowearly, aes(x = Date, y = DIN), size = 0.5, color = "gray40") + #non-significant slope
-  geom_point(data = DINinflowlate, aes(x = Date, y = DIN), size = 0.5, color = "#240c4cff") + #significant negative slope
-  ylab(expression(DIN)) +
+  geom_point(data = DINinflowdataset, aes(x = Date, y = DIN), size = 0.25, color = "gray40") + #non-significant slope
+  ylab(expression(DIN ~ (mu*g / L))) +
   xlab(" ") +
-  geom_vline(xintercept = as.numeric(DINinflowdataset$Date[308]), lty = 5) 
+  theme(plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(DINinflowplot)
 
-Radiationearly <- Radiation[1:11111,]
-Radiationlate <- Radiation[11112:14923,]
+# Radiationearly <- Radiation[1:11111,]
+# Radiationlate <- Radiation[11112:14923,]
 Radiationplot <-
-  ggplot(Radiationearly) +
+  ggplot(Radiation) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = Radiationearly, aes(x = Date, y = totalrad), size = 0.5, color = "gray40") + #non-significant slope
-  geom_point(data = Radiationlate, aes(x = Date, y = totalrad), size = 0.5, color = "gray40") + #non-significant slope
-  ylab(expression(Radiation ~ (MJ ~ m^-2 ~ d^-1))) +
-  xlab(" ") #+
-#geom_vline(xintercept = as.numeric(AirTempdataset$Date[10121]), lty = 5) # took out because both periods have no trend
+  geom_point(data = Radiation, aes(x = Date, y = totalrad), size = 0.25, color = "#240c4cff") + #significant negative slope
+  ylab(expression(Rad. ~ (MJ/m^2/d))) +
+  xlab(" ") +
+  xlim(as.Date(c("1969-06-27", NA))) +
+  theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(Radiationplot)
 #ggsave("Radiation.jpg", Radiationplot, dpi = 300)
-
-grid.arrange(AirTempplot, WindSpeedplot, Precipplot, TPinflowplot, DINinflowplot, ncol = 1)
 
 
 #### Combined plots ====
 grid.arrange(FertNtoPplot, cyanoplot, Shannonplot, TNtoTPplot, TDNtoTDPplot, PPplot, chlplot,  ncol = 1)
 grid.arrange(PPplot, chlplot, ncol = 1)
 
-library(gtable)
-library(grid)
 FertNtoPplot2 <- ggplotGrob(FertNtoPplot)
 cyanoplot2 <- ggplotGrob(cyanoplot)
 Shannonplot2 <- ggplotGrob(Shannonplot)
@@ -891,8 +950,24 @@ historical.combined$widths <- unit.pmax(FertNtoPplot2$widths, cyanoplot2$widths,
                                         TDNtoTDPplot2$widths, PPplot2$widths, chlplot2$widths)
 grid.newpage()
 grid.draw(historical.combined)
-
 #ggsave("historical.combined.pdf", historical.combined, dpi = 300, width = 3.25, height = 7, units = "in")
+
+grid.arrange(AirTempplot, WindSpeedplot, Precipplot, Radiationplot, TPinflowplot, DINinflowplot, ncol = 1)
+
+AirTempplot2 <- ggplotGrob(AirTempplot)
+WindSpeedplot2 <- ggplotGrob(WindSpeedplot)
+Precipplot2 <- ggplotGrob(Precipplot)
+Radiationplot2 <- ggplotGrob(Radiationplot)
+TPinflowplot2 <- ggplotGrob(TPinflowplot)
+DINinflowplot2 <- ggplotGrob(DINinflowplot)
+historical.forcings <- rbind(AirTempplot2, WindSpeedplot2, Precipplot2, Radiationplot2, 
+                             TPinflowplot2, DINinflowplot2, size = "first")
+historical.forcings$widths <- unit.pmax(AirTempplot2$widths, WindSpeedplot2$widths, Precipplot2$widths, 
+                                        Radiationplot2$widths, TPinflowplot2$widths, DINinflowplot2$widths)
+
+grid.newpage()
+grid.draw(historical.forcings)
+#ggsave("historical.forcings.jpg", historical.forcings, dpi = 300, width = 3.25, height = 7, units = "in")
 
 #### Model Performance Analysis ----
 # Code taken from ModelIterationReport
@@ -1023,17 +1098,19 @@ icedateplot <-
   geom_rect(xmin = 1990, xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_line(aes(y = out.daybreak, col = "Ice Break"), size = 0.5) +
   geom_point(aes(y = obs.daybreak, col = "Ice Break"), size = 0.5) +
-  geom_line(aes(y = out.dayfreeze - 160, col = "Ice Freeze"), size = 0.5) +
-  geom_point(aes(y = obs.dayfreeze - 160, col = "Ice Freeze"), size = 0.5) + 
+  geom_line(aes(y = out.dayfreeze, col = "Ice Freeze"), size = 0.5) +
+  geom_point(aes(y = obs.dayfreeze, col = "Ice Freeze"), size = 0.5) + 
+  #geom_line(aes(y = out.dayfreeze - 160, col = "Ice Freeze"), size = 0.5) +
+  #geom_point(aes(y = obs.dayfreeze - 160, col = "Ice Freeze"), size = 0.5) + 
   geom_linerange(aes(ymax = obs.daybreak-5, ymin = obs.daybreak, col = "Ice Break")) +
-  geom_linerange(aes(ymax = obs.dayfreeze-175, ymin = obs.dayfreeze - 160, col = "Ice Freeze")) +
-  scale_y_continuous(sec.axis = sec_axis(~.+160)) + 
+  geom_linerange(aes(ymax = obs.dayfreeze-15, ymin = obs.dayfreeze, col = "Ice Freeze")) +
+  #scale_y_continuous(sec.axis = sec_axis(~.+160)) + 
   ylab("Julian Day") +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f99d15ff", "#240c4cff")) +
   geom_vline(xintercept = 1975, color = "white", alpha = 0) +
   geom_vline(xintercept = 1990, color = "white", alpha = 0) +
-  theme(legend.position = "right")#, axis.text.x = element_blank())
+  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm"))
 print(icedateplot)
 
 #ggsave("Ice.jpg", icedateplot, dpi = 300)
@@ -1124,7 +1201,7 @@ tempplot <- ggplot(mod2) +
   ylab(expression("Temp " ( degree*C))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("1 m", "4 m", "9 m"), values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "right")#, axis.text.x = element_blank())
+  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm"))
 print(tempplot)
 
 #ggsave("Temp.jpg", tempplot, dpi = 300)
@@ -1157,7 +1234,7 @@ PPmodelplot <- ggplot(mod) +
   xlab(" ") +
   ylim(c(0, 100)) +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "right")#, axis.text.x = element_blank()) 
+  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
 print(PPmodelplot)
 
 #ggsave("PP.jpg", PPmodelplot, dpi = 300)
@@ -1200,10 +1277,10 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 1) +
   geom_point(aes(x = date, y = Cum.Sum.obs.PP, col = "Observed"), size = 0.5) +
-  ylab(expression(Cumulative ~ PP ~ (mu*g / L))) +
+  ylab(expression(Cum. ~ PP ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "right")#, axis.text.x = element_blank()) 
+  theme(legend.position = "none", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(PPcumulativeplot)
 
 #ggsave("PPcumulative.jpg", PPcumulativeplot, dpi = 300)
@@ -1265,29 +1342,29 @@ tapply(PPresiduals$abs.residuals.PP, PPresiduals$Year, sum)
 min(tapply(PPresiduals$abs.residuals.PP, PPresiduals$Year, sum))
 
 #### Model PP residuals Plot ====
-PPresidualsearly <- PPresiduals[1:411,]
-PPresidualslate <- PPresiduals[412:687,]
+# PPresidualsearly <- PPresiduals[1:411,]
+# PPresidualslate <- PPresiduals[412:687,]
+# PPresidualsplot <- ggplot(PPresiduals) +
+#   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+#   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+#   geom_point(data = PPresidualsearly, aes(x = date, y = residuals.PP), size = 0.5, color = "#f99d15ff") + 
+#   geom_point(data = PPresidualslate, aes(x = date, y = residuals.PP), size = 0.5, color = "gray40") + 
+#   ylab(expression(PP ~ residuals ~ (mu*g / L))) +
+#   xlab(" ") +
+#   scale_y_continuous(limits = c(-75, 75), breaks = c(-75, -50, -25, 0, 25, 50, 75)) +
+#   geom_vline(xintercept = as.numeric(PPresiduals$date[412]), lty = 5) +
+#   theme(legend.position = "none") 
+# print(PPresidualsplot)
+
 PPresidualsplot <- ggplot(PPresiduals) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = PPresidualsearly, aes(x = date, y = residuals.PP), size = 0.5, color = "#f99d15ff") + 
-  geom_point(data = PPresidualslate, aes(x = date, y = residuals.PP), size = 0.5, color = "gray40") + 
-  ylab(expression(PP ~ residuals ~ (mu*g / L))) +
+  geom_point(data = PPresiduals, aes(x = date, y = residuals.PP), size = 0.5, color = "#d14a42ff") +
+  ylab(expression(PP ~ res. ~ (mu*g / L))) +
   xlab(" ") +
   scale_y_continuous(limits = c(-75, 75), breaks = c(-75, -50, -25, 0, 25, 50, 75)) +
-  geom_vline(xintercept = as.numeric(PPresiduals$date[412]), lty = 5) +
-  theme(legend.position = "none") 
+  theme(legend.position = "none", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"))
 print(PPresidualsplot)
-
-#PPresidualsplot <- ggplot(PPresiduals) +
-  # geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
-  # geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  # geom_point(data = PPresiduals, aes(x = date, y = residuals.PP), size = 0.5, color = "#d14a42ff") + 
-  # ylab(expression(PP ~ residuals ~ (mu*g / L))) +
-  # xlab(" ") +
-  # scale_y_continuous(limits = c(-75, 75), breaks = c(-75, -50, -25, 0, 25, 50, 75)) +
-  # theme(legend.position = "none") 
-#print(PPresidualsplot)
 
 PPresiduals.bestyear <- filter(PPresiduals, Year == 1992)
 PPresidualsplot.bestyear <- ggplot(PPresiduals.bestyear) +
@@ -1303,17 +1380,17 @@ mod.bestyear <- filter(mod, date > "1999-12-31" & date < "2002-01-01")
 mod.match.bestyear <- filter(mod.match, Year == 2000 | Year == 2001)
 
   PPmodelplot.bestyear <- ggplot() +
-    geom_line(data = mod.bestyear, aes(x = date, y = mod.PP, col = "PP modeled"), size = 0.5) +
-    geom_point(data = mod.match.bestyear, aes(x = date, y = obs.PP, col = "PP observed"), pch = 19, size = 2) +
-    #geom_line(data = mod.bestyear, aes(x = date, y = mod.TDP, col = "TDP modeled"), size = 0.5) +
-    #geom_point(data = mod.match.bestyear, aes(x = date, y = obs.TDP, col = "TDP observed"), pch = 19, size = 2) +    
-    ylab(expression(PP ~ (mu*g / L))) +
+    geom_line(data = mod.bestyear, aes(x = date, y = mod.PP, col = "PP"), size = 0.25) +
+    geom_point(data = mod.match.bestyear, aes(x = date, y = obs.PP, col = "PP"), pch = 19, size = 1) +
+    geom_line(data = mod.bestyear, aes(x = date, y = mod.TDP, col = "TDP"), size = 0.25) +
+    geom_point(data = mod.match.bestyear, aes(x = date, y = obs.TDP, col = "TDP"), pch = 19, size = 1) +    
+    ylab(expression(PP ~ or ~ TDP  ~ (mu*g / L))) +
     xlab(" ") +
-    scale_colour_manual("", breaks = c("PP modeled", "PP observed", "TDP modeled", "TDP observed"), values = c("#240c4cff", "#240c4cff", "#f27d16ff", "#f27d16ff")) +
-    theme(legend.position = "none") 
+    scale_colour_manual("", breaks = c("PP", "TDP"), values = c("#240c4cff", "#f27d16ff")) +
+    theme(legend.position = "top") 
 print(PPmodelplot.bestyear)
 
-#ggsave("PPbestyear.jpg", PPmodelplot.bestyear, dpi = 300)
+ggsave("PPbestyear.jpg", PPmodelplot.bestyear, dpi = 300, width = 3.25, height = 3.25, units = "in")
 #### TDP Fit Metrics ====
 TDP.regression.period1 <- lm(mod.match$obs.TDP[mod.match$Year < 1975] ~ mod.match$mod.TDP[mod.match$Year < 1975])
 summary(TDP.regression.period1)$adj.r.squared
@@ -1342,7 +1419,7 @@ TDPplot <- ggplot(mod) +
   ylab(expression(TDP ~ (mu*g / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "top") 
+  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm"))
 print(TDPplot)
 
 #### O2 Fit Metrics ====
@@ -1373,7 +1450,7 @@ O2plot <- ggplot(mod2) +
   ylab(expression(DO ~ (mg / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "top") 
+  theme(legend.position = "none", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"))
 print(O2plot)
 
 #### DOC Fit Metrics ====
@@ -1404,12 +1481,36 @@ DOCplot <- ggplot(mod) +
   ylab(expression(DOC ~ (mg / L))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "top") 
+  theme(legend.position = "none", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(DOCplot)
 
 #### Combined Plot ====
 grid.arrange(icedateplot, tempplot, PPmodelplot, PPcumulativeplot, PPresidualsplot,  ncol = 1)
 grid.arrange(O2plot, DOCplot, TDPplot, ncol = 1)
+
+icedateplot2 <- ggplotGrob(icedateplot)
+tempplot2 <- ggplotGrob(tempplot)
+PPmodelplot2 <- ggplotGrob(PPmodelplot)
+PPcumulativeplot2 <- ggplotGrob(PPcumulativeplot)
+PPresidualsplot2 <- ggplotGrob(PPresidualsplot)
+modelfitplot <- rbind(icedateplot2, tempplot2, PPmodelplot2, 
+                      PPcumulativeplot2, PPresidualsplot2, size = "first")
+modelfitplot$widths <- unit.pmax(icedateplot2$widths, tempplot2$widths, PPmodelplot2$widths, 
+                                 PPcumulativeplot2$widths, PPresidualsplot2$widths)
+grid.newpage()
+grid.draw(modelfitplot)
+#ggsave("modelfitplot.jpg", modelfitplot, dpi = 300, width = 3.25, height = 7, units = "in")
+
+TDPplot2 <- ggplotGrob(TDPplot)
+O2plot2 <- ggplotGrob(O2plot)
+DOCplot2 <- ggplotGrob(DOCplot)
+
+modelfitplot2 <- rbind(TDPplot2, O2plot2, DOCplot2, size = "first")
+modelfitplot2$widths <- unit.pmax(O2plot2$widths, DOCplot2$widths, TDPplot2$widths)
+grid.newpage()
+grid.draw(modelfitplot2)
+#ggsave("modelfitplot2.pdf", modelfitplot2, dpi = 300, width = 3.25, height = 4, units = "in")
+
 #### Target Diagram ====
 #### Temperature 1 m ####
 model.mean.Temp1m.period1 <- mean(mod2.match$mod.Temp1m[mod2.match$Year < 1975])
@@ -1697,25 +1798,30 @@ ggplot(TargetDiagramData, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias,
   ylim(-3, 3) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   scale_shape_manual(values = c(0, 1, 2, 18, 15, 19, 17)) + 
-  ylab(expression(Normalized ~ Bias)) +
-  xlab(expression(Normalized ~ Unbiased ~ RMSD)) +
+  ylab(expression(paste(B, "*"))) +
+  #ylab(expression(Normalized ~ Bias)) +
+  xlab(expression(paste(RMSD, "'", "*"))) +
+  #xlab(expression(Normalized ~ Unbiased ~ RMSD)) +
   theme(legend.title = element_blank())
 print(TargetPlot)
 
 TargetPlot2 <- 
   ggplot(TargetDiagramData2, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias, shape = Variable, color = Period, fill = Period)) + 
-  geom_point(size = 4) + 
+  geom_vline(xintercept = 0, lty = 5) +
+  geom_hline(yintercept = 0, lty = 5) +
   annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
-  #annotate("path", x=0+0.75*cos(seq(0,2*pi,length.out=100)), y=0+0.75*sin(seq(0,2*pi,length.out=100))) +
+  geom_point(size = 2.5) + 
   xlim(-13, 13) +
   ylim(-3, 3) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   scale_shape_manual(values = c(0, 1, 2, 15, 19, 17)) + 
-  ylab(expression(Normalized ~ Bias)) +
-  xlab(expression(Normalized ~ Unbiased ~ RMSD)) +
+  ylab(expression(paste(B, "*"))) +
+  #ylab(expression(Normalized ~ Bias)) +
+  xlab(expression(paste(RMSD, "'", "*"))) +
+  #xlab(expression(Normalized ~ Unbiased ~ RMSD)) +
   geom_vline(xintercept = 0, lty = 5) +
   geom_hline(yintercept = 0, lty = 5) +
-  theme(legend.title = element_blank())
+  theme(legend.title = element_blank(), legend.position = "right", legend.key.height = unit(0.4, "cm"))
 print(TargetPlot2)
 
-ggsave("Target.jpg", TargetPlot2, dpi = 300)
+ggsave("Target.pdf", TargetPlot2, dpi = 300, width = 4.5, height = 3, units = "in")
