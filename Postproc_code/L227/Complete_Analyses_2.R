@@ -1300,16 +1300,33 @@ sd(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
 summary(PPresiduals$residuals.PP[PPresiduals$Year > 1989])
 sd(PPresiduals$residuals.PP[PPresiduals$Year > 1989])
 
-var.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
-var.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
-var.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+PPresiduals <- mutate(PPresiduals, abs.residual = abs(PPresiduals$residuals.PP))
+shapiro.test(PPresiduals$abs.residual[PPresiduals$Year < 1975])
+shapiro.test(PPresiduals$abs.residual[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
+shapiro.test(PPresiduals$abs.residual[PPresiduals$Year > 1989])
 
-# Variance of PP residuals is significantly lower in period 3 than in period 1 or 2.
-# Variance of PP in periods 1 and 2 does not differ significantly.
+PPresiduals <- mutate(PPresiduals, Period = NA)
+PPresiduals$Period[1:79] <- "1"
+PPresiduals$Period[80:339] <- "2"
+PPresiduals$Period[340:687] <- "3"
+PPresiduals$Period <- as.factor(PPresiduals$Period)
 
-t.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
-t.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
-t.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+# variance test assumes normal distribution. Fligner-Killen test is robust against departures from normality.
+# var.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
+# var.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+# var.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+
+fligner.test(PPresiduals$abs.residual, PPresiduals$Period)
+# data:  PPresiduals$abs.residual and PPresiduals$Period
+# Fligner-Killeen:med chi-squared = 8.8113, df = 2, p-value = 0.01221
+
+wilcox.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
+wilcox.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+wilcox.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+
+wilcox.test(PPresiduals$abs.residual[PPresiduals$Year < 1975], PPresiduals$abs.residual[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
+wilcox.test(PPresiduals$abs.residual[PPresiduals$Year < 1975], PPresiduals$abs.residual[PPresiduals$Year > 1989])
+wilcox.test(PPresiduals$abs.residual[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$abs.residual[PPresiduals$Year > 1989])
 
 # PP residuals are significantly lower in period 3 than in period 1 or 2.
 # PP residuals do not differ significantly in periods 1 and 2.
