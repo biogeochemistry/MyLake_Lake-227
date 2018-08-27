@@ -984,6 +984,11 @@ mod2 <- read.csv("Output_Depths.csv", header = F)
 colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy6m", "mod.Oxy8m", "mod.Oxy10m", "mod.Fe4m", "mod.Fe6m", "mod.Fe8m", "mod.Fe10m")
 obs.ice <- read.csv("Lake_239_ice-on_ice-off.csv", header = T)
 out.ice <- read.csv("Output_Ice.csv", header = F)
+mod.nofert <- read.csv("Output_IntegratedEpi_nofertilization.csv", header = F)
+colnames(mod.nofert) <- c("Year", "Month", "Day", "mod.TDP.nofert", "mod.PP.nofert", "mod.DOC.nofert")
+mod2.nofert <- read.csv("Output_Depths_nofertilization.csv", header = F)
+colnames(mod2.nofert) <- c("Year", "Month", "Day", "mod.Temp1m.nofert", "mod.Temp4m.nofert", "mod.Temp9m.nofert", "mod.Oxy2m.nofert", "mod.Oxy3m.nofert", "mod.Oxy4m.nofert", "mod.Oxy6m.nofert", "mod.Oxy8m.nofert", "mod.Oxy10m.nofert", "mod.Fe4m.nofert", "mod.Fe6m.nofert", "mod.Fe8m.nofert", "mod.Fe10m.nofert")
+out.ice.nofert <- read.csv("Output_Ice_Period1.csv", header = F)
 
 # Tidy
 obs <- obsinit %>% 
@@ -994,7 +999,10 @@ obs <- obs[,-1]
 colnames(obs) <- c("date", "obs.TP","obs.chla","obs.TDP", "obs.PP", "obs.DOC", "Month", "Year")
 mod <- mod %>% unite(date, Year, Month, Day, sep = '-')
 mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
+mod.nofert <- mod.nofert %>% unite(date, Year, Month, Day, sep = '-')
+mod2.nofert <- mod2.nofert %>% unite(date, Year, Month, Day, sep = '-')
 colnames(out.ice) <- c("Year.Break", "Month.Break", "Day.Break", "Year.Freeze", "Month.Freeze", "Day.Freeze")
+colnames(out.ice.nofert) <- c("Year.Break", "Month.Break", "Day.Break", "Year.Freeze", "Month.Freeze", "Day.Freeze")
 out.ice.edit <- out.ice %>% unite(Ice.Off.Date, Year.Break, Month.Break, Day.Break, sep = '-')
 out.ice.edit <- out.ice.edit %>% unite(Ice.On.Date, Year.Freeze, Month.Freeze, Day.Freeze, sep = '-')
 
@@ -1004,6 +1012,8 @@ obs_temp$date <- as.Date(obs_temp$date, format = "%m/%d/%y")
 obs_O2$date <- as.Date(obs_O2$date, format = "%d/%m/%y")
 mod$date <- as.Date(mod$date, format = "%Y-%m-%d") 
 mod2$date <- as.Date(mod2$date, format = "%Y-%m-%d") 
+mod.nofert$date <- as.Date(mod.nofert$date, format = "%Y-%m-%d") 
+mod2.nofert$date <- as.Date(mod2.nofert$date, format = "%Y-%m-%d") 
 obs.ice$Ice.Off.Date <- as.Date(obs.ice$Ice.Off.Date, format = "%m/%d/%y")
 obs.ice$Ice.On.Date <- as.Date(obs.ice$Ice.On.Date, format = "%m/%d/%y")
 obs.daybreak <- strftime(obs.ice$Ice.Off.Date, format = "%j")
@@ -1016,10 +1026,13 @@ out.dayfreeze <- strftime(out.ice.edit$Ice.On.Date, format = "%j")
 out.year <- as.character(out.ice$Year.Freeze)
 
 # Tidy
-mod.match <- inner_join(obs,mod, by = "date") 
+mod.match <- inner_join(obs, mod, by = "date") 
+mod.match <- inner_join(mod.match, mod.nofert, by = "date")
 mod.match <- filter(mod.match, obs.TDP < 50)
 mod2.match <- inner_join(obs_temp, mod2, by = "date")
+mod2.match <- inner_join(mod2.match, mod2.nofert, by = "date")
 mod3.match <- inner_join(obs_O2, mod2, by = "date")
+mod3.match <- inner_join(mod3.match, mod2.nofert, by = "date")
 obs.ice.edit <- cbind(obs.year, obs.ice[4], obs.ice[5], obs.daybreak, obs.dayfreeze)
 colnames(obs.ice.edit) <- c("Year", "Ice.Off.Date", "Ice.On.Date", "obs.daybreak", "obs.dayfreeze")
 out.ice.edit2 <- cbind(out.year, out.ice.edit, out.daybreak, out.dayfreeze)
@@ -1228,12 +1241,13 @@ NashSutcliffe.PP.period3 <-NSE(mod.match$mod.PP[mod.match$Year > 1989], mod.matc
 PPmodelplot <- ggplot(mod) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.5) +
-  geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 0.75) +
+  geom_line(data = mod, aes(x = date, y = mod.PP), size = 0.5, color = "#d14a42ff") +
+  geom_point(data = mod.match, aes(x = date, y = obs.PP), pch = 19, size = 0.75, color = "#240c4cff") +
+  geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
   ylim(c(0, 100)) +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
+  #scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff",  "#240c4cff")) +
   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
 print(PPmodelplot)
 
@@ -1241,6 +1255,7 @@ print(PPmodelplot)
 #### Cumulative PP Fit Metrics ====
 # Cumulative Sum of PP
 mod.match.daily <- right_join(obs, mod, by = "date")
+mod.match.daily <- inner_join(mod.match.daily, mod.nofert, by = "date")
 mod.match.daily$Month <- as.numeric(format(mod.match.daily$date, "%m"))
 mod.match.daily$Year <- format(mod.match.daily$date, "%Y")
 mod.match.daily <- mod.match.daily %>% 
@@ -1253,12 +1268,12 @@ mod.match.daily$obs.PP[mod.match.daily$Year == 2016 & mod.match.daily$Month == 1
 mod.match.daily$obs.PP[mod.match.daily$Month == 5 & mod.match.daily$Day == 16] <- 0
 obs.PP.interpolated <- na.approx(mod.match.daily$obs.PP)
 mod.match.daily$obs.PP <- obs.PP.interpolated
-mod.match.cumulative <- ddply(mod.match.daily, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.obs.PP = cumsum(obs.PP))
+mod.match.cumulative <- ddply(mod.match.daily, .(Year), transform, Cum.Sum.mod.PP = cumsum(mod.PP), Cum.Sum.mod.PP.nofert = cumsum(mod.PP.nofert), Cum.Sum.obs.PP = cumsum(obs.PP))
 
 # calculate end-of season comparison between cumulative modeled vs. observed PP
 end.of.season.cumulative <- as.data.frame(mod.match.cumulative) %>%
   filter(Day == 31 & Month == 10) %>%
-  select(date, Month, Year, Day, Cum.Sum.mod.PP, Cum.Sum.obs.PP) %>%
+  select(date, Month, Year, Day, Cum.Sum.mod.PP, Cum.Sum.mod.PP.nofert, Cum.Sum.obs.PP) %>%
   mutate(mod.minus.obs.PP = Cum.Sum.mod.PP -Cum.Sum.obs.PP) %>%
   mutate(mod.divided.obs.PP = Cum.Sum.mod.PP/Cum.Sum.obs.PP)
 
@@ -1277,9 +1292,10 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 1) +
   geom_point(aes(x = date, y = Cum.Sum.obs.PP, col = "Observed"), size = 0.5) +
+  geom_point(aes(x = date, y = Cum.Sum.mod.PP.nofert, col = "No Fertilization"), size = 0.5) +
   ylab(expression(Cum. ~ PP ~ (mu*g / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled", "No Fertilization"), values = c("#d14a42ff", "#e55e2fff", "#240c4cff")) +
   theme(legend.position = "none", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(PPcumulativeplot)
 
