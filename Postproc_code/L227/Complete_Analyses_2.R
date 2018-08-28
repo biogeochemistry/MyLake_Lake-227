@@ -16,6 +16,7 @@ library(reshape2)
 library(vegan)
 library(gtable)
 library(grid)
+library(cowplot)
 
 theme_std <- function (base_size = 11, base_family = "") {
   theme_grey(base_size = base_size, base_family = base_family) %+replace% 
@@ -1214,7 +1215,7 @@ tempplot <- ggplot(mod2) +
   ylab(expression("Temp " ( degree*C))) +
   xlab(" ") +
   scale_colour_manual("", breaks = c("1 m", "4 m", "9 m"), values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm"))
+  theme(legend.position = "top", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm"))
 print(tempplot)
 
 #ggsave("Temp.jpg", tempplot, dpi = 300)
@@ -1241,13 +1242,13 @@ NashSutcliffe.PP.period3 <-NSE(mod.match$mod.PP[mod.match$Year > 1989], mod.matc
 PPmodelplot <- ggplot(mod) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_line(data = mod, aes(x = date, y = mod.PP), size = 0.5, color = "#d14a42ff") +
-  geom_point(data = mod.match, aes(x = date, y = obs.PP), pch = 19, size = 0.75, color = "#240c4cff") +
+  geom_line(data = mod, aes(x = date, y = mod.PP, color = "Modeled"), size = 0.5) +
+  geom_point(data = mod.match, aes(x = date, y = obs.PP, color = "Observed"), pch = 19, size = 0.75) +
   geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
   ylim(c(0, 100)) +
-  #scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff",  "#240c4cff")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff",  "#240c4cff")) +
   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
 print(PPmodelplot)
 
@@ -1292,10 +1293,10 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(aes(x = date, y = Cum.Sum.mod.PP, col = "Modeled"), size = 1) +
   geom_point(aes(x = date, y = Cum.Sum.obs.PP, col = "Observed"), size = 0.5) +
-  geom_point(aes(x = date, y = Cum.Sum.mod.PP.nofert, col = "No Fertilization"), size = 0.5) +
+  #geom_point(aes(x = date, y = Cum.Sum.mod.PP.nofert, col = "No Fertilization"), size = 0.5) +
   ylab(expression(Cum. ~ PP ~ (mu*g / L))) +
   xlab(" ") +
-  scale_colour_manual("", breaks = c("Observed", "Modeled", "No Fertilization"), values = c("#d14a42ff", "#e55e2fff", "#240c4cff")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
   theme(legend.position = "none", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(PPcumulativeplot)
 
@@ -1424,6 +1425,110 @@ mod.match.bestyear <- filter(mod.match, Year == 2000 | Year == 2001)
 print(PPmodelplot.bestyear)
 
 ggsave("PPbestyear.jpg", PPmodelplot.bestyear, dpi = 300, width = 3.25, height = 3.25, units = "in")
+#### PP maximum concentration ----
+mod <- mutate(mod, Year = format(mod$date, "%Y"))
+mod <- mutate(mod, Month = format(mod$date, "%m"))
+mod.nofert <- mutate(mod.nofert, Year = format(mod.nofert$date, "%Y"))
+mod.nofert <- mutate(mod.nofert, Month = format(mod.nofert$date, "%m"))
+
+MaxModPP <- 
+  mod %>%
+  select(date, mod.PP, Year) %>%
+  group_by(Year) %>%
+  filter(mod.PP == max(mod.PP))
+#summarize(MaxPP = max(mod.PP), date = date[mod.PP == MaxPP])
+MaxModPP$Year <- as.integer(MaxModPP$Year)
+names(MaxModPP)[1] <- "mod.date"
+
+MaxModPP.nofert <- 
+  mod.nofert %>%
+  select(date, mod.PP.nofert, Year) %>%
+  group_by(Year) %>%
+  filter(mod.PP.nofert == max(mod.PP.nofert))
+#summarize(MaxPP.nofert = max(mod.PP.nofert), date = date[mod.PP.nofert == MaxPP.nofert])
+MaxModPP.nofert$Year <- as.integer(MaxModPP.nofert$Year)
+names(MaxModPP.nofert)[1] <- "mod.date.nofert"
+
+MaxObsPP <- 
+  obs %>%
+  select(date, obs.PP, Year) %>%
+  na.omit(obs) %>%
+  group_by(Year) %>%
+  filter(obs.PP == max(obs.PP))
+names(MaxObsPP)[1] <- "obs.date"
+
+
+match.MaxPP <- inner_join(MaxObsPP, MaxModPP, by = "Year") 
+match.MaxPP <- inner_join(match.MaxPP, MaxModPP.nofert, by = "Year")
+match.MaxPP$mod.date <- format(match.MaxPP$mod.date, "%j")
+match.MaxPP$mod.date.nofert <- format(match.MaxPP$mod.date.nofert, "%j")
+match.MaxPP$obs.date <- format(match.MaxPP$obs.date, "%j")
+match.MaxPP$Year <- as.numeric(match.MaxPP$Year)
+match.MaxPP$mod.date <- as.numeric(match.MaxPP$mod.date)
+match.MaxPP$mod.date.nofert <- as.numeric(match.MaxPP$mod.date.nofert)
+match.MaxPP$obs.date <- as.numeric(match.MaxPP$obs.date)
+
+MaxPPobsvsmodplot <-
+  ggplot(data = match.MaxPP, aes(x = obs.PP, y = mod.PP, color = Year)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
+  scale_color_viridis_c(option = "inferno") + 
+  xlab("") +
+  ylab(expression(Modeled ~ PP ~ (mu*g / L))) +
+  theme(legend.position = "top", axis.text.x = element_blank(), legend.key.width = unit(1, "cm"))
+print(MaxPPobsvsmodplot)
+
+MaxPPobsvsmodnofertplot <-
+  ggplot(data = match.MaxPP, aes(x = obs.PP, y = mod.PP.nofert, color = Year)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
+  scale_color_viridis_c(option = "inferno") + 
+  xlab(expression(Observed ~ PP ~ (mu*g / L))) +
+  ylab(expression(Climate ~ only ~ modeled ~ PP ~ (mu*g / L) )) +
+  theme(legend.position = "none")
+print(MaxPPobsvsmodnofertplot)
+
+#grid.arrange(MaxPPobsvsmodplot, MaxPPobsvsmodnofertplot, ncol = 1)
+
+MaxPPobsvsmodplot2 <- ggplotGrob(MaxPPobsvsmodplot)
+MaxPPobsvsmodnofertplot2 <- ggplotGrob(MaxPPobsvsmodnofertplot)
+MaxPPplot <- rbind(MaxPPobsvsmodplot2, MaxPPobsvsmodnofertplot2, size = "first")
+MaxPPplot$widths <- unit.pmax(MaxPPobsvsmodnofertplot2$widths, MaxPPobsvsmodnofertplot2$widths)
+grid.newpage()
+grid.draw(MaxPPplot)
+ggsave("MaxPPplot.jpg", MaxPPplot, dpi = 300, width = 3.25, height = 5, units = "in")
+
+
+Maxdateobsvsmodplot <- 
+  ggplot(data = match.MaxPP, aes(x = obs.date, y = mod.date, color = Year)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
+  scale_color_viridis_c(option = "inferno")
+print(Maxdateobsvsmodplot)
+
+Maxdateobsvsmodnofertplot <- 
+  ggplot(data = match.MaxPP, aes(x = obs.date, y = mod.date.nofert, color = Year)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
+  scale_color_viridis_c(option = "inferno")
+print(Maxdateobsvsmodnofertplot)
+
+# MaxPPconcplot <- 
+#   ggplot(data = match.MaxPP, aes(x = Year)) +
+#   geom_point(aes(y = obs.PP, color = "Observed")) +
+#   geom_line(aes(y = mod.PP, color = "Modeled")) + 
+#   scale_colour_manual("", breaks = c("Observed", "Modeled"), 
+#                       values = c("black", "blue")) + 
+#   ylab(expression(Maximum ~ PP ~ (mu*g / L))) +
+#   theme(legend.position = c(0.9,0.9)) 
+# print(MaxPPconcplot)
+# 
+# MaxPPconcregression <- lm (match.MaxPP$obs.PP ~ match.MaxPP$mod.PP)
+# summary(MaxPPconcregression)
+# mseconc <- mean(residuals(MaxPPconcregression)^2)
+# rmseconc <- sqrt(mseconc)
+# rmseconc
+
 #### TDP Fit Metrics ====
 TDP.regression.period1 <- lm(mod.match$obs.TDP[mod.match$Year < 1975] ~ mod.match$mod.TDP[mod.match$Year < 1975])
 summary(TDP.regression.period1)$adj.r.squared
@@ -1518,21 +1623,45 @@ DOCplot <- ggplot(mod) +
 print(DOCplot)
 
 #### Combined Plot ====
-grid.arrange(icedateplot, tempplot, PPmodelplot, PPcumulativeplot, PPresidualsplot,  ncol = 1)
-grid.arrange(O2plot, DOCplot, TDPplot, ncol = 1)
+# grid.arrange(icedateplot, tempplot, PPmodelplot, PPcumulativeplot, PPresidualsplot,  ncol = 1)
+# grid.arrange(O2plot, DOCplot, TDPplot, ncol = 1)
+# 
+# icedateplot2 <- ggplotGrob(icedateplot)
+# tempplot2 <- ggplotGrob(tempplot)
+# PPmodelplot2 <- ggplotGrob(PPmodelplot)
+# PPcumulativeplot2 <- ggplotGrob(PPcumulativeplot)
+# PPresidualsplot2 <- ggplotGrob(PPresidualsplot)
+# modelfitplot <- rbind(icedateplot2, tempplot2, PPmodelplot2, 
+#                       PPcumulativeplot2, PPresidualsplot2, size = "first")
+# modelfitplot$widths <- unit.pmax(icedateplot2$widths, tempplot2$widths, PPmodelplot2$widths, 
+#                                  PPcumulativeplot2$widths, PPresidualsplot2$widths)
+# grid.newpage()
+# grid.draw(modelfitplot)
+#ggsave("modelfitplot.jpg", modelfitplot, dpi = 300, width = 3.25, height = 7, units = "in")
 
 icedateplot2 <- ggplotGrob(icedateplot)
 tempplot2 <- ggplotGrob(tempplot)
+modelphysicsfitplot <- rbind(icedateplot2, tempplot2, size = "first")
+modelphysicsfitplot$widths <- unit.pmax(icedateplot2$widths, tempplot2$widths)
+grid.newpage()
+grid.draw(modelphysicsfitplot)
+ggsave("modelphysicsfitplot.jpg", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
+
 PPmodelplot2 <- ggplotGrob(PPmodelplot)
 PPcumulativeplot2 <- ggplotGrob(PPcumulativeplot)
 PPresidualsplot2 <- ggplotGrob(PPresidualsplot)
-modelfitplot <- rbind(icedateplot2, tempplot2, PPmodelplot2, 
-                      PPcumulativeplot2, PPresidualsplot2, size = "first")
-modelfitplot$widths <- unit.pmax(icedateplot2$widths, tempplot2$widths, PPmodelplot2$widths, 
-                                 PPcumulativeplot2$widths, PPresidualsplot2$widths)
-grid.newpage()
-grid.draw(modelfitplot)
-#ggsave("modelfitplot.jpg", modelfitplot, dpi = 300, width = 3.25, height = 7, units = "in")
+modelPPfitplot2 <- rbind(PPcumulativeplot2, PPresidualsplot2, size = "first")
+#modelPPfitplot$widths <- unit.pmax(PPmodelplot2$widths, PPcumulativeplot2$widths, PPresidualsplot2$widths)
+#grid.newpage()
+#grid.draw(modelPPfitplot)
+
+modelPPfitplot <- plot_grid(PPmodelplot2, modelPPfitplot2, align = "v", nrow = 2, rel_heights = c(1/2, 1/2))
+print(modelPPfitplot)
+modelPPfitplot <- arrangeGrob(PPmodelplot2, PPcumulativeplot2, PPresidualsplot2, heights = c(4, 2, 2), ncol = 1)
+grid.arrange(arrangeGrob(PPmodelplot2, ncol = 1), arrangeGrob(PPcumulativeplot2, PPresidualsplot2, ncol = 1), 
+             heights = c(4, 4))
+ggsave("modelPPfitplot.jpg", modelPPfitplot, dpi = 300, width = 6.5, height = 5, units = "in")
+
 
 TDPplot2 <- ggplotGrob(TDPplot)
 O2plot2 <- ggplotGrob(O2plot)
