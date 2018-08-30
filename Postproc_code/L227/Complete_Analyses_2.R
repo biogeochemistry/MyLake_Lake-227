@@ -1055,6 +1055,18 @@ mod.match <- filter(mod.match, Year != 1969)
 mod2.match <- filter(mod2.match, Year != 1969)
 mod3.match <- filter(mod3.match, Year != 1969)
 
+PropPP <- mutate(mod, mod.PP.nofert = mod.nofert$mod.PP.nofert)
+PropPP <- PropPP %>%
+  mutate(PropPPFert = (mod.PP - mod.PP.nofert)/mod.PP *100, 
+         Month = as.numeric(format(PropPP$date, "%m")), 
+         Day = as.numeric(format(PropPP$date, "%d"))) #%>%
+  # filter(Month > 4 & Month < 11)  %>% 
+  # filter(Month == 5 & Day > 15 | Month > 5 )
+PropPP$PropPPFert[PropPP$Month < 5] <- NA
+PropPP$PropPPFert[PropPP$Month > 10] <- NA
+PropPP$PropPPFert[PropPP$Month == 5 & PropPP$Day < 16] <- NA
+PropPP$PropPPFert[PropPP$PropPPFert < 0]  <- 0
+
 
 #### Ice Fit metrics ====
 icebreakregression <- lm (match.ice$obs.daybreak ~ match.ice$out.daybreak)
@@ -1242,13 +1254,14 @@ NashSutcliffe.PP.period3 <-NSE(mod.match$mod.PP[mod.match$Year > 1989], mod.matc
 PPmodelplot <- ggplot(mod) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_line(data = PropPP, aes(x = date, y = PropPPFert, color = "% PP from fertilization"), size = 0.25) +
   geom_line(data = mod, aes(x = date, y = mod.PP, color = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, color = "Observed"), pch = 19, size = 0.75) +
   geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
   ylim(c(0, 100)) +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff",  "#240c4cff")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled", "% PP from fertilization"), values = c("#f99d15ff", "#d14a42ff",  "#240c4cff")) +
   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
 print(PPmodelplot)
 
@@ -1393,6 +1406,9 @@ min(tapply(PPresiduals$abs.residuals.PP, PPresiduals$Year, sum))
 PPresidualsplot <- ggplot(PPresiduals) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_hline(yintercept = 0, lty = 1) +
+  geom_hline(yintercept = 25, lty = 2) + 
+  geom_hline(yintercept = -25, lty = 2) + 
   geom_point(data = PPresiduals, aes(x = date, y = residuals.PP), size = 0.5, color = "#d14a42ff") +
   ylab(expression(PP ~ res. ~ (mu*g / L))) +
   xlab(" ") +
@@ -1472,7 +1488,7 @@ MaxPPobsvsmodplot <-
   ggplot(data = match.MaxPP, aes(x = obs.PP, y = mod.PP, color = Year)) +
   geom_point() +
   geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
-  scale_color_viridis_c(option = "inferno") + 
+  scale_color_viridis(option = "inferno") + 
   xlab("") +
   ylab(expression(Modeled ~ PP ~ (mu*g / L))) +
   theme(legend.position = "top", axis.text.x = element_blank(), legend.key.width = unit(1, "cm"))
@@ -1481,8 +1497,9 @@ print(MaxPPobsvsmodplot)
 MaxPPobsvsmodnofertplot <-
   ggplot(data = match.MaxPP, aes(x = obs.PP, y = mod.PP.nofert, color = Year)) +
   geom_point() +
+  #geom_abline(slope = 1, lty = 2) + #1:1 line is off the plot
   geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
-  scale_color_viridis_c(option = "inferno") + 
+  scale_color_viridis(option = "inferno") + 
   xlab(expression(Observed ~ PP ~ (mu*g / L))) +
   ylab(expression(Climate ~ only ~ modeled ~ PP ~ (mu*g / L) )) +
   theme(legend.position = "none")
@@ -1499,19 +1516,19 @@ grid.draw(MaxPPplot)
 ggsave("MaxPPplot.jpg", MaxPPplot, dpi = 300, width = 3.25, height = 5, units = "in")
 
 
-Maxdateobsvsmodplot <- 
-  ggplot(data = match.MaxPP, aes(x = obs.date, y = mod.date, color = Year)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
-  scale_color_viridis_c(option = "inferno")
-print(Maxdateobsvsmodplot)
-
-Maxdateobsvsmodnofertplot <- 
-  ggplot(data = match.MaxPP, aes(x = obs.date, y = mod.date.nofert, color = Year)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
-  scale_color_viridis_c(option = "inferno")
-print(Maxdateobsvsmodnofertplot)
+# Maxdateobsvsmodplot <- 
+#   ggplot(data = match.MaxPP, aes(x = obs.date, y = mod.date, color = Year)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
+#   scale_color_viridis(option = "inferno")
+# print(Maxdateobsvsmodplot)
+# 
+# Maxdateobsvsmodnofertplot <- 
+#   ggplot(data = match.MaxPP, aes(x = obs.date, y = mod.date.nofert, color = Year)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
+#   scale_color_viridis(option = "inferno")
+# print(Maxdateobsvsmodnofertplot)
 
 # MaxPPconcplot <- 
 #   ggplot(data = match.MaxPP, aes(x = Year)) +
@@ -1657,9 +1674,8 @@ modelPPfitplot2 <- rbind(PPcumulativeplot2, PPresidualsplot2, size = "first")
 
 modelPPfitplot <- plot_grid(PPmodelplot2, modelPPfitplot2, align = "v", nrow = 2, rel_heights = c(1/2, 1/2))
 print(modelPPfitplot)
-modelPPfitplot <- arrangeGrob(PPmodelplot2, PPcumulativeplot2, PPresidualsplot2, heights = c(4, 2, 2), ncol = 1)
-grid.arrange(arrangeGrob(PPmodelplot2, ncol = 1), arrangeGrob(PPcumulativeplot2, PPresidualsplot2, ncol = 1), 
-             heights = c(4, 4))
+#modelPPfitplot <- arrangeGrob(PPmodelplot2, PPcumulativeplot2, PPresidualsplot2, heights = c(4, 2, 2), ncol = 1)
+#grid.arrange(arrangeGrob(PPmodelplot2, ncol = 1), arrangeGrob(PPcumulativeplot2, PPresidualsplot2, ncol = 1), heights = c(4, 4))
 ggsave("modelPPfitplot.jpg", modelPPfitplot, dpi = 300, width = 6.5, height = 5, units = "in")
 
 
@@ -1969,20 +1985,19 @@ print(TargetPlot)
 
 TargetPlot2 <- 
   ggplot(TargetDiagramData2, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias, shape = Variable, color = Period, fill = Period)) + 
-  geom_vline(xintercept = 0, lty = 5) +
-  geom_hline(yintercept = 0, lty = 5) +
-  annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
+  geom_vline(xintercept = 0, lty = 5, size = 0.5) +
+  geom_hline(yintercept = 0, lty = 5, size = 0.5) +
+  #annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   geom_point(size = 2.5) + 
   xlim(-13, 13) +
-  ylim(-3, 3) +
+  #ylim(-3, 3) +
+  scale_y_continuous(limits = c(-3, 3), breaks = c(-2, -1, 0, 1, 2)) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   scale_shape_manual(values = c(0, 1, 2, 15, 19, 17)) + 
   ylab(expression(paste(B, "*"))) +
   #ylab(expression(Normalized ~ Bias)) +
   xlab(expression(paste(RMSD, "'", "*"))) +
   #xlab(expression(Normalized ~ Unbiased ~ RMSD)) +
-  geom_vline(xintercept = 0, lty = 5) +
-  geom_hline(yintercept = 0, lty = 5) +
   theme(legend.title = element_blank(), legend.position = "right", legend.key.height = unit(0.4, "cm"))
 print(TargetPlot2)
 
