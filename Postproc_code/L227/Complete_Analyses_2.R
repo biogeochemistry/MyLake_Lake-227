@@ -1483,6 +1483,24 @@ match.MaxPP$Year <- as.numeric(match.MaxPP$Year)
 match.MaxPP$mod.date <- as.numeric(match.MaxPP$mod.date)
 match.MaxPP$mod.date.nofert <- as.numeric(match.MaxPP$mod.date.nofert)
 match.MaxPP$obs.date <- as.numeric(match.MaxPP$obs.date)
+match.MaxPP <- filter(match.MaxPP, Year > 1969)
+match.MaxPP <- mutate(match.MaxPP, Period = NA)
+#remove duplicate years by taking out later dates
+match.MaxPP <- match.MaxPP[-c(27, 36, 42, 50, 51),]
+match.MaxPP$Period[1:5] <- "a"
+match.MaxPP$Period[6:20] <- "b"
+match.MaxPP$Period[21:47] <- "c"
+    
+summary(lm(match.MaxPP$mod.PP.nofert ~ match.MaxPP$Year))
+# Estimate Std. Error t value Pr(>|t|)
+# (Intercept)      50.13067   48.22755   1.039    0.304
+# match.MaxPP$Year -0.02207    0.02420  -0.912    0.367
+# 
+# Residual standard error: 2.25 on 45 degrees of freedom
+# Multiple R-squared:  0.01815,	Adjusted R-squared:  -0.003672 
+# F-statistic: 0.8317 on 1 and 45 DF,  p-value: 0.3666
+
+summary(lm(match.MaxPP$mod.PP.nofert ~ match.MaxPP$Period))
 
 MaxPPobsvsmodplot <-
   ggplot(data = match.MaxPP, aes(x = obs.PP, y = mod.PP, color = Year)) +
