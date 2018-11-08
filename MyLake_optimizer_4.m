@@ -13,7 +13,7 @@ max_generations = 24;
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
 m_start = [1990, 1, 1];
-m_stop = [1990, 12, 31];
+m_stop = [1994, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
