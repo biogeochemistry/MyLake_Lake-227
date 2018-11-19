@@ -36,7 +36,7 @@ varyindexes = [10 47 49 50 53; %PAR_sat, w_chl, m_twty, g_twty, P_half
                54 56 57 58 59 ]; %PAR_sat_2, w_chl2, m_twty2, g_twty2, P_half_2
 
 % Setting up the min and max boundaries for each covarying set of parameters.
-minparam = [ 3e-6, 0.01, 0.02, 0.1, 0.001];
+minparam = [ 3e-6, 0.01, 0.01, 0.1, 0.001];
 maxparam = [ 3e-4, 0.5 , 0.1 , 2.0, 100];
 
 % The best initial guess for the values of each set of covarying parameters (can have
@@ -60,6 +60,9 @@ function Data = loadData(MyL_dates)
     rawPPdata = rawcsvdata(:,4);
     rawPPdata(rawPPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
     Data.PPintegratedepi = rawPPdata(withinmodelrange);
+    rawTDPdata = rawcsvdata(:,3);
+    rawTDPdata(rawTDPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
+    Data.TDPintegratedepi = rawTDPdata(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
     Data.date_mask = getmask(dateswithinrange, MyL_dates); % Used later to match model data to observed data by correct date.
 end
@@ -93,7 +96,12 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
     ModelResult.PPintegratedepi = transpose(TPPintegratedepi);
    
-
+    TDP = MyLake_results.basin1.concentrations.P;
+    TDPintegratedepi = zeros(1,length(TDP));
+    for (i=1:length(TDP))
+        TDPintegratedepi(i) = mean(TDP(1:epidepthposition(i), i));
+    end %returns integrated epilimnion TDP measurement for each day (variable epilimnion depth)
+    ModelResult.TDPintegratedepi = transpose(TDPintegratedepi);
 end
 
 % Error function. The error function takes a ModelResult
@@ -104,7 +112,9 @@ end
 function err = error_function_P(ModelResult, Data)
     
     MatchedModelPP = ModelResult.PPintegratedepi(Data.date_mask);
-    err = nansum((MatchedModelPP - Data.PPintegratedepi).^2);
+    MatchedModelTDP = ModelResult.TDPintegratedepi(Data.date_mask);
+    err = nansum (((MatchedModelPP - Data.PPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2));
+
 end
 
 %% END project specific evaluation functions
@@ -147,20 +157,12 @@ function err = MyLake_optimizer_single_run(m_start, m_stop, K_sediments, K_lake,
         end
     end
     
-    try 
         
     % Running the model
     ModelResult = modeleval(m_start, m_stop, K_sediments, K_lake);
 
     % Evaluating the error
     err = errfun(ModelResult, Data);
-    
-      
-    catch
-        
-    disp("model crash, recovering ...");
-    err = 9999999999;    % punished
-    end 
     
     
     % Debug output.

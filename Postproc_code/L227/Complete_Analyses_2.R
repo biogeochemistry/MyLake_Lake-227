@@ -2018,7 +2018,7 @@ TargetPlot2 <-
   geom_hline(yintercept = 0, lty = 5, size = 0.5) +
   #annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   geom_point(size = 2.5) + 
-  xlim(-40, 40) +
+  xlim(-10, 10) +
   #ylim(-10, 10) +
   scale_y_continuous(limits = c(-10, 10), breaks = c(-2, -1, 0, 1, 2)) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
