@@ -1311,6 +1311,12 @@ sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1
 summary(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1989])
 sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1989])
 
+end.of.season.cumulative <- mutate(end.of.season.cumulative, Period = NA)
+end.of.season.cumulative$Period[1:5] <- "High N:P"
+end.of.season.cumulative$Period[6:20] <- "Low N:P"
+end.of.season.cumulative$Period[21:46] <- "P only"
+
+
 #### Cumulative PP Plot ====
 PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
@@ -1323,6 +1329,17 @@ PPcumulativeplot <- ggplot(data = mod.match.cumulative) +
   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
   theme(legend.position = "none", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
 print(PPcumulativeplot)
+
+endPPcumulativeplot <- ggplot(data = end.of.season.cumulative) +
+  geom_abline(slope = 1) +
+  geom_abline(slope = 1.1, lty = 5) +
+  geom_abline(slope = 0.9, lty = 5) +
+  geom_point(aes(x = Cum.Sum.obs.PP, y = Cum.Sum.mod.PP, color = Period)) +
+  scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
+  xlab(expression(Observed ~ Cum. ~ PP ~ (mu*g / L))) +
+  ylab(expression(Modeled ~ Cum. ~ PP ~ (mu*g / L))) +
+  theme(legend.title = element_blank(), legend.position = c(1,1), legend.justification = c(1,1), legend.key.height = unit(0.4, "cm"))
+print(endPPcumulativeplot)
 
 #ggsave("PPcumulative.jpg", PPcumulativeplot, dpi = 300)
 
@@ -2018,9 +2035,9 @@ TargetPlot2 <-
   geom_hline(yintercept = 0, lty = 5, size = 0.5) +
   #annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   geom_point(size = 2.5) + 
-  xlim(-10, 10) +
+  #xlim(-10, 10) +
   #ylim(-10, 10) +
-  scale_y_continuous(limits = c(-10, 10), breaks = c(-2, -1, 0, 1, 2)) +
+  #scale_y_continuous(limits = c(-10, 10), breaks = c(-2, -1, 0, 1, 2)) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   scale_shape_manual(values = c(0, 1, 2, 15, 19, 17)) + 
   ylab(expression(paste(B, "*"))) +
