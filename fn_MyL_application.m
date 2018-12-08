@@ -56,11 +56,11 @@ end
 %# ############ This is Vansjø Storefj ##############
 
 parafile=lake_par_file;
-initfile='IO/L227_initial.txt';
+initfile='IO/L227_initial_1975_nofertilization.txt';
 
 
 if use_INCA == 0
-    inputfile='IO/L227_input_interpolated_constantfertilization.txt';
+    inputfile='IO/L227_input_interpolated_nofertilization.txt';
     % inputfile='IO/store_constant_input.txt';
     disp('Using existing input')
 elseif use_INCA == 1
