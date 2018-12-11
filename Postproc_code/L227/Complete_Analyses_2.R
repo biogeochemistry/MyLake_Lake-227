@@ -1254,7 +1254,7 @@ NashSutcliffe.PP.period3 <-NSE(mod.match$mod.PP[mod.match$Year > 1989], mod.matc
 PPmodelplot <- ggplot(mod) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  #geom_line(data = PropPP, aes(x = date, y = PropPPFert, color = "% PP from fertilization"), size = 0.25) +
+  geom_line(data = PropPP, aes(x = date, y = PropPPFert, color = "% PP from fertilization"), size = 0.25) +
   geom_line(data = mod, aes(x = date, y = mod.PP, color = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, color = "Observed"), pch = 19, size = 0.75) +
   geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
@@ -1265,7 +1265,7 @@ PPmodelplot <- ggplot(mod) +
   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
 print(PPmodelplot)
 
-PPmodelplot <- ggplot(mod) +
+#PPmodelplot <- ggplot(mod) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.25) +
@@ -1334,6 +1334,8 @@ endPPcumulativeplot <- ggplot(data = end.of.season.cumulative) +
   geom_abline(slope = 1) +
   geom_abline(slope = 1.1, lty = 5) +
   geom_abline(slope = 0.9, lty = 5) +
+  #geom_abline(slope = 1.2, lty = 2, color = "gray") +
+  #geom_abline(slope = 0.8, lty = 2, color = "gray") +
   geom_point(aes(x = Cum.Sum.obs.PP, y = Cum.Sum.mod.PP, color = Period)) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   xlab(expression(Observed ~ Cum. ~ PP ~ (mu*g / L))) +
@@ -1347,6 +1349,7 @@ print(endPPcumulativeplot)
 PPresiduals <- mod.match %>%
   select(date, Year) %>%
   mutate(residuals.PP = mod.match$obs.PP - mod.match$mod.PP) %>%
+  filter(Year != 1996) %>%
   na.omit()
 
 summary(PPresiduals$residuals.PP[PPresiduals$Year < 1975])
@@ -1484,14 +1487,21 @@ MaxModPP <-
 MaxModPP$Year <- as.integer(MaxModPP$Year)
 names(MaxModPP)[1] <- "mod.date"
 
+summary(MaxModPP$mod.PP)
+sd(MaxModPP$mod.PP)
+
 MaxModPP.nofert <- 
   mod.nofert %>%
   select(date, mod.PP.nofert, Year) %>%
   group_by(Year) %>%
-  filter(mod.PP.nofert == max(mod.PP.nofert))
+  filter(mod.PP.nofert == max(mod.PP.nofert)) %>%
+  filter(Year != 1969)
 #summarize(MaxPP.nofert = max(mod.PP.nofert), date = date[mod.PP.nofert == MaxPP.nofert])
 MaxModPP.nofert$Year <- as.integer(MaxModPP.nofert$Year)
 names(MaxModPP.nofert)[1] <- "mod.date.nofert"
+
+summary(MaxModPP.nofert$mod.PP.nofert)
+sd(MaxModPP.nofert$mod.PP.nofert)
 
 MaxObsPP <- 
   obs %>%
@@ -1733,7 +1743,7 @@ modelfitplot2 <- rbind(TDPplot2, O2plot2, DOCplot2, size = "first")
 modelfitplot2$widths <- unit.pmax(O2plot2$widths, DOCplot2$widths, TDPplot2$widths)
 grid.newpage()
 grid.draw(modelfitplot2)
-#ggsave("modelfitplot2.pdf", modelfitplot2, dpi = 300, width = 3.25, height = 4, units = "in")
+ggsave("modelfitplot2.pdf", modelfitplot2, dpi = 300, width = 3.25, height = 4, units = "in")
 
 #### Target Diagram ====
 #### Temperature 1 m ####
@@ -2035,7 +2045,7 @@ TargetPlot2 <-
   geom_hline(yintercept = 0, lty = 5, size = 0.5) +
   #annotate("path", x=0+1*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   geom_point(size = 2.5) + 
-  #xlim(-10, 10) +
+  xlim(-23, 23) +
   #ylim(-10, 10) +
   #scale_y_continuous(limits = c(-10, 10), breaks = c(-2, -1, 0, 1, 2)) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
