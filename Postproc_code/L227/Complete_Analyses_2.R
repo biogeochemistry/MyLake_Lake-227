@@ -1129,7 +1129,7 @@ icedateplot <-
   #geom_line(aes(y = out.dayfreeze - 160, col = "Ice Freeze"), size = 0.5) +
   #geom_point(aes(y = obs.dayfreeze - 160, col = "Ice Freeze"), size = 0.5) + 
   geom_linerange(aes(ymax = obs.daybreak-5, ymin = obs.daybreak, col = "Ice Break")) +
-  geom_linerange(aes(ymax = obs.dayfreeze-15, ymin = obs.dayfreeze, col = "Ice Freeze")) +
+  geom_linerange(aes(ymax = obs.dayfreeze-18, ymin = obs.dayfreeze, col = "Ice Freeze")) +
   #scale_y_continuous(sec.axis = sec_axis(~.+160)) + 
   ylab("Julian Day") +
   xlab(" ") +

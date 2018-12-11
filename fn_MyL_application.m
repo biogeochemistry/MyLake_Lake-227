@@ -56,7 +56,7 @@ end
 %# ############ This is Vansjø Storefj ##############
 
 parafile=lake_par_file;
-initfile='IO/L227_initial_1975_nofertilization.txt';
+initfile='IO/L227_initial_1990_nofertilization.txt';
 
 
 if use_INCA == 0
