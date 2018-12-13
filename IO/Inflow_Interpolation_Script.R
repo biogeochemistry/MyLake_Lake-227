@@ -63,6 +63,7 @@ pHI = na.aggregate(pH)
 AirTempI = na.approx(AirTemp)
 InflowTempI = na.approx(InflowTemp)
 TPI = na.approx(TP)
+TPI.constant = na.approx(TP, method = "constant")
 DOCI = na.approx(DOC)
 NO3I = na.approx(NO3)
 NH4I = na.approx(NH4)
@@ -74,6 +75,7 @@ SiO2I = na.approx(SiO2)
 
 #Write an output file
 InterpolatedData = data.frame(Year, Month, Day, CloudI, AirTempI, HumidityI, AirPressureI, WindSpeedI, InflowTempI, TPI, DOCI, NO3I, NH4I, SO4I, Fe2I, Ca2I, pHI, Fe3I, SiO2I)
+InterpolatedTP = data.frame(Year, Month, Day, TPI, TPI.constant)
 
 #DOC was too high in the model inputs, which made the model crash. I will take all values > 50,000
 #and replace them with 50,000
@@ -81,4 +83,5 @@ InterpolatedData = data.frame(Year, Month, Day, CloudI, AirTempI, HumidityI, Air
 InterpolatedData$DOCI[InterpolatedData$DOCI > 50000] <- 50000
 
 write.csv(InterpolatedData, "Inflow_Interpolated.csv", row.names = F)
+write.csv(InterpolatedTP, "TP_Interpolated.csv", row.names = F)
 
