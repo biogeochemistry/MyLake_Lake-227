@@ -101,6 +101,8 @@ NtoPinsitu <- data.frame(Datelake, Monthlake, TNtoTP, PNtoPP, DINtoTDP, TDNtoTDP
 NtoPinsitu <- filter(NtoPinsitu, Monthlake > 4 & Monthlake < 11)
 NtoPinput <- data.frame(Dateinflow, Monthinflow, Fert_NtoP, Inflow_NtoP, Input_NtoP, Input_TN_molar, Inflow_TP_mg.d, Inflow_TN_mg.d)
 NtoPinput <- filter(NtoPinput, Monthinflow > 4 & Monthinflow < 11)
+NPinsitu <- data.frame(Datelake, Monthlake, TP_molar, TN_molar, TDP_molar, TDN_molar)
+NPinsitu <- filter(NPinsitu, Monthlake > 4 & Monthlake < 11)
 
 # Add Year to datasets
 NtoPinsitu <- mutate(NtoPinsitu, Year = format(NtoPinsitu$Datelake, "%Y"))
@@ -280,6 +282,36 @@ mk.test(chlvec[435:913])
     # -1.298600e+04  1.224942e+07 -1.134540e-01 
 
 #### Plots ####
+TPplot <-
+  ggplot(NPinsitu) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(aes(x = Datelake, y = TP_molar)) +
+  geom_point(aes(x = Datelake, y = TDP_molar), color= "#f99d15ff")
+print(TPplot)
+
+TNplot <-
+  ggplot(NPinsitu) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(aes(x = Datelake, y = TN_molar)) +
+  geom_point(aes(x = Datelake, y = TDN_molar), color= "#f99d15ff")
+print(TNplot)
+
+TDPplot <-
+  ggplot(NPinsitu) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(aes(x = Datelake, y = TDP_molar))
+print(TDPplot)
+
+TDNplot <-
+  ggplot(NPinsitu) +
+  geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_point(aes(x = Datelake, y = TDN_molar))
+print(TDNplot)
+
 TNtoTPearly <- TNtoTPdataset[1:469,]
 TNtoTPlate <- TNtoTPdataset[470:752,]
 TNtoTPplot <- 
@@ -1530,13 +1562,15 @@ match.MaxPP$Period[6:20] <- "b"
 match.MaxPP$Period[21:47] <- "c"
     
 summary(lm(match.MaxPP$mod.PP.nofert ~ match.MaxPP$Year))
-# Estimate Std. Error t value Pr(>|t|)
-# (Intercept)      50.13067   48.22755   1.039    0.304
-# match.MaxPP$Year -0.02207    0.02420  -0.912    0.367
+# Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)      177.46440   40.85881   4.343 7.65e-05 ***
+#   match.MaxPP$Year  -0.08777    0.02050  -4.281 9.34e-05 ***
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 # 
-# Residual standard error: 2.25 on 45 degrees of freedom
-# Multiple R-squared:  0.01815,	Adjusted R-squared:  -0.003672 
-# F-statistic: 0.8317 on 1 and 45 DF,  p-value: 0.3666
+# Residual standard error: 1.909 on 46 degrees of freedom
+# Multiple R-squared:  0.2849,	Adjusted R-squared:  0.2694 
+# F-statistic: 18.33 on 1 and 46 DF,  p-value: 9.341e-05
 
 summary(lm(match.MaxPP$mod.PP.nofert ~ match.MaxPP$Period))
 
