@@ -6,4 +6,10 @@ NO3byyear <- aggregate(InflowNP$Inflow_NO3_mgd, by = list(Year = InflowNP$Year),
 NPbyyear <- inner_join(TPbyyear, NO3byyear, by = "Year")
 colnames(NPbyyear) <- c("Year", "TP", "NO3")
 
+TPloading <- lm(NPbyyear$TP ~ NPbyyear$Year)
+summary(TPloading)
+
+NO3loading <- lm(NPbyyear$NO3 ~ NPbyyear$Year)
+summary(NO3loading)
+
 write.csv(NPbyyear, file = "InflowNPbyyear.csv", row.names = F)
