@@ -872,6 +872,17 @@ mk.test(Radiationvec)
     #   S          varS           tau 
     # -8.345609e+06  3.692912e+11 -7.498112e-02 
 
+#### Seasonal Mann-Kendall test ----
+AirTempts <- ts(AirTempvec, start = c(1969, 6, 27), end = c(2016, 12, 31), frequency = 365)
+smk.test(AirTempts)
+WindSpeedts <- ts(WindSpeedvec, start = c(1969, 6, 27), end = c(2013, 12, 31), frequency = 365)
+smk.test(WindSpeedts)
+Precipts <- ts(Precipvec, start = c(1969, 6, 27), end = c(2016, 12, 31), frequency = 365)
+smk.test(Precipts)
+Radiationvec_cut <- Radiationvec[c(1:11924, 11977:14923)]
+Radiationts <- ts(Radiationvec_cut, start = c(1973, 4, 15), end = c(2013, 12, 31), frequency = 365)
+smk.test(Radiationts)
+
 #### test for equal sample number by year ####
 tapply(InflowData$AirTemp, InflowData$Year, length)
 # range from 365 to 366
@@ -907,7 +918,7 @@ WindSpeedplot <-
   ggplot(WindSpeeddataset) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = WindSpeeddataset, aes(x = Date, y = WindSpeed), size = 0.25, color = "gray40") + #non-significant slope
+  geom_point(data = WindSpeeddataset, aes(x = Date, y = WindSpeed), size = 0.25, color = "#240c4cff") + #significant negative slope
   ylab(expression(Wind ~ (m/s))) +
   xlab(" ") +
   theme(axis.text.x=element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm")) 
@@ -1000,7 +1011,7 @@ historical.forcings$widths <- unit.pmax(AirTempplot2$widths, WindSpeedplot2$widt
 
 grid.newpage()
 grid.draw(historical.forcings)
-ggsave("historical.forcings.pdf", historical.forcings, dpi = 300, width = 3.25, height = 7, units = "in")
+#ggsave("historical.forcings.pdf", historical.forcings, dpi = 300, width = 3.25, height = 7, units = "in")
 
 #### Model Performance Analysis ----
 # Code taken from ModelIterationReport
@@ -1162,7 +1173,8 @@ icedateplot <-
   #geom_point(aes(y = obs.dayfreeze - 160, col = "Ice Freeze"), size = 0.5) + 
   geom_linerange(aes(ymax = obs.daybreak-5, ymin = obs.daybreak, col = "Ice Break")) +
   geom_linerange(aes(ymax = obs.dayfreeze-18, ymin = obs.dayfreeze, col = "Ice Freeze")) +
-  #scale_y_continuous(sec.axis = sec_axis(~.+160)) + 
+  #scale_y_continuous(sec.axis = sec_axis(~.+160)) +
+  annotate("text", x = as.Date("1969-01-01"), y = 100, label = "a") +
   ylab("Julian Day") +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f99d15ff", "#240c4cff")) +
@@ -1290,6 +1302,7 @@ PPmodelplot <- ggplot(mod) +
   geom_line(data = mod, aes(x = date, y = mod.PP, color = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, color = "Observed"), pch = 19, size = 0.75) +
   geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
+  # annotate("text", x = as.Date("1968-01-01"), y = 100, label = "a") +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
   ylim(c(0, 100)) +
@@ -1479,18 +1492,8 @@ PPresidualsplot <- ggplot(PPresiduals) +
   theme(legend.position = "none", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"))
 print(PPresidualsplot)
 
-PPresiduals.bestyear <- filter(PPresiduals, Year == 1992)
-PPresidualsplot.bestyear <- ggplot(PPresiduals.bestyear) +
-    geom_point(aes(x = date, y = residuals.PP), size = 0.5, color = "#f99d15ff") + 
-    geom_point(aes(x = date, y = residuals.PP), size = 0.5, color = "gray40") + 
-    ylab(expression(PP ~ residuals ~ (mu*g / L))) +
-    xlab(" ") +
-    scale_y_continuous(limits = c(-75, 75), breaks = c(-75, -50, -25, 0, 25, 50, 75)) +
-    theme(legend.position = "none") 
-print(PPresidualsplot.bestyear)
-
-mod.bestyear <- filter(mod, date > "1999-12-31" & date < "2002-01-01")
-mod.match.bestyear <- filter(mod.match, Year == 2000 | Year == 2001)
+mod.bestyear <- filter(mod, date > "1997-12-31" & date < "2003-01-01")
+mod.match.bestyear <- filter(mod.match, Year == 1998 | Year == 1999 | Year == 2000 | Year == 2001 | Year == 2002)
 
   PPmodelplot.bestyear <- ggplot() +
     geom_line(data = mod.bestyear, aes(x = date, y = mod.PP, col = "PP"), size = 0.25) +
@@ -1499,11 +1502,12 @@ mod.match.bestyear <- filter(mod.match, Year == 2000 | Year == 2001)
     geom_point(data = mod.match.bestyear, aes(x = date, y = obs.TDP, col = "TDP"), pch = 19, size = 1) +    
     ylab(expression(PP ~ or ~ TDP  ~ (mu*g / L))) +
     xlab(" ") +
+    scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
     scale_colour_manual("", breaks = c("PP", "TDP"), values = c("#240c4cff", "#f27d16ff")) +
     theme(legend.position = "top") 
 print(PPmodelplot.bestyear)
 
-#ggsave("PPbestyear.pdf", PPmodelplot.bestyear, dpi = 300, width = 3.25, height = 3.25, units = "in")
+#ggsave("PPbestyear.pdf", PPmodelplot.bestyear, dpi = 300, width = 4.5, height = 3.25, units = "in")
 #### PP maximum concentration ----
 mod <- mutate(mod, Year = format(mod$date, "%Y"))
 mod <- mutate(mod, Month = format(mod$date, "%m"))
