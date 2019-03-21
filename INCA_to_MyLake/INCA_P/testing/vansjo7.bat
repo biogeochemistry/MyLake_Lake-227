@@ -1,1 +1,0 @@
-inca_p_cmd.exe -par vansjo7.par -dat vansjo7.dat -lfert vansjo7.lfd -errfile NULL
