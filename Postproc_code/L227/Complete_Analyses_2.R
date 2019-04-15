@@ -1034,6 +1034,13 @@ mod2.nofert <- read.csv("Output_Depths_nofertilization.csv", header = F)
 colnames(mod2.nofert) <- c("Year", "Month", "Day", "mod.Temp1m.nofert", "mod.Temp4m.nofert", "mod.Temp9m.nofert", "mod.Oxy2m.nofert", "mod.Oxy3m.nofert", "mod.Oxy4m.nofert", "mod.Oxy6m.nofert", "mod.Oxy8m.nofert", "mod.Oxy10m.nofert", "mod.Fe4m.nofert", "mod.Fe6m.nofert", "mod.Fe8m.nofert", "mod.Fe10m.nofert")
 out.ice.nofert <- read.csv("Output_Ice_Period1.csv", header = F)
 
+mod.noclimate <- read.csv("Output_IntegratedEpi_Period3_tempdetrended.csv", header = F)
+colnames(mod.noclimate) <- c("Year", "Month", "Day", "mod.TDP.noclimate", "mod.PP.noclimate", "mod.DOC.noclimate")
+mod2.noclimate <- read.csv("Output_Depths_Period3_tempdetrended.csv", header = F)
+colnames(mod2.noclimate) <- c("Year", "Month", "Day", "mod.Temp1m.noclimate", "mod.Temp4m.noclimate", "mod.Temp9m.noclimate", "mod.Oxy2m.noclimate", "mod.Oxy3m.noclimate", "mod.Oxy4m.noclimate", "mod.Oxy6m.noclimate", "mod.Oxy8m.noclimate", "mod.Oxy10m.noclimate", "mod.Fe4m.noclimate", "mod.Fe6m.noclimate", "mod.Fe8m.noclimate", "mod.Fe10m.noclimate")
+out.ice.noclimate <- read.csv("Output_Ice_Period3_tempdetrended.csv", header = F)
+
+
 # Tidy
 obs <- obsinit %>% 
   unite(date, Year, Month, Day, sep = '-') #%>%
@@ -1045,8 +1052,11 @@ mod <- mod %>% unite(date, Year, Month, Day, sep = '-')
 mod2 <- mod2 %>% unite(date, Year, Month, Day, sep = '-')
 mod.nofert <- mod.nofert %>% unite(date, Year, Month, Day, sep = '-')
 mod2.nofert <- mod2.nofert %>% unite(date, Year, Month, Day, sep = '-')
+mod.noclimate <- mod.noclimate %>% unite(date, Year, Month, Day, sep = '-')
+mod2.noclimate <- mod2.noclimate %>% unite(date, Year, Month, Day, sep = '-')
 colnames(out.ice) <- c("Year.Break", "Month.Break", "Day.Break", "Year.Freeze", "Month.Freeze", "Day.Freeze")
 colnames(out.ice.nofert) <- c("Year.Break", "Month.Break", "Day.Break", "Year.Freeze", "Month.Freeze", "Day.Freeze")
+colnames(out.ice.noclimate) <- c("Year.Break", "Month.Break", "Day.Break", "Year.Freeze", "Month.Freeze", "Day.Freeze")
 out.ice.edit <- out.ice %>% unite(Ice.Off.Date, Year.Break, Month.Break, Day.Break, sep = '-')
 out.ice.edit <- out.ice.edit %>% unite(Ice.On.Date, Year.Freeze, Month.Freeze, Day.Freeze, sep = '-')
 
@@ -1058,6 +1068,8 @@ mod$date <- as.Date(mod$date, format = "%Y-%m-%d")
 mod2$date <- as.Date(mod2$date, format = "%Y-%m-%d") 
 mod.nofert$date <- as.Date(mod.nofert$date, format = "%Y-%m-%d") 
 mod2.nofert$date <- as.Date(mod2.nofert$date, format = "%Y-%m-%d") 
+mod.noclimate$date <- as.Date(mod.noclimate$date, format = "%Y-%m-%d") 
+mod2.noclimate$date <- as.Date(mod2.noclimate$date, format = "%Y-%m-%d") 
 obs.ice$Ice.Off.Date <- as.Date(obs.ice$Ice.Off.Date, format = "%m/%d/%y")
 obs.ice$Ice.On.Date <- as.Date(obs.ice$Ice.On.Date, format = "%m/%d/%y")
 obs.daybreak <- strftime(obs.ice$Ice.Off.Date, format = "%j")
@@ -1110,6 +1122,26 @@ PropPP$PropPPFert[PropPP$Month > 10] <- NA
 PropPP$PropPPFert[PropPP$Month == 5 & PropPP$Day < 16] <- NA
 PropPP$PropPPFert[PropPP$PropPPFert < 0]  <- 0
 
+modelPP.comparison <- right_join(mod, mod.noclimate, by = "date")
+modelPP.comparison <- left_join(modelPP.comparison, mod.nofert, by = "date")
+modelPP.comparison <- modelPP.comparison %>%
+  select(-mod.DOC, -mod.DOC.noclimate, -mod.DOC.nofert) %>%
+  mutate(mod.PP.minus.mod.PP.noclimate = mod.PP - mod.PP.noclimate, 
+         PropPPFert = (mod.PP - mod.PP.nofert)/mod.PP *100,
+         Month = as.numeric(format(modelPP.comparison$date, "%m")), 
+         Day = as.numeric(format(modelPP.comparison$date, "%d")), 
+         Year = as.numeric(format(modelPP.comparison$date, "%Y")), 
+         Week = as.numeric(format(modelPP.comparison$date, "%V")))
+modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month < 5] <- NA
+modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month > 10] <- NA
+modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month == 5 & modelPP.comparison$Day < 16] <- NA
+modelPP.comparison$PropPPFert[modelPP.comparison$Month < 5] <- NA
+modelPP.comparison$PropPPFert[modelPP.comparison$Month > 10] <- NA
+modelPP.comparison$PropPPFert[modelPP.comparison$Month == 5 & modelPP.comparison$Day < 16] <- NA
+modelPP.comparison$PropPPFert[modelPP.comparison$PropPPFert < 0]  <- 0
+
+modeltemp.comparison <- right_join(mod2[,1:4], mod2.noclimate[,1:4], by = "date")
+modeltemp.comparison <- left_join(modeltemp.comparison, mod2.nofert[,1:4], by = "date")
 
 #### Ice Fit metrics ====
 icebreakregression <- lm (match.ice$obs.daybreak ~ match.ice$out.daybreak)
@@ -1301,7 +1333,7 @@ PPmodelplot <- ggplot(mod) +
   geom_line(data = PropPP, aes(x = date, y = PropPPFert, color = "% PP from fertilization"), size = 0.25) +
   geom_line(data = mod, aes(x = date, y = mod.PP, color = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, color = "Observed"), pch = 19, size = 0.75) +
-  geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
+  #geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
   # annotate("text", x = as.Date("1968-01-01"), y = 100, label = "a") +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
@@ -1782,6 +1814,82 @@ modelfitplot2$widths <- unit.pmax(O2plot2$widths, DOCplot2$widths, TDPplot2$widt
 grid.newpage()
 grid.draw(modelfitplot2)
 ggsave("modelfitplot2.pdf", modelfitplot2, dpi = 300, width = 3.25, height = 4, units = "in")
+
+
+#### Model comparisons for PP, temp, ice
+PPcomparisonplot <- ggplot(modelPP.comparison) +
+  geom_line(aes(x = date, y = mod.PP, color = "Climate Change + Fertilization"), size = 0.4) +
+  geom_line(aes(x = date, y = mod.PP.nofert, color = "Climate Change Only"), size = 0.4) +
+  geom_line(aes(x = date, y = mod.PP.noclimate, color = "Fertilization Only"), size = 0.4) +
+  ylab(expression(PP ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_color_manual("", breaks = c("Climate Change + Fertilization", "Climate Change Only", "Fertilization Only"), 
+                      values = c("#d14a42ff", "#f99d15ff", "#240c4cff")) +
+  theme(legend.position = "top", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
+print(PPcomparisonplot)
+
+PPcomparisondotplot <- ggplot(modelPP.comparison, aes(x = Week, y = mod.PP.minus.mod.PP.noclimate)) +
+  geom_point(aes(color = Year), size = 1.5, alpha = 0.6) +
+  stat_summary(geom="line", fun.y="mean", size = 1) +
+  #geom_smooth(color = "black", se = FALSE) +
+  geom_hline(yintercept = 0, lty = 2, size = 0.8) +
+  scale_color_viridis_c(option = "inferno", direction = -1, begin = 0.1, end = 0.9) + 
+  ylab(expression(PP ~ difference ~ (mu*g / L))) +
+  xlim(c(20, 44)) +
+  theme(legend.title = element_blank())
+print(PPcomparisondotplot)
+
+PPcomparisonboxplot <- ggplot(modelPP.comparison) +
+  geom_hline(yintercept = 0, lty = 2, size = 0.8) +
+  geom_boxplot(aes(x = Week, y = mod.PP.minus.mod.PP.noclimate, group = Week), 
+               fill = "#d14a42ff") +
+  ylab(expression(PP ~ difference ~ (mu*g / L))) +
+  xlim(c(19.5, 44.5))
+print(PPcomparisonboxplot)
+
+grid.arrange(PPcomparisonplot, PPcomparisonboxplot)  
+grid.arrange(PPcomparisonplot, PPcomparisondotplot)
+# 
+# TDPcomparisonplot <- ggplot(modelPP.comparison) +
+#   geom_line(aes(x = date, y = mod.TDP, color = "Climate Change + Fertilization"), size = 0.5) +
+#   geom_line(aes(x = date, y = mod.TDP.nofert, color = "Climate Change Only"), size = 0.5) +
+#   geom_line(aes(x = date, y = mod.TDP.noclimate, color = "Fertilization Only"), size = 0.5) +
+#   ylab(expression(PP ~ (mu*g / L))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Climate Change + Fertilization", "Climate Change Only", "Fertilization Only"), 
+#                       values = c("#d14a42ff", "#f99d15ff", "#240c4cff")) +
+#   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
+# print(TDPcomparisonplot)
+# 
+# temp1comparisonplot <- ggplot(modeltemp.comparison) +
+#   geom_line(aes(x = date, y = mod.Temp1m, color = "Climate Change"), size = 0.5) +
+#   geom_line(aes(x = date, y = mod.Temp1m.noclimate, color = "No Climate Change"), size = 0.5) +
+#   ylab(expression("Temp " ( degree*C))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Climate Change", "No Climate Change"), 
+#                       values = c("#d14a42ff",  "#240c4cff")) +
+#   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
+# print(temp1comparisonplot)
+# 
+# temp4comparisonplot <- ggplot(modeltemp.comparison) +
+#   geom_line(aes(x = date, y = mod.Temp4m, color = "Climate Change"), size = 0.5) +
+#   geom_line(aes(x = date, y = mod.Temp4m.noclimate, color = "No Climate Change"), size = 0.5) +
+#   ylab(expression("Temp " ( degree*C))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Climate Change", "No Climate Change"), 
+#                       values = c("#d14a42ff",  "#240c4cff")) +
+#   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
+# print(temp4comparisonplot)
+# 
+# temp9comparisonplot <- ggplot(modeltemp.comparison) +
+#   geom_line(aes(x = date, y = mod.Temp9m, color = "Climate Change"), size = 0.5) +
+#   geom_line(aes(x = date, y = mod.Temp9m.noclimate, color = "No Climate Change"), size = 0.5) +
+#   ylab(expression("Temp " ( degree*C))) +
+#   xlab(" ") +
+#   scale_colour_manual("", breaks = c("Climate Change", "No Climate Change"), 
+#                       values = c("#d14a42ff",  "#240c4cff")) +
+#   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
+# print(temp9comparisonplot)
 
 #### Target Diagram ====
 #### Temperature 1 m ####
