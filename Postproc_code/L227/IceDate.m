@@ -39,11 +39,11 @@ for a = 1:maxo-1;
 end
 
 DatesFreeze2=DatesFreeze(any(DatesFreeze,2),:);
-IceDates = [DatesBreak2(:,1:3), DatesFreeze2(:,1:3)];
+IceDates = [DatesBreak2(:,1:3), DatesFreeze2(2:29,1:3)];
 
 
 
-filename = 'Postproc_code/L227/Output_Ice.csv';
+filename = 'Postproc_code/L227/Output_Ice_Period3_tempdetrended.csv';
 csvwrite(filename, IceDates);
 
 
