@@ -1330,7 +1330,7 @@ NashSutcliffe.PP.period3 <-NSE(mod.match$mod.PP[mod.match$Year > 1989], mod.matc
 PPmodelplot <- ggplot(mod) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_line(data = PropPP, aes(x = date, y = PropPPFert, color = "% PP from fertilization"), size = 0.25) +
+  #geom_line(data = PropPP, aes(x = date, y = PropPPFert, color = "% PP from fertilization"), size = 0.25) +
   geom_line(data = mod, aes(x = date, y = mod.PP, color = "Modeled"), size = 0.5) +
   geom_point(data = mod.match, aes(x = date, y = obs.PP, color = "Observed"), pch = 19, size = 0.75) +
   #geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
@@ -1338,7 +1338,7 @@ PPmodelplot <- ggplot(mod) +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
   ylim(c(0, 100)) +
-  scale_colour_manual("", breaks = c("Observed", "Modeled", "% PP from fertilization"), values = c("#f99d15ff", "#d14a42ff",  "#240c4cff")) +
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff",  "#240c4cff")) +
   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
 print(PPmodelplot)
 
@@ -1788,7 +1788,7 @@ modelphysicsfitplot <- rbind(icedateplot2, tempplot2, size = "first")
 modelphysicsfitplot$widths <- unit.pmax(icedateplot2$widths, tempplot2$widths)
 grid.newpage()
 grid.draw(modelphysicsfitplot)
-ggsave("modelphysicsfitplot.pdf", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
+#ggsave("modelphysicsfitplot.pdf", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
 
 PPmodelplot2 <- ggplotGrob(PPmodelplot)
 PPcumulativeplot2 <- ggplotGrob(PPcumulativeplot)
@@ -1802,7 +1802,7 @@ modelPPfitplot <- plot_grid(PPmodelplot2, modelPPfitplot2, align = "v", nrow = 2
 print(modelPPfitplot)
 #modelPPfitplot <- arrangeGrob(PPmodelplot2, PPcumulativeplot2, PPresidualsplot2, heights = c(4, 2, 2), ncol = 1)
 #grid.arrange(arrangeGrob(PPmodelplot2, ncol = 1), arrangeGrob(PPcumulativeplot2, PPresidualsplot2, ncol = 1), heights = c(4, 4))
-#ggsave("modelPPfitplot.pdf", modelPPfitplot, dpi = 300, width = 6.5, height = 5, units = "in")
+#ggsave("modelPPfitplot.jpg", modelPPfitplot, dpi = 300, width = 6.5, height = 5, units = "in")
 
 
 TDPplot2 <- ggplotGrob(TDPplot)
@@ -1816,20 +1816,20 @@ grid.draw(modelfitplot2)
 ggsave("modelfitplot2.pdf", modelfitplot2, dpi = 300, width = 3.25, height = 4, units = "in")
 
 
-#### Model comparisons for PP, temp, ice
+#### Model comparisons for PP, temp, ice ----
 PPcomparisonplot <- ggplot(modelPP.comparison) +
-  geom_line(aes(x = date, y = mod.PP, color = "Climate Change + Fertilization"), size = 0.4) +
-  geom_line(aes(x = date, y = mod.PP.nofert, color = "Climate Change Only"), size = 0.4) +
-  geom_line(aes(x = date, y = mod.PP.noclimate, color = "Fertilization Only"), size = 0.4) +
+  geom_line(aes(x = date, y = mod.PP, color = "Climate Change + Fertilization"), size = 0.5) +
+  geom_line(aes(x = date, y = mod.PP.noclimate, color = "Fertilization Only"), size = 0.5) +
+  geom_line(aes(x = date, y = mod.PP.nofert, color = "Climate Change Only"), size = 0.5) +
   ylab(expression(PP ~ (mu*g / L))) +
-  xlab(" ") +
+  xlab("Year") +
   scale_color_manual("", breaks = c("Climate Change + Fertilization", "Climate Change Only", "Fertilization Only"), 
                       values = c("#d14a42ff", "#f99d15ff", "#240c4cff")) +
-  theme(legend.position = "top", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
+  theme(legend.position = "top",  legend.key.size = unit(0.3, "cm"), axis.title.x=element_blank()) 
 print(PPcomparisonplot)
 
 PPcomparisondotplot <- ggplot(modelPP.comparison, aes(x = Week, y = mod.PP.minus.mod.PP.noclimate)) +
-  geom_point(aes(color = Year), size = 1.5, alpha = 0.6) +
+  geom_point(aes(color = Year), size = 1, alpha = 0.6) +
   stat_summary(geom="line", fun.y="mean", size = 1) +
   #geom_smooth(color = "black", se = FALSE) +
   geom_hline(yintercept = 0, lty = 2, size = 0.8) +
@@ -1849,7 +1849,14 @@ print(PPcomparisonboxplot)
 
 grid.arrange(PPcomparisonplot, PPcomparisonboxplot)  
 grid.arrange(PPcomparisonplot, PPcomparisondotplot)
-# 
+modelPPcomparisonplot <- plot_grid(PPcomparisonplot, PPcomparisonboxplot, align = "v", nrow = 2, rel_heights = c(1, 0.6))
+print(modelPPcomparisonplot)
+modelPPcomparisonplot2 <- plot_grid(PPcomparisonplot, PPcomparisondotplot, align = "v", nrow = 2, rel_heights = c(1, 0.6))
+print(modelPPcomparisonplot2)
+ggsave("modelPPcomparisonplot.pdf", modelPPcomparisonplot, dpi = 300, width = 6.5, height = 4, units = "in")
+ggsave("modelPPcomparisonplot2.jpg", modelPPcomparisonplot2, dpi = 300, width = 6.5, height = 4, units = "in")
+
+
 # TDPcomparisonplot <- ggplot(modelPP.comparison) +
 #   geom_line(aes(x = date, y = mod.TDP, color = "Climate Change + Fertilization"), size = 0.5) +
 #   geom_line(aes(x = date, y = mod.TDP.nofert, color = "Climate Change Only"), size = 0.5) +
