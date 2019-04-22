@@ -39,6 +39,9 @@ Temp_All <-
   left_join(., Temp_Random, by = "Date") 
 
 Temp_All <- mutate(Temp_All, Temp.Detrended = Temp.Observed - Temp.Trend)
+Temp_All_Period3 <- Temp_All[7495:17355,]
+summary(Temp_All_Period3$Temp.Trend)
+sd(Temp_All_Period3$Temp.Trend)
 
 
 ggplot(Temp_All) +

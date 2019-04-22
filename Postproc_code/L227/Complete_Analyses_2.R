@@ -1131,7 +1131,8 @@ modelPP.comparison <- modelPP.comparison %>%
          Month = as.numeric(format(modelPP.comparison$date, "%m")), 
          Day = as.numeric(format(modelPP.comparison$date, "%d")), 
          Year = as.numeric(format(modelPP.comparison$date, "%Y")), 
-         Week = as.numeric(format(modelPP.comparison$date, "%V")))
+         Week = as.numeric(format(modelPP.comparison$date, "%V")), 
+         JulianDay = as.numeric(format(modelPP.comparison$date, "%j")))
 modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month < 5] <- NA
 modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month > 10] <- NA
 modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month == 5 & modelPP.comparison$Day < 16] <- NA
@@ -1541,136 +1542,32 @@ print(PPmodelplot.bestyear)
 
 #ggsave("PPbestyear.pdf", PPmodelplot.bestyear, dpi = 300, width = 4.5, height = 3.25, units = "in")
 #### PP maximum concentration ----
-mod <- mutate(mod, Year = format(mod$date, "%Y"))
-mod <- mutate(mod, Month = format(mod$date, "%m"))
-mod.nofert <- mutate(mod.nofert, Year = format(mod.nofert$date, "%Y"))
-mod.nofert <- mutate(mod.nofert, Month = format(mod.nofert$date, "%m"))
 
 MaxModPP <- 
-  mod %>%
-  select(date, mod.PP, Year) %>%
+  modelPP.comparison %>%
+  select(date, mod.PP, Month, Day, Year) %>%
   group_by(Year) %>%
   filter(mod.PP == max(mod.PP))
-#summarize(MaxPP = max(mod.PP), date = date[mod.PP == MaxPP])
-MaxModPP$Year <- as.integer(MaxModPP$Year)
-names(MaxModPP)[1] <- "mod.date"
-
 summary(MaxModPP$mod.PP)
 sd(MaxModPP$mod.PP)
 
 MaxModPP.nofert <- 
-  mod.nofert %>%
-  select(date, mod.PP.nofert, Year) %>%
+  modelPP.comparison %>%
+  select(date, mod.PP.nofert, Month, Day, Year) %>%
   group_by(Year) %>%
-  filter(mod.PP.nofert == max(mod.PP.nofert)) %>%
-  filter(Year != 1969)
-#summarize(MaxPP.nofert = max(mod.PP.nofert), date = date[mod.PP.nofert == MaxPP.nofert])
-MaxModPP.nofert$Year <- as.integer(MaxModPP.nofert$Year)
-names(MaxModPP.nofert)[1] <- "mod.date.nofert"
-
+  filter(mod.PP.nofert == max(mod.PP.nofert))
 summary(MaxModPP.nofert$mod.PP.nofert)
 sd(MaxModPP.nofert$mod.PP.nofert)
 
-MaxObsPP <- 
-  obs %>%
-  select(date, obs.PP, Year) %>%
-  na.omit(obs) %>%
+MaxModPP.noclimate <- 
+  modelPP.comparison %>%
+  select(date, mod.PP.noclimate, Month, Day, Year) %>%
   group_by(Year) %>%
-  filter(obs.PP == max(obs.PP))
-names(MaxObsPP)[1] <- "obs.date"
+  filter(mod.PP.noclimate == max(mod.PP.noclimate))
+summary(MaxModPP.noclimate$mod.PP.noclimate)
+sd(MaxModPP.noclimate$mod.PP.noclimate)
 
 
-match.MaxPP <- inner_join(MaxObsPP, MaxModPP, by = "Year") 
-match.MaxPP <- inner_join(match.MaxPP, MaxModPP.nofert, by = "Year")
-match.MaxPP$mod.date <- format(match.MaxPP$mod.date, "%j")
-match.MaxPP$mod.date.nofert <- format(match.MaxPP$mod.date.nofert, "%j")
-match.MaxPP$obs.date <- format(match.MaxPP$obs.date, "%j")
-match.MaxPP$Year <- as.numeric(match.MaxPP$Year)
-match.MaxPP$mod.date <- as.numeric(match.MaxPP$mod.date)
-match.MaxPP$mod.date.nofert <- as.numeric(match.MaxPP$mod.date.nofert)
-match.MaxPP$obs.date <- as.numeric(match.MaxPP$obs.date)
-match.MaxPP <- filter(match.MaxPP, Year > 1969)
-match.MaxPP <- mutate(match.MaxPP, Period = NA)
-#remove duplicate years by taking out later dates
-match.MaxPP <- match.MaxPP[-c(27, 36, 42, 50, 51),]
-match.MaxPP$Period[1:5] <- "a"
-match.MaxPP$Period[6:20] <- "b"
-match.MaxPP$Period[21:47] <- "c"
-    
-summary(lm(match.MaxPP$mod.PP.nofert ~ match.MaxPP$Year))
-# Estimate Std. Error t value Pr(>|t|)    
-# (Intercept)      177.46440   40.85881   4.343 7.65e-05 ***
-#   match.MaxPP$Year  -0.08777    0.02050  -4.281 9.34e-05 ***
-#   ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# 
-# Residual standard error: 1.909 on 46 degrees of freedom
-# Multiple R-squared:  0.2849,	Adjusted R-squared:  0.2694 
-# F-statistic: 18.33 on 1 and 46 DF,  p-value: 9.341e-05
-
-summary(lm(match.MaxPP$mod.PP.nofert ~ match.MaxPP$Period))
-
-MaxPPobsvsmodplot <-
-  ggplot(data = match.MaxPP, aes(x = obs.PP, y = mod.PP, color = Year)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
-  scale_color_viridis(option = "inferno") + 
-  xlab("") +
-  ylab(expression(Modeled ~ PP ~ (mu*g / L))) +
-  theme(legend.position = "top", axis.text.x = element_blank(), legend.key.width = unit(1, "cm"))
-print(MaxPPobsvsmodplot)
-
-MaxPPobsvsmodnofertplot <-
-  ggplot(data = match.MaxPP, aes(x = obs.PP, y = mod.PP.nofert, color = Year)) +
-  geom_point() +
-  #geom_abline(slope = 1, lty = 2) + #1:1 line is off the plot
-  geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
-  scale_color_viridis(option = "inferno") + 
-  xlab(expression(Observed ~ PP ~ (mu*g / L))) +
-  ylab(expression(Climate ~ only ~ modeled ~ PP ~ (mu*g / L) )) +
-  theme(legend.position = "none")
-print(MaxPPobsvsmodnofertplot)
-
-#grid.arrange(MaxPPobsvsmodplot, MaxPPobsvsmodnofertplot, ncol = 1)
-
-MaxPPobsvsmodplot2 <- ggplotGrob(MaxPPobsvsmodplot)
-MaxPPobsvsmodnofertplot2 <- ggplotGrob(MaxPPobsvsmodnofertplot)
-MaxPPplot <- rbind(MaxPPobsvsmodplot2, MaxPPobsvsmodnofertplot2, size = "first")
-MaxPPplot$widths <- unit.pmax(MaxPPobsvsmodnofertplot2$widths, MaxPPobsvsmodnofertplot2$widths)
-grid.newpage()
-grid.draw(MaxPPplot)
-ggsave("MaxPPplot.jpg", MaxPPplot, dpi = 300, width = 3.25, height = 5, units = "in")
-
-
-# Maxdateobsvsmodplot <- 
-#   ggplot(data = match.MaxPP, aes(x = obs.date, y = mod.date, color = Year)) +
-#   geom_point() +
-#   geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
-#   scale_color_viridis(option = "inferno")
-# print(Maxdateobsvsmodplot)
-# 
-# Maxdateobsvsmodnofertplot <- 
-#   ggplot(data = match.MaxPP, aes(x = obs.date, y = mod.date.nofert, color = Year)) +
-#   geom_point() +
-#   geom_smooth(method = lm, se = FALSE, color = "black", size = 0.5) +
-#   scale_color_viridis(option = "inferno")
-# print(Maxdateobsvsmodnofertplot)
-
-# MaxPPconcplot <- 
-#   ggplot(data = match.MaxPP, aes(x = Year)) +
-#   geom_point(aes(y = obs.PP, color = "Observed")) +
-#   geom_line(aes(y = mod.PP, color = "Modeled")) + 
-#   scale_colour_manual("", breaks = c("Observed", "Modeled"), 
-#                       values = c("black", "blue")) + 
-#   ylab(expression(Maximum ~ PP ~ (mu*g / L))) +
-#   theme(legend.position = c(0.9,0.9)) 
-# print(MaxPPconcplot)
-# 
-# MaxPPconcregression <- lm (match.MaxPP$obs.PP ~ match.MaxPP$mod.PP)
-# summary(MaxPPconcregression)
-# mseconc <- mean(residuals(MaxPPconcregression)^2)
-# rmseconc <- sqrt(mseconc)
-# rmseconc
 
 #### TDP Fit Metrics ====
 TDP.regression.period1 <- lm(mod.match$obs.TDP[mod.match$Year < 1975] ~ mod.match$mod.TDP[mod.match$Year < 1975])
@@ -1817,25 +1714,46 @@ ggsave("modelfitplot2.pdf", modelfitplot2, dpi = 300, width = 3.25, height = 4, 
 
 
 #### Model comparisons for PP, temp, ice ----
+wilcox.test(modelPP.comparison$mod.PP, modelPP.comparison$mod.PP.noclimate)
+wilcox.test(modelPP.comparison$mod.PP, modelPP.comparison$mod.PP.nofert)
+sum(modelPP.comparison$mod.PP.minus.mod.PP.noclimate > 0, na.rm = TRUE)/sum(!is.na(modelPP.comparison$mod.PP.minus.mod.PP.noclimate))
+summary(modelPP.comparison$mod.PP.minus.mod.PP.noclimate)
+sd(!is.na(modelPP.comparison$mod.PP.minus.mod.PP.noclimate))
+
+
 PPcomparisonplot <- ggplot(modelPP.comparison) +
   geom_line(aes(x = date, y = mod.PP, color = "Climate Change + Fertilization"), size = 0.5) +
   geom_line(aes(x = date, y = mod.PP.noclimate, color = "Fertilization Only"), size = 0.5) +
   geom_line(aes(x = date, y = mod.PP.nofert, color = "Climate Change Only"), size = 0.5) +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab("Year") +
+  #scale_x_continuous(breaks = as.Date(c("1990-01-01", "1995-01-01", "2000-01-01", "2005-01-01", "2010-01-01", "2015-01-01"),
+  #                                    origin = "1970-01-01")) +
   scale_color_manual("", breaks = c("Climate Change + Fertilization", "Climate Change Only", "Fertilization Only"), 
                       values = c("#d14a42ff", "#f99d15ff", "#240c4cff")) +
   theme(legend.position = "top",  legend.key.size = unit(0.3, "cm"), axis.title.x=element_blank()) 
 print(PPcomparisonplot)
 
-PPcomparisondotplot <- ggplot(modelPP.comparison, aes(x = Week, y = mod.PP.minus.mod.PP.noclimate)) +
-  geom_point(aes(color = Year), size = 1, alpha = 0.6) +
+PPcomparisondotplot <- ggplot(modelPP.comparison, aes(x = JulianDay, y = mod.PP.minus.mod.PP.noclimate)) +
+  geom_point(aes(color = Year), size = 0.5, alpha = 0.8) +
   stat_summary(geom="line", fun.y="mean", size = 1) +
   #geom_smooth(color = "black", se = FALSE) +
-  geom_hline(yintercept = 0, lty = 2, size = 0.8) +
+  geom_hline(yintercept = 0, lty = 2, size = 1) +
+  scale_color_viridis_c(option = "inferno", direction = -1, begin = 0.5, end = 0.9) + 
+  ylab(expression(PP ~ difference ~ (mu*g / L))) +
+  xlab("Julian Day") +
+  xlim(c(135, 305)) +
+  theme(legend.title = element_blank())
+
+PPcomparisondotplot <- ggplot(modelPP.comparison, aes(x = Year, y = mod.PP.minus.mod.PP.noclimate)) +
+  geom_point(aes(color = JulianDay), size = 1, alpha = 0.8) +
+  #stat_summary(geom="line", fun.y="mean", size = 1) +
+  #geom_smooth(color = "black", se = FALSE) +
+  geom_hline(yintercept = 0, lty = 2, size = 1) +
   scale_color_viridis_c(option = "inferno", direction = -1, begin = 0.1, end = 0.9) + 
   ylab(expression(PP ~ difference ~ (mu*g / L))) +
-  xlim(c(20, 44)) +
+  xlab("Julian Day") +
+  #xlim(c(135, 305)) +
   theme(legend.title = element_blank())
 print(PPcomparisondotplot)
 
@@ -1847,11 +1765,18 @@ PPcomparisonboxplot <- ggplot(modelPP.comparison) +
   xlim(c(19.5, 44.5))
 print(PPcomparisonboxplot)
 
+PPcomparisonboxplot2 <- ggplot(modelPP.comparison) +
+  geom_hline(yintercept = 0, lty = 2, size = 0.8) +
+  geom_boxplot(aes(x = Year, y = mod.PP.minus.mod.PP.noclimate, group = Year), 
+               fill = "#d14a42ff") +
+  ylab(expression(PP ~ difference ~ (mu*g / L)))
+print(PPcomparisonboxplot2)
+
 grid.arrange(PPcomparisonplot, PPcomparisonboxplot)  
 grid.arrange(PPcomparisonplot, PPcomparisondotplot)
-modelPPcomparisonplot <- plot_grid(PPcomparisonplot, PPcomparisonboxplot, align = "v", nrow = 2, rel_heights = c(1, 0.6))
+modelPPcomparisonplot <- plot_grid(PPcomparisonplot, PPcomparisonboxplot2,  PPcomparisonboxplot, align = "v", nrow = 3, rel_heights = c(1, 0.6, 0.6))
 print(modelPPcomparisonplot)
-modelPPcomparisonplot2 <- plot_grid(PPcomparisonplot, PPcomparisondotplot, align = "v", nrow = 2, rel_heights = c(1, 0.6))
+modelPPcomparisonplot2 <- plot_grid(PPcomparisonplot, PPcomparisondotplot, nrow = 2, rel_heights = c(1, 0.6))
 print(modelPPcomparisonplot2)
 ggsave("modelPPcomparisonplot.pdf", modelPPcomparisonplot, dpi = 300, width = 6.5, height = 4, units = "in")
 ggsave("modelPPcomparisonplot2.jpg", modelPPcomparisonplot2, dpi = 300, width = 6.5, height = 4, units = "in")
