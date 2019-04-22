@@ -994,7 +994,7 @@ historical.combined$widths <- unit.pmax(FertNtoPplot2$widths, cyanoplot2$widths,
                                         TDNtoTDPplot2$widths, PPplot2$widths, chlplot2$widths)
 grid.newpage()
 grid.draw(historical.combined)
-#ggsave("historical.combined.pdf", historical.combined, dpi = 300, width = 3.25, height = 7, units = "in")
+#ggsave("historical.combined.jpg", historical.combined, dpi = 300, width = 3.25, height = 7, units = "in")
 
 grid.arrange(AirTempplot, WindSpeedplot, Precipplot, Radiationplot, TPinflowplot, DINinflowplot, ncol = 1)
 
@@ -1011,7 +1011,7 @@ historical.forcings$widths <- unit.pmax(AirTempplot2$widths, WindSpeedplot2$widt
 
 grid.newpage()
 grid.draw(historical.forcings)
-#ggsave("historical.forcings.pdf", historical.forcings, dpi = 300, width = 3.25, height = 7, units = "in")
+ggsave("historical.forcings.jpg", historical.forcings, dpi = 300, width = 3.25, height = 7, units = "in")
 
 #### Model Performance Analysis ----
 # Code taken from ModelIterationReport
@@ -1207,7 +1207,7 @@ icedateplot <-
   geom_linerange(aes(ymax = obs.daybreak-5, ymin = obs.daybreak, col = "Ice Break")) +
   geom_linerange(aes(ymax = obs.dayfreeze-18, ymin = obs.dayfreeze, col = "Ice Freeze")) +
   #scale_y_continuous(sec.axis = sec_axis(~.+160)) +
-  annotate("text", x = as.Date("1969-01-01"), y = 100, label = "a") +
+  #annotate("text", x = as.Date("1969-01-01"), y = 100, label = "a") +
   ylab("Julian Day") +
   xlab(" ") +
   scale_colour_manual("", breaks = c("Ice Break", "Ice Freeze"), values = c("#f99d15ff", "#240c4cff")) +
@@ -1685,7 +1685,7 @@ modelphysicsfitplot <- rbind(icedateplot2, tempplot2, size = "first")
 modelphysicsfitplot$widths <- unit.pmax(icedateplot2$widths, tempplot2$widths)
 grid.newpage()
 grid.draw(modelphysicsfitplot)
-#ggsave("modelphysicsfitplot.pdf", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
+#ggsave("modelphysicsfitplot.jpg", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
 
 PPmodelplot2 <- ggplotGrob(PPmodelplot)
 PPcumulativeplot2 <- ggplotGrob(PPcumulativeplot)
@@ -2127,7 +2127,8 @@ TargetPlot2 <-
   ylim(-1, 1) +
   #scale_y_continuous(limits = c(-10, 10), breaks = c(-2, -1, 0, 1, 2)) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  scale_shape_manual(values = c(0, 1, 2, 15, 19, 17)) + 
+  scale_shape_manual(values = c(22, 21, 24, 15, 19, 17)) + 
+  scale_fill_manual(values = c("white", "white", "white")) +
   ylab(expression(paste(B, "*"))) +
   #ylab(expression(Normalized ~ Bias)) +
   xlab(expression(paste(RMSD, "'", "*"))) +
@@ -2135,4 +2136,4 @@ TargetPlot2 <-
   theme(legend.title = element_blank(), legend.position = "right", legend.key.height = unit(0.4, "cm"))
 print(TargetPlot2)
 
-ggsave("Target.pdf", TargetPlot2, dpi = 300, width = 4.5, height = 3, units = "in")
+#ggsave("Target.jpg", TargetPlot2, dpi = 300, width = 4.5, height = 3, units = "in")
