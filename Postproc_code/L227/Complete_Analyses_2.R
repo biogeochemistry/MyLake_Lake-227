@@ -1143,6 +1143,13 @@ modelPP.comparison$PropPPFert[modelPP.comparison$PropPPFert < 0]  <- 0
 
 modeltemp.comparison <- right_join(mod2[,1:4], mod2.noclimate[,1:4], by = "date")
 modeltemp.comparison <- left_join(modeltemp.comparison, mod2.nofert[,1:4], by = "date")
+modeltemp.comparison <- modeltemp.comparison %>%
+  mutate(Temp1m.difference = mod.Temp1m - mod.Temp1m.noclimate, 
+         Month = as.numeric(format(modeltemp.comparison$date, "%m")), 
+         Day = as.numeric(format(modeltemp.comparison$date, "%d")), 
+         Year = as.numeric(format(modeltemp.comparison$date, "%Y")), 
+         Week = as.numeric(format(modeltemp.comparison$date, "%V")), 
+         JulianDay = as.numeric(format(modeltemp.comparison$date, "%j")))
 
 #### Ice Fit metrics ====
 icebreakregression <- lm (match.ice$obs.daybreak ~ match.ice$out.daybreak)
@@ -1721,6 +1728,42 @@ summary(modelPP.comparison$mod.PP.minus.mod.PP.noclimate)
 sd(!is.na(modelPP.comparison$mod.PP.minus.mod.PP.noclimate))
 
 
+tempcomparisonplot <- ggplot(modeltemp.comparison) +
+  geom_line(aes(x = date, y = mod.Temp1m), color = "black", size = 0.5) +
+  geom_line(aes(x = date, y = mod.Temp1m.noclimate), color = "#f99d15ff", 
+            size = 0.5, alpha = 0.6) +
+  #geom_line(aes(x = date, y = Temp1m.difference), color = "#d14a42ff", size = 0.5) +
+  ylab(expression("Water Temperature " (degree*C)))
+print(tempcomparisonplot)
+
+tempcomparisonboxplot <- ggplot(modeltemp.comparison) +
+  geom_hline(yintercept = 0, lty = 2, size = 0.8) +
+  geom_boxplot(aes(x = as.factor(Month), y = Temp1m.difference, group = Month), 
+               fill = "#d14a42ff") +
+  ylab(expression(Temperature))
+print(tempcomparisonboxplot)
+
+tempcomparisonviolinplot <- ggplot(modeltemp.comparison) +
+  geom_hline(yintercept = 0, lty = 2, size = 0.8) +
+  geom_violin(aes(x = as.factor(Month), y = Temp1m.difference, group = Month), 
+               fill = "#d14a42ff", draw_quantiles = c(0.5), width = 1.1) +
+  ylab(expression("Water Temperature Difference " (degree*C))) +
+  xlab("Month") +
+  scale_y_continuous(breaks = c(-0.5, 0, 0.5, 1, 1.5))
+
+print(tempcomparisonviolinplot)
+
+ggsave("tempcomparisonviolinplot.jpg", tempcomparisonviolinplot, dpi = 300, width = 6.5, height = 3, units = "in")
+
+
+tempcomparisondotplot <- ggplot(modeltemp.comparison, aes(x = JulianDay, y = Temp1m.difference)) +
+  geom_point(aes(color = Year), size = 0.5, alpha = 0.8) +
+  stat_summary(geom="line", fun.y="mean", size = 1) +
+  scale_color_viridis_c(option = "inferno", direction = -1, begin = 0.5, end = 0.9) 
+print(tempcomparisondotplot)
+
+TempPlots <- grid.arrange(tempcomparisonplot, tempcomparisonviolinplot)
+  
 PPcomparisonplot <- ggplot(modelPP.comparison) +
   geom_line(aes(x = date, y = mod.PP, color = "Climate Change + Fertilization"), size = 0.5) +
   geom_line(aes(x = date, y = mod.PP.noclimate, color = "Fertilization Only"), size = 0.5) +

@@ -55,7 +55,7 @@ ggplot(Temp_All[7494:17355,]) +
   geom_line(aes(y = Temp.Detrended, x = Date), color = "#f99d15ff", size = 0.3, alpha = 0.6) +
   geom_line(aes(y = Temp.Trend, x = Date), color = "#d14a42ff") +
   geom_hline(yintercept = 0, lty = 2) +
-  ylab("Temperature") +
+  ylab(expression("Air Temperature " ( degree*C))) +
   theme_classic()
 print(Temp.Period3)
 
