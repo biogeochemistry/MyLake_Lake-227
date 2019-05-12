@@ -281,6 +281,17 @@ mk.test(chlvec[435:913])
     #   S          varS           tau 
     # -1.298600e+04  1.224942e+07 -1.134540e-01 
 
+#### Modified Mann-Kendall test for autocorrelated data ---- 
+mk.test(TNtoTPvec)
+mmkh(TNtoTPvec)
+mmky(TNtoTPvec[1:469])
+mmky(TNtoTPvec[470:752])
+mmky(TDNtoTDPvec[1:119])
+mmky(TDNtoTDPvec[120:781])
+mmky(PPvec[1:178])
+mmky(PPvec[179:791])
+mmky(chlvec[1:434])
+mmky(chlvec[435:913])
 #### Plots ####
 TPplot <-
   ggplot(NPinsitu) +
