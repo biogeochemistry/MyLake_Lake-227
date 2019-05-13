@@ -17,6 +17,7 @@ library(vegan)
 library(gtable)
 library(grid)
 library(cowplot)
+library(modifiedmk)
 
 theme_std <- function (base_size = 11, base_family = "") {
   theme_grey(base_size = base_size, base_family = base_family) %+replace% 
@@ -209,81 +210,9 @@ pettitt.test(chlvec)
     #   probable change point at time K 
     # 435 
 
-#### Mann-Kendall test ####
-# Mann-Kendall test: detect monotonic trends in series of environmental/climate/hydrological data
-mk.test(TNtoTPvec[1:469])
-# data:  TNtoTPvec[1:469]
-# z = 4.0215, n = 469, p-value = 5.782e-05
-# alternative hypothesis: true S is not equal to 0
-# sample estimates:
-#   S         varS          tau 
-# 1.363800e+04 1.149894e+07 1.242727e-01 
-
-mk.test(TNtoTPvec[470:752])
-# data:  TNtoTPvec[470:752]
-# z = 0.77053, n = 283, p-value = 0.441
-# alternative hypothesis: true S is not equal to 0
-# sample estimates:
-#   S         varS          tau 
-# 1.227000e+03 2.531613e+06 3.075342e-02 
-
-mk.test(TDNtoTDPvec[1:119])
-# data:  TDNtoTDPvec[1:119]
-# z = 1.4424, n = 119, p-value = 0.1492
-# alternative hypothesis: true S is not equal to 0
-# sample estimates:
-#   S         varS          tau 
-# 6.290000e+02 1.895640e+05 8.960752e-02 
-
-mk.test(TDNtoTDPvec[120:781])
-# data:  TDNtoTDPvec[120:781]
-# z = -3.5267, n = 662, p-value = 0.0004207
-# alternative hypothesis: true S is not equal to 0
-# sample estimates:
-#   S          varS           tau 
-# -2.004700e+04  3.230782e+07 -9.167299e-02 
-
-mk.test(PPvec[1:178])
-# data:  PPvec[1:178]
-# z = 1.3246, n = 178, p-value = 0.1853
-# alternative hypothesis: true S is not equal to 0
-# sample estimates:
-#   S         varS          tau 
-# 1.053000e+03 6.307977e+05 6.781124e-02 
-
-mk.test(PPvec[179:791])
-# Mann-Kendall trend test
-# 
-# data:  PPvec[179:791]
-# z = -6.7774, n = 613, p-value = 1.223e-11
-# alternative hypothesis: true S is not equal to 0
-# sample estimates:
-#   S          varS           tau 
-# -3.431400e+04  2.563227e+07 -1.852262e-01 
-
-mk.test(chlvec[1:434])
-    # Mann-Kendall trend test
-    # 
-    # data:  chlvec[1:434]
-    # z = -5.0183, n = 434, p-value = 5.212e-07
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -1.515100e+04  9.113908e+06 -1.614472e-01 
-
-mk.test(chlvec[435:913])
-    # Mann-Kendall trend test
-    # 
-    # data:  chlvec[435:913]
-    # z = -3.7101, n = 479, p-value = 0.0002072
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -1.298600e+04  1.224942e+07 -1.134540e-01 
-
 #### Modified Mann-Kendall test for autocorrelated data ---- 
-mk.test(TNtoTPvec)
-mmkh(TNtoTPvec)
+# Yue and Wang (2004) modified Mann-Kendall for serially autocorrelated data. 
+# Calculates ESS from the serial correlation coefficient of the sample data
 mmky(TNtoTPvec[1:469])
 mmky(TNtoTPvec[470:752])
 mmky(TDNtoTDPvec[1:119])
@@ -292,6 +221,19 @@ mmky(PPvec[1:178])
 mmky(PPvec[179:791])
 mmky(chlvec[1:434])
 mmky(chlvec[435:913])
+
+# Hamed and Rao (1998) modified Mann-Kendall for serially autocorrelated data
+# Calculates ESS from the serial correlation coefficient of the ranks of sample data
+# Rejection rate is higher than the Yue and Wang method
+mmkh(TNtoTPvec[1:469])
+mmkh(TNtoTPvec[470:752])
+mmkh(TDNtoTDPvec[1:119])
+mmkh(TDNtoTDPvec[120:781])
+mmkh(PPvec[1:178])
+mmkh(PPvec[179:791])
+mmkh(chlvec[1:434])
+mmkh(chlvec[435:913])
+
 #### Plots ####
 TPplot <-
   ggplot(NPinsitu) +
@@ -346,7 +288,7 @@ TDNtoTDPplot <-
   ggplot(TDNtoTDPearly) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  geom_point(data = TDNtoTDPearly, aes(x = Datelake, y = TDNtoTDP), size = 0.5, color = "gray40") + #non-significant slope
+  geom_point(data = TDNtoTDPearly, aes(x = Datelake, y = TDNtoTDP), size = 0.5, color = "#f99d15ff") + #significant positive slope
   geom_point(data = TDNtoTDPlate, aes(x = Datelake, y = TDNtoTDP), size = 0.5, color = "#240c4cff") + #significant negative slope
   ylim(0,300) +
   ylab(expression(TDN:TDP)) +
@@ -677,211 +619,25 @@ DINinflowdataset <- InflowData %>%
   drop_na()
 rownames(DINinflowdataset) <- NULL
 
-#### Pettitt's test ####
-# Pettitt's test: detects a single changepoint in hydrological/climate series with continuous data
 AirTempvec <- as.vector(AirTempdataset$AirTemp)
-pettitt.test(AirTempvec)
-    # data:  AirTempvec
-    # U* = 3696400, p-value = 2.699e-07
-    # alternative hypothesis: two.sided
-    # sample estimates:
-    #   probable change point at time K 
-    # 10121 
-
 WindSpeedvec <- as.vector(WindSpeeddataset$WindSpeed)
-pettitt.test(WindSpeedvec)
-    # data:  WindSpeedvec
-    # U* = 7456000, p-value < 2.2e-16
-    # alternative hypothesis: two.sided
-    # sample estimates:
-    #   probable change point at time K 
-    # 4430 
-
 Precipvec <- as.vector(Precipdataset$Precipitation)
-pettitt.test(Precipvec)
-    # data:  Precipvec
-    # U* = 3790800, p-value = 1.374e-07
-    # alternative hypothesis: two.sided
-    # sample estimates:
-    #   probable change point at time K 
-    # 11270 
-
 TPinflowvec <- as.vector(TPinflowdataset$TP)
-pettitt.test(TPinflowvec)
-    # data:  TPinflowvec
-    # U* = 153180, p-value < 2.2e-16
-    # alternative hypothesis: two.sided
-    # sample estimates:
-    #   probable change point at time K 
-    # 677 
-
 DINinflowvec <- as.vector(DINinflowdataset$DIN)
-pettitt.test(DINinflowvec)
-    # data:  DINinflowvec
-    # U* = 84911, p-value = 1.378e-10
-    # alternative hypothesis: two.sided
-    # sample estimates:
-    #   probable change point at time K 
-    # 308 
-
 Radiationvec <- as.vector(Radiation$totalrad)
-pettitt.test(Radiationvec)
-    # data:  Radiationvec
-    # U* = 7430100, p-value < 2.2e-16
-    # alternative hypothesis: two.sided
-    # sample estimates:
-    #   probable change point at time K 
-    # 11112 
+
 
 #### Mann-Kendall test ####
-# Mann-Kendall test: detect monotonic trends in series of environmental/climate/hydrological data
-mk.test(AirTempvec[1:10120])
-    # data:  AirTempvec[1:10120]
-    # z = -0.79636, n = 10120, p-value = 0.4258
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -2.702660e+05  1.151746e+11 -5.286991e-03 
+# Yue and Wang (2004) modified Mann-Kendall for serially autocorrelated data. 
+# Calculates ESS from the serial correlation coefficient of the sample data
+mmky(TPinflowvec)
+mmky(DINinflowvec)
 
-mk.test(AirTempvec[10121:17305])
-    # data:  AirTempvec[10121:17305]
-    # z = -1.0596, n = 7185, p-value = 0.2893
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -2.151250e+05  4.122037e+10 -8.358701e-03 
-
-mk.test(AirTempvec)
-    # data:  AirTempvec
-    # z = 4.2279, n = 17305, p-value = 2.359e-05
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 3.208302e+06 5.758386e+11 2.147113e-02 
-
-AirTempts <- ts(AirTempvec, start = c(1969, 6), end = c(2016, 12), frequency = 12)
-smk.test(AirTempts)
-summary(smk.test(AirTempts))
-
-mk.test(WindSpeedvec[1:4429])
-    # data:  WindSpeedvec[1:4429]
-    # z = 4.7796, n = 4429, p-value = 1.757e-06
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 4.686810e+05 9.615581e+09 4.928511e-02 
-
-mk.test(WindSpeedvec[4430:15453])
-    # data:  WindSpeedvec[4430:15453]
-    # z = -20.828, n = 11024, p-value < 2.2e-16
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -8.022001e+06  1.483467e+11 -1.358043e-01 
-
-mk.test(WindSpeedvec)
-    # data:  WindSpeedvec
-    # z = -0.16284, n = 15453, p-value = 0.8706
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -1.040840e+05  4.085297e+11 -8.971985e-04 
-
-mk.test(Precipvec[1:11269])
-    # data:  Precipvec[1:11269]
-    # z = 0.29164, n = 11269, p-value = 0.7706
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 1.027980e+05 1.242402e+11 2.034715e-03 
-
-mk.test(Precipvec[11270:17355])
-    # data:  Precipvec[11270:17355]
-    # z = 1.496, n = 6086, p-value = 0.1347
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 2.173940e+05 2.111648e+10 1.399441e-02 
-
-mk.test(Precipvec)
-    # data:  Precipvec
-    # z = 6.0034, n = 17355, p-value = 1.932e-09
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 4.103710e+06 4.672624e+11 3.356808e-02 
-
-mk.test(TPinflowvec[1:676])
-    # data:  TPinflowvec[1:676]
-    # z = 1.9682, n = 676, p-value = 0.04905
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 1.154200e+04 3.438425e+07 5.099094e-02 
-
-mk.test(TPinflowvec[677:1276])
-    # data:  TPinflowvec[677:1276]
-    # z = -0.12095, n = 600, p-value = 0.9037
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -5.940000e+02  2.403618e+07 -3.343057e-03 
-
-mk.test(TPinflowvec)
-    # data:  TPinflowvec
-    # z = -9.3519, n = 1276, p-value < 2.2e-16
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -1.421320e+05  2.309814e+08 -1.762646e-01 
-
-mk.test(DINinflowvec[1:307])
-    # data:  DINinflowvec[1:307]
-    # z = 1.3065, n = 307, p-value = 0.1914
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 2.349000e+03 3.229839e+06 5.022712e-02 
-
-mk.test(DINinflowvec[308:1227])
-    # data:  DINinflowvec[308:1227]
-    # z = -8.7875, n = 920, p-value < 2.2e-16
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -8.180400e+04  8.665817e+07 -1.938433e-01 
-
-mk.test(DINinflowvec)
-    # data:  DINinflowvec
-    # z = 0.33582, n = 1227, p-value = 0.737
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 4.815000e+03 2.054955e+08 6.414509e-03 
-
-mk.test(Radiationvec[1:1111])
-    # data:  Radiationvec[1:1111]
-    # z = 0.031331, n = 1111, p-value = 0.975
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S         varS          tau 
-    # 3.880000e+02 1.525748e+08 6.295335e-04 
-
-mk.test(Radiationvec[11112:14923])
-    # data:  Radiationvec[11112:14923]
-    # z = -0.60987, n = 3812, p-value = 0.542
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -4.785600e+04  6.157252e+09 -6.588474e-03 
-
-mk.test(Radiationvec)
-    # data:  Radiationvec
-    # z = -13.733, n = 14923, p-value < 2.2e-16
-    # alternative hypothesis: true S is not equal to 0
-    # sample estimates:
-    #   S          varS           tau 
-    # -8.345609e+06  3.692912e+11 -7.498112e-02 
+# Hamed and Rao (1998) modified Mann-Kendall for serially autocorrelated data
+# Calculates ESS from the serial correlation coefficient of the ranks of sample data
+# Rejection rate is higher than the Yue and Wang method
+mmkh(TPinflowvec)
+mmkh(DINinflowvec)
 
 #### Seasonal Mann-Kendall test ----
 AirTempts <- ts(AirTempvec, start = c(1969, 6, 27), end = c(2016, 12, 31), frequency = 365)
@@ -1005,7 +761,7 @@ historical.combined$widths <- unit.pmax(FertNtoPplot2$widths, cyanoplot2$widths,
                                         TDNtoTDPplot2$widths, PPplot2$widths, chlplot2$widths)
 grid.newpage()
 grid.draw(historical.combined)
-#ggsave("historical.combined.jpg", historical.combined, dpi = 300, width = 3.25, height = 7, units = "in")
+ggsave("historical.combined.pdf", historical.combined, dpi = 300, width = 3.25, height = 7, units = "in")
 
 grid.arrange(AirTempplot, WindSpeedplot, Precipplot, Radiationplot, TPinflowplot, DINinflowplot, ncol = 1)
 
@@ -1748,14 +1504,14 @@ tempcomparisonplot <- ggplot(modeltemp.comparison) +
 print(tempcomparisonplot)
 
 tempcomparisonboxplot <- ggplot(modeltemp.comparison) +
-  geom_hline(yintercept = 0, lty = 2, size = 0.8) +
+  geom_hline(yintercept = 0, lty = 2, size = 0.5) +
   geom_boxplot(aes(x = as.factor(Month), y = Temp1m.difference, group = Month), 
                fill = "#d14a42ff") +
   ylab(expression(Temperature))
 print(tempcomparisonboxplot)
 
 tempcomparisonviolinplot <- ggplot(modeltemp.comparison) +
-  geom_hline(yintercept = 0, lty = 2, size = 0.8) +
+  geom_hline(yintercept = 0, lty = 2, size = 0.5) +
   geom_violin(aes(x = as.factor(Month), y = Temp1m.difference, group = Month), 
                fill = "#d14a42ff", draw_quantiles = c(0.5), width = 1.1) +
   ylab(expression("Water Temperature Difference " (degree*C))) +
@@ -1767,11 +1523,19 @@ print(tempcomparisonviolinplot)
 ggsave("tempcomparisonviolinplot.jpg", tempcomparisonviolinplot, dpi = 300, width = 6.5, height = 3, units = "in")
 
 
-tempcomparisondotplot <- ggplot(modeltemp.comparison, aes(x = JulianDay, y = Temp1m.difference)) +
-  geom_point(aes(color = Year), size = 0.5, alpha = 0.8) +
-  stat_summary(geom="line", fun.y="mean", size = 1) +
-  scale_color_viridis_c(option = "inferno", direction = -1, begin = 0.5, end = 0.9) 
+tempcomparisondotplot <- ggplot(modeltemp.comparison, aes(x = Month, y = Temp1m.difference)) +
+  geom_point(aes(color = Year), size = 0.5, alpha = 0.5, position = "jitter") +
+  geom_hline(yintercept = 0, lty = 2, size = 0.5) +
+  #stat_summary(geom="line", fun.y="mean", size = 1) +
+  scale_color_viridis_c(option = "inferno", direction = -1, begin = 0.4, end = 0.9)  +
+  ylab(expression("Water Temperature Difference " (degree*C))) +
+  xlab("Month") +
+  scale_y_continuous(breaks = c(-0.5, 0, 0.5, 1, 1.5)) +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))
 print(tempcomparisondotplot)
+
+ggsave("tempcomparisondotplot.jpg", tempcomparisondotplot, dpi = 300, width = 6.5, height = 3, units = "in")
+
 
 TempPlots <- grid.arrange(tempcomparisonplot, tempcomparisonviolinplot)
   
