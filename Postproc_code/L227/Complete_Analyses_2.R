@@ -1341,7 +1341,13 @@ MaxModPP.noclimate <-
 summary(MaxModPP.noclimate$mod.PP.noclimate)
 sd(MaxModPP.noclimate$mod.PP.noclimate)
 
-
+MaxPP <- as.data.frame(cbind(Year = MaxModPP$Year, mod.PP = MaxModPP$mod.PP, 
+                            mod.PP.noclimate = MaxModPP.noclimate$mod.PP.noclimate, 
+                            mod.PP.nofer = MaxModPP.nofert$mod.PP.nofert[c(1:9, 11:28)]))
+MaxPP <- gather(MaxPP, "Scenario", "MaxPP", 2:4)
+MaxPP$Scenario <- as.factor(MaxPP$Scenario)
+kruskal.test(MaxPP$MaxPP, MaxPP$Scenario)
+dunn.test(MaxPP$MaxPP, MaxPP$Scenario)
 
 #### TDP Fit Metrics ====
 TDP.regression.period1 <- lm(mod.match$obs.TDP[mod.match$Year < 1975] ~ mod.match$mod.TDP[mod.match$Year < 1975])
