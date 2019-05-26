@@ -5,7 +5,7 @@ library(tidyverse)
 library(knitr)
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 library(magrittr)
-library(plyr)
+#library(plyr)
 library(hydroGOF)
 library(gridExtra)
 library(zoo)
@@ -912,6 +912,7 @@ modeltemp.comparison <- right_join(mod2[,1:4], mod2.noclimate[,1:4], by = "date"
 modeltemp.comparison <- left_join(modeltemp.comparison, mod2.nofert[,1:4], by = "date")
 modeltemp.comparison <- modeltemp.comparison %>%
   mutate(Temp1m.difference = mod.Temp1m - mod.Temp1m.noclimate, 
+         Temp4m.difference = mod.Temp4m - mod.Temp4m.noclimate, 
          Month = as.numeric(format(modeltemp.comparison$date, "%m")), 
          Day = as.numeric(format(modeltemp.comparison$date, "%d")), 
          Year = as.numeric(format(modeltemp.comparison$date, "%Y")), 
@@ -1500,6 +1501,22 @@ sum(modelPP.comparison$mod.PP.minus.mod.PP.noclimate > 0, na.rm = TRUE)/sum(!is.
 summary(modelPP.comparison$mod.PP.minus.mod.PP.noclimate)
 sd(!is.na(modelPP.comparison$mod.PP.minus.mod.PP.noclimate))
 
+modeltemp.summaries <- 
+  modeltemp.comparison %>%
+  group_by(Month) %>%
+  summarize(mean.diff.1m = mean(Temp1m.difference), 
+            sd.diff.1m = sd(Temp1m.difference), 
+            mean.diff.4m = mean(Temp4m.difference), 
+            sd.diff.4m = sd(Temp4m.difference))
+
+modelPP.summaries <-
+  modelPP.comparison %>%
+  group_by(Month) %>%
+  summarize(mean = mean(mod.PP.minus.mod.PP.noclimate, na.rm = TRUE), 
+            sd = sd(mod.PP.minus.mod.PP.noclimate, na.rm = TRUE))
+
+mean(modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month > 5 & modelPP.comparison$Month < 10], na.rm = TRUE)
+sd(modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month > 5 & modelPP.comparison$Month < 10], na.rm = TRUE)
 
 tempcomparisonplot <- ggplot(modeltemp.comparison) +
   geom_line(aes(x = date, y = mod.Temp1m), color = "black", size = 0.5) +
@@ -1523,7 +1540,6 @@ tempcomparisonviolinplot <- ggplot(modeltemp.comparison) +
   ylab(expression("Water Temperature Difference " (degree*C))) +
   xlab("Month") +
   scale_y_continuous(breaks = c(-0.5, 0, 0.5, 1, 1.5))
-
 print(tempcomparisonviolinplot)
 
 ggsave("tempcomparisonviolinplot.jpg", tempcomparisonviolinplot, dpi = 300, width = 6.5, height = 3, units = "in")
@@ -1539,9 +1555,13 @@ tempcomparisondotplot <- ggplot(modeltemp.comparison, aes(x = Month, y = Temp1m.
   scale_y_continuous(breaks = c(-0.5, 0, 0.5, 1, 1.5)) +
   scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))
 print(tempcomparisondotplot)
-
 ggsave("tempcomparisondotplot.jpg", tempcomparisondotplot, dpi = 300, width = 6.5, height = 3, units = "in")
 
+tempcomparisonbytime <- ggplot(modeltemp.comparison, aes(x = date, y = Temp1m.difference)) +
+  geom_line(aes(color = Month), size = 0.5) +
+  geom_hline(yintercept = 0, lty = 2, size = 0.5) +
+  scale_color_viridis_c(option = "inferno", direction = -1, begin = 0.4, end = 0.9)
+print(tempcomparisonbytime)
 
 TempPlots <- grid.arrange(tempcomparisonplot, tempcomparisonviolinplot)
   
