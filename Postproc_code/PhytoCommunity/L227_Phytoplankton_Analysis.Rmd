@@ -84,15 +84,26 @@ From a bit of digging, I can confirm that the following genera are diazotrophs:
 
 L227phyto.subset <- L227phyto.subset %>%
   filter(Genus != "Heterocysts" & Genus != "Heterocycts") %>%
-  mutate(Group = ifelse(Class == "Bacillariophyceae", "Diatom", 
-                        ifelse(Genus %in% c("Aphanizomenon", "Anabaena", "Synechococcus",
+  mutate(Group = ifelse(Genus %in% c("Aphanizomenon", "Anabaena", "Synechococcus",
                           "Lyngbya", "Gloeocapsa", "Lyngbya", "Oscillatoria",
-                          "Leptolyngbya"), "Diazotroph", "Non-Diazotroph")))
+                          "Leptolyngbya"), "Diazotroph", "Non-Diazotroph"))
 
 
 L227phyto.dailygroups <- L227phyto.subset %>%
   group_by(start.date, Group) %>%
-  summarise(Biomass = sum(as.numeric(biomass_mg.m3)))
-  
+  summarise(Biomass = sum(as.numeric(biomass_mg.m3))) %>%
+  group_by(start.date) %>%
+  mutate(TotalBiomass = sum(Biomass), 
+         PropBiomass = Biomass/TotalBiomass)
+
+L227phyto.dailynondiazo <- L227phyto.dailygroups %>%
+  filter(Group == "Non-Diazotroph") %>%
+  select(-Group)
+
+write.csv(L227phyto.dailygroups, file = "./Phytoplankton/L227_BiomassProp.csv", 
+          row.names = FALSE)
+
+  write.csv(L227phyto.dailynondiazo, file = "./Phytoplankton/L227_BiomassNonDiazo.csv", 
+          row.names = FALSE)
 ```
 
