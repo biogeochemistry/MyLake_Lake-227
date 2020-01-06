@@ -55,26 +55,27 @@ lake_params = {
     0.656, 'g_twty',             % 50    specific growth rate (1/day) at 20 deg C
     2.00E-04, 'k_twty',        % 51    NOTE: NOT USED: specific Chl a to P transformation rate (1/day) at 20 deg C
     0, 'dop_twty',             % 52    NOTE: NOT USED: specific DOP to P transformation rate (day-1) at 20 deg C
-    0.483, 'P_half',             % 53    Half saturation growth P level (mg/m3)
-    2.46E-04, 'PAR_sat_2',     % 54    PAR saturation level for phytoplankton growth (mol(quanta) m-2 s-1)
-    0.015, 'beta_chl_2',       % 55    Optical cross_section of chlorophyll (m2 mg-1)
-    0.0785, 'w_chl_2',           % 56    Settling velocity for Chl a (m day-1)
-    0.01, 'm_twty_2',           % 57    Loss rate (1/day) at 20 deg C
-    0.656, 'g_twty_2',           % 58    Specific growth rate (1/day) at 20 deg C
-    0.483, 'P_half_2',         % 59    Half saturation growth P level (mg/m3)
-    0.01, 'oc_DOC',            % 60    Optical cross-section of DOC (m2/mg DOC)
-    0.1, 'qy_DOC',             % 61    Quantum yield (mg DOC degraded/mol quanta)
-    0.01, 'k_BOD',              % 62    NOTE: NOT USED: Organic decomposition rate (1/d)
-    5, 'w_CH4',                % 63    Methane gas rising velocity (m/d)
-    1.047, 'theta_bod',        % 64    NOTE: NOT USED: Temperature adjustment coefficient for BOD, T ? 10 °C
-    1.13, 'theta_bod_ice',     % 65    NOTE: NOT USED: Temperature adjustment coefficient for BOD, T < 10 °C
-    1, 'theta_sod',            % 66    NOTE: NOT USED: Temperature adjustment coefficient for SOD, T ? 10 °C
-    1, 'theta_sod_ice',        % 67    NOTE: NOT USED: Temperature adjustment coefficient for SOD, T < 10 °C
-    4, 'BOD_temp_switch',      % 68    NOTE: NOT USED: Threshold for bod or bod_ice °C
-    7.5, 'pH',                 % 69    Lake water pH
-    2, 'Q10_wc',               % 70    Q10 for reactions of respiration
-    1, 'wc_factor',            % 71    Scaling factor for rates in WC
-    4.8497, 'T_ref_wc'};       % 72    Reference Temperature for rates
+    0.28, 'P_half',             % 53    Half saturation growth P level (mg/m3)
+    100, 'N_half',             % 54    Half saturation growth N level (mg/m3)
+    2.46E-04, 'PAR_sat_2',     % 55    PAR saturation level for phytoplankton growth (mol(quanta) m-2 s-1)
+    0.015, 'beta_chl_2',       % 56    Optical cross_section of chlorophyll (m2 mg-1)
+    0.0785, 'w_chl_2',           % 57    Settling velocity for Chl a (m day-1)
+    0.01, 'm_twty_2',           % 58    Loss rate (1/day) at 20 deg C
+    0.656, 'g_twty_2',           % 59    Specific growth rate (1/day) at 20 deg C
+    5, 'P_half_2',         % 60    Half saturation growth P level (mg/m3)
+    0.01, 'oc_DOC',            % 61    Optical cross-section of DOC (m2/mg DOC)
+    0.1, 'qy_DOC',             % 62    Quantum yield (mg DOC degraded/mol quanta)
+    0.01, 'k_BOD',              % 63    NOTE: NOT USED: Organic decomposition rate (1/d)
+    5, 'w_CH4',                % 64    Methane gas rising velocity (m/d)
+    1.047, 'theta_bod',        % 65    NOTE: NOT USED: Temperature adjustment coefficient for BOD, T ? 10 °C
+    1.13, 'theta_bod_ice',     % 66    NOTE: NOT USED: Temperature adjustment coefficient for BOD, T < 10 °C
+    1, 'theta_sod',            % 67    NOTE: NOT USED: Temperature adjustment coefficient for SOD, T ? 10 °C
+    1, 'theta_sod_ice',        % 68    NOTE: NOT USED: Temperature adjustment coefficient for SOD, T < 10 °C
+    4, 'BOD_temp_switch',      % 69    NOTE: NOT USED: Threshold for bod or bod_ice °C
+    7.5, 'pH',                 % 70    Lake water pH
+    2, 'Q10_wc',               % 71    Q10 for reactions of respiration
+    1, 'wc_factor',            % 72    Scaling factor for rates in WC
+    4.8497, 'T_ref_wc'};       % 73    Reference Temperature for rates
 
 
 sediment_params = {
