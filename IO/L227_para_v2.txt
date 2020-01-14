@@ -1,1 +1,75 @@
--999	L227			Parameter	Value	Min	Max	Unitdz	1	0.5	2	mKz_ak	NaN	NaN	NaN	(-)Kz_ak_ice	0.000898	NaN	NaN	(-)Kz_N0	7.00E-05	NaN	NaN	s-2C_shelter	NaN	NaN	NaN	(-)lat	49.661944	NaN	NaN	dec.deglon	93.721944	NaN	NaN	dec.degalb_melt_ice	0.3	NaN	NaN	(-)alb_melt_snow	0.4	NaN	NaN	(-)PAR_sat	3.00E-05	1.00E-05	1.00E-04	mol m-2 s-1f_par	0.45	NaN	NaN	(-)beta_chl	0.015	0.005	0.045	m2 mg-1lambda_i	5	NaN	NaN	m-1lambda_s	15	NaN	NaN	m-1F_sed_sld	0.36	NaN	NaN	(m3/m3)I_scV 	0.7359	NaN	NaN	(-)I_scT	0	NaN	NaN	deg CI_scC	1	NaN	NaN	(-)I_scS	1	NaN	NaN	(-)I_scTP	1.0000	NaN	NaN	(-)I_scDOP	1	NaN	NaN	(-)I_scChl	1	NaN	NaN	(-)I_scDOC	1	NaN	NaN	(-)I_scPOC	1	NaN	NaN	(-)I_scO	1	NaN	NaN	(-)I_scDIC	1	NaN	NaN	(-)I_scNO3	1	NaN	NaN	(-)I_scNH4	1	NaN	NaN	(-)I_scSO4	1	NaN	NaN	(-)I_scFe2	1	NaN	NaN	(-)I_scCa2	1	NaN	NaN	(-)I_scpH	1	NaN	NaN	(-)I_scCH4	1	NaN	NaN	(-)I_scFe3	1	NaN	NaN	(-)I_scAl3	1	NaN	NaN	(-)I_scSiO4	1	NaN	NaN	(-)I_scSiO2	1	NaN	NaN	(-)I_scdiatom	1	NaN	NaN	(-)swa_b0	2.5	NaN	NaN	m-1swa_b1	1.05	0.8	1.3	m-1S_res_epi	3.30E-07	7.30E-08	1.82E-06	m d-1 (dry mass)S_res_hypo	3.30E-08	NaN	NaN	m d-1 (dry mass)H_sed	0.03	NaN	NaN	mPsat_L	2500	NaN	NaN	mg m-3Fmax_L	8000	5000	10000	mg kg-1Uz_Sz	0.1	0.1	1	m d-1Uz_Chl	0.1	0.05	0.5	m d-1Y_cp	1	NaN	NaN	(-)m_twty	0.03	0.1	0.3	d-1g_twty	0.6	1	1.5	d-1k_sed_twty	2.00E-04	NaN	NaN	d-1k_dop_twty	0	NaN	NaN	d-1P_half	0.483	0.2	2	mg m-3PAR_sat2	3.00E-05	NaN	NaN	mol m-2 s-1beta_chl2	0.015	NaN	NaN	m2 mg-1Uz_Chl2	0.1	NaN	NaN	m d-1m_twty2	0.03	NaN	NaN	d-1g_twty2	0.6	NaN	NaN	d-1P_half2	0.483	NaN	NaN	mg m-3oc_DOC	0.01	NaN	NaN	m2 mg-1qy_DOC	0.1	NaN	NaN	mg mol-1k_BOD	0.1	NaN	NaN	d-1k_SOD	500	NaN	NaN	mg m-2theta_BOD	1.047	NaN	NaN	(-)theta_BOD_ice	1.13	NaN	NaN	(-)open_slot	1	NaN	NaN	(-)open_slot	1	NaN	NaN	(-)theta_T	4	NaN	NaN	deg.celciuspH	7.5	NaN	NaN	(-)Q10	2	NaN	NaN	(-)wc_factor	0.0001	NaN	NaN	(-)T_ref	4.8497	NaN	NaN	(-)
+-999	L227			
+Parameter	Value	Min	Max	Unit
+dz	1	0.5	2	m
+Kz_ak	NaN	NaN	NaN	(-)
+Kz_ak_ice	0.000898	NaN	NaN	(-)
+Kz_N0	7.00E-05	NaN	NaN	s-2
+C_shelter	NaN	NaN	NaN	(-)
+lat	49.661944	NaN	NaN	dec.deg
+lon	93.721944	NaN	NaN	dec.deg
+alb_melt_ice	0.3	NaN	NaN	(-)
+alb_melt_snow	0.4	NaN	NaN	(-)
+PAR_sat	3.00E-05	1.00E-05	1.00E-04	mol m-2 s-1
+f_par	0.45	NaN	NaN	(-)
+beta_chl	0.015	0.005	0.045	m2 mg-1
+lambda_i	5	NaN	NaN	m-1
+lambda_s	15	NaN	NaN	m-1
+F_sed_sld	0.36	NaN	NaN	(m3/m3)
+I_scV 	0.7359	NaN	NaN	(-)
+I_scT	0	NaN	NaN	deg C
+I_scC	1	NaN	NaN	(-)
+I_scS	1	NaN	NaN	(-)
+I_scTP	1	NaN	NaN	(-)
+I_scDOP	1	NaN	NaN	(-)
+I_scChl	1	NaN	NaN	(-)
+I_scDOC	1	NaN	NaN	(-)
+I_scPOC	1	NaN	NaN	(-)
+I_scO	1	NaN	NaN	(-)
+I_scDIC	1	NaN	NaN	(-)
+I_scNO3	1	NaN	NaN	(-)
+I_scNH4	1	NaN	NaN	(-)
+I_scSO4	1	NaN	NaN	(-)
+I_scFe2	1	NaN	NaN	(-)
+I_scCa2	1	NaN	NaN	(-)
+I_scpH	1	NaN	NaN	(-)
+I_scCH4	1	NaN	NaN	(-)
+I_scFe3	1	NaN	NaN	(-)
+I_scAl3	1	NaN	NaN	(-)
+I_scSiO4	1	NaN	NaN	(-)
+I_scSiO2	1	NaN	NaN	(-)
+I_scdiatom	1	NaN	NaN	(-)
+swa_b0	2.5	NaN	NaN	m-1
+swa_b1	1.05	0.8	1.3	m-1
+S_res_epi	3.30E-07	7.30E-08	1.82E-06	m d-1 (dry mass)
+S_res_hypo	3.30E-08	NaN	NaN	m d-1 (dry mass)
+H_sed	0.03	NaN	NaN	m
+Psat_L	2500	NaN	NaN	mg m-3
+Fmax_L	8000	5000	10000	mg kg-1
+Uz_Sz	0.1	0.1	1	m d-1
+Uz_Chl	0.1	0.05	0.5	m d-1
+Y_cp	1	NaN	NaN	(-)
+m_twty	0.03	0.1	0.3	d-1
+g_twty	0.6	1	1.5	d-1
+k_sed_twty	2.00E-04	NaN	NaN	d-1
+k_dop_twty	0	NaN	NaN	d-1
+P_half	0.483	0.2	2	mg m-3
+N_half	1.8	NaN	NaN	mg m-3
+PAR_sat2	3.00E-05	NaN	NaN	mol m-2 s-1
+beta_chl2	0.015	NaN	NaN	m2 mg-1
+Uz_Chl2	0.1	NaN	NaN	m d-1
+m_twty2	0.03	NaN	NaN	d-1
+g_twty2	0.6	NaN	NaN	d-1
+P_half2	0.483	NaN	NaN	mg m-3
+oc_DOC	0.01	NaN	NaN	m2 mg-1
+qy_DOC	0.1	NaN	NaN	mg mol-1
+k_BOD	0.1	NaN	NaN	d-1
+k_SOD	500	NaN	NaN	mg m-2
+theta_BOD	1.047	NaN	NaN	(-)
+theta_BOD_ice	1.13	NaN	NaN	(-)
+open_slot	1	NaN	NaN	(-)
+open_slot	1	NaN	NaN	(-)
+theta_T	4	NaN	NaN	deg.celcius
+pH	7.5	NaN	NaN	(-)
+Q10	2	NaN	NaN	(-)
+wc_factor	0.0001	NaN	NaN	(-)
+T_ref	4.8497	NaN	NaN	(-)

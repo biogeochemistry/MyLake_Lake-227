@@ -29,6 +29,12 @@ TPPintegratedepi = zeros(1,length(TPP));
     end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
 TPPintegratedepi = transpose(TPPintegratedepi);
 
+TPPintegratedepi = zeros(1,length(TPP));
+    for (i=1:length(TPP))
+        TPPintegratedepi(i) = mean(TPP(1:epidepthposition(i), i));
+    end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
+TPPintegratedepi = transpose(TPPintegratedepi);
+
 DOC = MyLake_results.basin1.concentrations.DOC;
 
 DOCintegratedepi = zeros(1,length(DOC));

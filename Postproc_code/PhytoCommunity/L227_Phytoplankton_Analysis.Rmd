@@ -1,0 +1,109 @@
+---
+title: "L227 Phytoplankton Analysis"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## Background
+
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+
+L227phyto.early <- read.csv("./Phytoplankton/L227_biology_speciescounts_1969-2012.csv")
+L227phyto.late <- read.csv("./Phytoplankton/L227_biology_speciescounts_2013-2015.csv")
+
+taxonomy <- read.csv("./Phytoplankton/phytoplankton_taxonomy.csv")
+taxonomy.extra <- read.csv("./Phytoplankton/phytoplankton_taxonomy_additional.csv")
+taxonomy <- rbind(taxonomy, taxonomy.extra)
+```
+
+
+## Data Wrangling
+
+1. Merge (rbind) two datasets, 1969-2012 and 2013-2015. Select only columns that match between files.
+2. Filter only epilimnion samples
+3. Turn date into a proper date format and arrange by date
+4. Join analysis dataset with taxonomy information
+
+```{r}
+L227phyto.early.subset <- 
+  L227phyto.early %>%
+  select(start.date, stratum, start.depth_m, end.depth_m, taxon.code, cell.count,
+         correction.factor, cell.length_um, cell.width_um, cell.volume_um3, 
+         cell.density_cells.L, biomass_mg.m3, stratum.volume) %>%
+  filter(stratum == "EPI")
+  
+L227phyto.late.subset <- 
+  L227phyto.late %>%
+  select(start.date, stratum, start.depth_m, end.depth_m, taxon.code, cell.count,
+         correction.factor, cell.length_um, cell.width_um, cell.volume_um3, 
+         cell.density_cells.L, biomass_mg.m3, stratum.volume) %>%
+  filter(stratum == "EPI")
+
+L227phyto.subset <- rbind(L227phyto.early.subset, L227phyto.late.subset)
+
+L227phyto.subset$start.date <- as.Date(L227phyto.subset$start.date, "%Y-%m-%d")
+class(L227phyto.subset$start.date)
+L227phyto.subset <- arrange(L227phyto.subset, start.date)
+
+unique(L227phyto.subset$taxon.code)
+summary(L227phyto.subset$taxon.code)
+
+colnames(taxonomy)[1] <- "taxon.code"
+L227phyto.subset <- left_join(L227phyto.subset, taxonomy, by = "taxon.code")
+
+unique(L227phyto.subset$Phylum)
+unique(L227phyto.subset$Class)
+summary(L227phyto.subset$Class)
+unique(L227phyto.subset$Genus)
+summary(L227phyto.subset$Genus)
+summary(L227phyto.subset$Genus[L227phyto.subset$Class == "Cyanophyceae"])
+
+```
+
+I need to separate phytoplankton based on their nutrient limitation characteristics. As a first pass, I will designate diatoms, cyanobacteria capable of N fixation ("diazotrophs"), and non-diazotrophs. 
+
+From a bit of digging, I can confirm that the following genera are diazotrophs: 
+* Aphanizomenon
+* Anabaena
+* Synechococcus
+* Lyngbya
+* Gloeocapsa
+* Lyngbya
+* Oscillatoria
+* Leptolyngbya
+
+5. Remove "Heterocysts" and "Heterocycts", as these are just counts of heterocyst cells
+6. Designate each group as Diatoms, Diazotrophs, and Non-Diazotrophs (note: diatoms are non-diazotrophs but they are a distinct group here since they have Si demand)
+7. Group by each day and add up biomass
+```{r}
+
+L227phyto.subset <- L227phyto.subset %>%
+  filter(Genus != "Heterocysts" & Genus != "Heterocycts") %>%
+  mutate(Group = ifelse(Genus %in% c("Aphanizomenon", "Anabaena", "Synechococcus",
+                          "Lyngbya", "Gloeocapsa", "Lyngbya", "Oscillatoria",
+                          "Leptolyngbya"), "Diazotroph", "Non-Diazotroph"))
+
+
+L227phyto.dailygroups <- L227phyto.subset %>%
+  group_by(start.date, Group) %>%
+  summarise(Biomass = sum(as.numeric(biomass_mg.m3))) %>%
+  group_by(start.date) %>%
+  mutate(TotalBiomass = sum(Biomass), 
+         PropBiomass = Biomass/TotalBiomass)
+
+L227phyto.dailynondiazo <- L227phyto.dailygroups %>%
+  filter(Group == "Non-Diazotroph") %>%
+  select(-Group)
+
+write.csv(L227phyto.dailygroups, file = "./Phytoplankton/L227_BiomassProp.csv", 
+          row.names = FALSE)
+
+  write.csv(L227phyto.dailynondiazo, file = "./Phytoplankton/L227_BiomassNonDiazo.csv", 
+          row.names = FALSE)
+```
+

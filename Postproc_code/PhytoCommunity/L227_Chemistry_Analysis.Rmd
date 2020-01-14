@@ -1,0 +1,342 @@
+---
+title: "L227 Chemistry Analysis"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## Background
+
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(cowplot)
+library(viridis)
+library(lubridate)
+theme_set(theme_classic())
+options(scipen = 100)
+
+
+L227.chem.gathered <- read.csv("./Chemistry/L227_chemistry_1969-2018_clean.csv")
+L227.chem.gathered$date <- as.Date(L227.chem.gathered$date, format = "%m/%d/%y")
+
+L227.chem.gathered$date <- format(L227.chem.gathered$date, "%y%m%d")
+create.early.dates <- (function(d) {
+       paste0(ifelse(d > 181231,"19","20"),d)
+       })
+L227.chem.gathered$date <- create.early.dates(L227.chem.gathered$date)
+L227.chem.gathered$date <- as.Date(L227.chem.gathered$date, format = "%Y%m%d") 
+
+MyLake.period1.chem.spread <- read.csv("./Chemistry/Output_IntegratedEpi_Period1_NandP.csv")
+MyLake.period1.chem.spread <- mutate(MyLake.period1.chem.spread, date = date(ISOdate(Year, Month, Day)))
+MyLake.period1.chem.spread.summer <- filter(MyLake.period1.chem.spread, Month < 11 & Month > 4)
+
+MyLake.period2.chem.spread <- read.csv("./Chemistry/Output_IntegratedEpi_Period2_NandP.csv")
+MyLake.period2.chem.spread <- mutate(MyLake.period2.chem.spread, date = date(ISOdate(Year, Month, Day)))
+MyLake.period2.chem.spread.summer <- filter(MyLake.period2.chem.spread, Month < 11 & Month > 4)
+
+MyLake.period3.chem.spread <- read.csv("./Chemistry/Output_IntegratedEpi_Period3_NandP.csv")
+MyLake.period3.chem.spread <- mutate(MyLake.period3.chem.spread, date = date(ISOdate(Year, Month, Day)))
+MyLake.period3.chem.spread.summer <- filter(MyLake.period3.chem.spread, Month < 11 & Month > 4)
+
+MyLake.chem.spread <- rbind(MyLake.period1.chem.spread, MyLake.period2.chem.spread, MyLake.period3.chem.spread)
+MyLake.chem.spread.summer <- rbind(MyLake.period1.chem.spread.summer, MyLake.period2.chem.spread.summer, MyLake.period3.chem.spread.summer)
+
+```
+
+
+## Data Wrangling
+
+1. Make micro appear as `u` rather than as `\xb5`
+2. Replace -1111, -200, and 0 with NA and other negative numbers were changed to 0 according to the ELA metadata documentation: 
+
+* “0” or “blank’ indicates the analysis was not requested
+* “-1111” indicates that results are not yet available
+* “-200” indicates that no sample was available
+* “-1” indicates that the result was <MDL
+
+3. Remove columns X, sample_id, location, sublocation, station
+4. Create an epilimnion gathered dataframe by selecting only EPI, removing NAs, and averaging values when there is more than one sample for each day-depth-parameter grouping
+5. Spread data frame into a tidy dataset by parameter (columns) with result as new row entries
+
+Note: units are now removed. These units are as follows: 
+
+* uEq/L: Alk, Org.acids
+* mg/L: Ca, Cl, Fe, Fe2, H2S, K, Mg, Mn, Na, O2, SO4, SRSi
+* uS/cm: Cond
+* uM: DIC, DOC, ELA.DIC
+* ug/L: chla, chla.hplc, NH3.N, NO2.N, NO3.N, Susp.C, Susp.FeSusp.N, Susp.P, TDN, TDP
+* ppm-tam: CH4, DIC.pCO2, pCO2
+
+
+```{r}
+L227.chem.gathered$units <- gsub("\xb5", "u", L227.chem.gathered$units)
+
+L227.chem.gathered$result <- ifelse(L227.chem.gathered$result == -1111, NA, L227.chem.gathered$result)
+L227.chem.gathered$result <- ifelse(L227.chem.gathered$result == -200, NA, L227.chem.gathered$result)
+L227.chem.gathered$result <- ifelse(L227.chem.gathered$result == 0, NA, L227.chem.gathered$result)
+L227.chem.gathered$result <- ifelse(L227.chem.gathered$result <0, 0, L227.chem.gathered$result)
+
+L227.chem.gathered.epi <- 
+  L227.chem.gathered %>%
+  select(-X, -sample_id, -location, -sublocation, -station) %>%
+  filter(stratum == "EPI") %>%
+  na.omit(result) %>%
+  group_by(date, depth, parameter, units) %>%
+  summarise(result = mean(result))
+
+L227.chem.spread <- 
+  L227.chem.gathered.epi %>%
+  select(-units) %>%
+  spread(key = parameter, value =  result) %>%
+  mutate(DIN = sum(NH3.N, NO2.N, NO3.N, na.rm = TRUE), 
+         year = year(date), 
+         month = month(date))
+
+L227.chem.spread$DIN <- ifelse(L227.chem.spread$DIN == 0, NA, L227.chem.spread$DIN)
+
+```
+
+## N and P Visualizations
+
+When are N, P, and Si below the thresholds identified in Reynolds et al. 2001: 
+"PROTECH allows growth increments to the defined physical limits until the concentration of phosphorus falls to <3 ug P l−1 or the nitrogen falls to <80 ug N l− 1 or the silica falls to <120 ug SiO2 l− 1. When this happens, the available limiting resource is shared among the species in the proportion that the physical constraints would have allowed. The nutrient is thus exhausted and becomes simulta- neously limiting to all species trying to grow in the simulated water mass. "
+
+P: 3 ug/L
+N: 80 ug/L
+Si: 0.12 mg/L
+
+### Observations from L227
+
+I will start by visualizing TDP, DIN, and SRSi, even though I know these don't encompass the compounds able to be directly taken up. They will provide a nice indication of what proportion of the time each nutrient may be limiting and when.
+
+```{r}
+ggplot(L227.chem.spread, aes(x = TDP)) +
+  geom_freqpoly() +
+  geom_vline(xintercept = 3, lty = 2) 
+
+ggplot(L227.chem.spread, aes(x = DIN)) +
+  geom_freqpoly() +
+  geom_vline(xintercept = 80, lty = 2)
+ 
+# Si is almost never limiting
+ggplot(L227.chem.spread, aes(x = SRSi)) +
+  geom_freqpoly() +
+  geom_vline(xintercept = 0.12, lty = 2) 
+
+TDPbytime <- ggplot(L227.chem.spread, aes(x = date, y = TDP)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 3, lty = 2) +
+  ylim(0, 100)
+
+DINbytime <- ggplot(L227.chem.spread, aes(x = date, y = DIN)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 80, lty = 2)
+
+plot_grid(TDPbytime, DINbytime, nrow = 2, align = "v")
+
+ggplot(L227.chem.spread, aes(x = TDP, y = DIN, color = year)) +
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = 3, lty = 2) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10() +
+  scale_x_log10() +
+  scale_color_viridis_c(option = "magma")
+
+ggplot(L227.chem.spread, aes(x = TDP, y = DIN, color = month)) +
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = 3, lty = 2) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10() +
+  scale_x_log10() +
+  scale_color_viridis_c(option = "magma", direction = -1)
+
+
+```
+
+Takeaways: 
+
+* DIN is below the threshold the majority of the time (calculate percentage)
+* TDP is below the threshold sometimes (calculate percentage)
+* SRSi is above the threshold nearly all the time (perhaps leave out modeling diatoms? or just anticipate it's not a major issue here)
+* DIN is below the threshold more often in the P-only regime. DIN is above the threshold more often in the high N:P regime (makes sense)
+* TDP centers in a narrow band, whereas there is more variability in DIN 
+* TDP is above/below the threshold pretty consistently across years
+* Non-limiting conditions (above N and P thesholds) occur most consistently in early and late months (makes sense)
+* N limitation will be the main axis of community composition shifts across years and seasons given that N fixers are not N-limited. P uptake kinetics will drive species competition when P is not limited (and when N is not limited?)
+
+Next steps: 
+1. Calculate proportion of the time concentrations are above/below thresholds, over time and season and compared to each other
+2. Run the MyLake model for 1990-2016 and calculate similar metrics for when P and N are above/below thresholds
+
+### Output from MyLake
+```{r}
+ggplot(MyLake.period1.chem.spread.summer, aes(x = TDP, color = "High N:P")) +
+  geom_density() +
+  geom_density(data = MyLake.period2.chem.spread.summer, 
+               aes(x = TDP, color = "Low N:P")) +
+  geom_density(data = MyLake.period3.chem.spread.summer, 
+                aes(x = TDP, color = "P only")) +
+  scale_color_viridis_d(option = "magma", end = 0.7) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0)) +
+  geom_vline(xintercept = 3, lty = 2) 
+
+ggplot(MyLake.period1.chem.spread.summer, aes(x = DIN, color = "High N:P")) +
+  geom_density() +
+  geom_density(data = MyLake.period2.chem.spread.summer, 
+               aes(x = DIN, color = "Low N:P")) +
+  geom_density(data = MyLake.period3.chem.spread.summer, 
+                aes(x = DIN, color = "P only")) +
+  scale_color_viridis_d(option = "magma", end = 0.7) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_log10(expand = c(0,0)) +
+  geom_vline(xintercept = 80, lty = 2)
+
+TDPbytime <- ggplot(MyLake.chem.spread, aes(x = date, y = TDP)) +
+  geom_point(alpha = 0.5, size = 1) +
+  geom_hline(yintercept = 3, lty = 2) +
+  ylim(0, 100)
+
+DINbytime <- ggplot(MyLake.chem.spread, aes(x = date, y = DIN)) +
+  geom_point(alpha = 0.5, size = 1) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10()
+
+plot_grid(TDPbytime, DINbytime, nrow = 2, align = "v")
+
+TDPbytime.summer <- ggplot(MyLake.chem.spread.summer, aes(x = date, y = TDP)) +
+  geom_point(alpha = 0.5, size = 1) +
+  geom_hline(yintercept = 3, lty = 2) +
+  ylim(0, 100)
+
+DINbytime.summer <- ggplot(MyLake.chem.spread.summer, aes(x = date, y = DIN)) +
+  geom_point(alpha = 0.5, size = 1) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10()
+
+plot_grid(TDPbytime.summer, DINbytime.summer, nrow = 2, align = "v")
+
+ggplot(MyLake.period1.chem.spread.summer, aes(x = TDP, y = DIN, color = Year)) +
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = 3, lty = 2) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10() +
+  scale_x_log10() +
+  scale_color_viridis_c(option = "magma")
+
+ggplot(MyLake.period2.chem.spread.summer, aes(x = TDP, y = DIN, color = Year)) +
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = 3, lty = 2) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10() +
+  scale_x_log10() +
+  scale_color_viridis_c(option = "magma")
+
+ggplot(MyLake.period3.chem.spread.summer, aes(x = TDP, y = DIN, color = Year)) +
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = 3, lty = 2) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10() +
+  scale_x_log10() +
+  scale_color_viridis_c(option = "magma")
+
+TDPbyDIN.period1 <-ggplot(MyLake.period1.chem.spread.summer, aes(x = TDP, y = DIN, color = Month)) +
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = 3, lty = 2) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10() +
+  scale_x_log10() +
+  scale_color_viridis_c(option = "magma", direction = -1)
+
+TDPbyDIN.period2 <- ggplot(MyLake.period2.chem.spread.summer, aes(x = TDP, y = DIN, color = Month)) +
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = 3, lty = 2) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10() +
+  scale_x_log10() +
+  scale_color_viridis_c(option = "magma", direction = -1)
+
+TDPbyDIN.period3 <- ggplot(MyLake.period3.chem.spread.summer, aes(x = TDP, y = DIN, color = Month)) +
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = 3, lty = 2) +
+  geom_hline(yintercept = 80, lty = 2) +
+  scale_y_log10() +
+  scale_x_log10() +
+  scale_color_viridis_c(option = "magma", direction = -1)
+
+plot_grid(TDPbyDIN.period1, TDPbyDIN.period2, TDPbyDIN.period3, nrow = 1, align = "v")
+
+```
+
+Takeaways: 
+
+* Highest concentrations of DIN and TDP are during the winter season
+* N and P concentrations above and below the threshold exist in all years
+* Non-limiting concentrations occur mostly in beginning and end of the season
+* P-limiting concentrations occur mostly in the beginning of the season
+* N-limiting concentrations occur across all dates
+* co-limitation occurs in mid- to late summer
+
+
+## What proportion of the time is the lake under N-limiting, P-limiting, or N- and P-limiting conditions?
+```{r}
+L227.chem.spread <- 
+  L227.chem.spread %>%
+  mutate(Nlimiting = ifelse(DIN < 80, 1, 0), 
+         Plimiting = ifelse(TDP < 3, 1, 0),
+         Colimiting = ifelse(Nlimiting == 1 & Plimiting == 1, 1, 0))
+
+L227.chem.spread$Nlimiting = as.factor(L227.chem.spread$Nlimiting)
+L227.chem.spread$Plimiting = as.factor(L227.chem.spread$Plimiting)
+L227.chem.spread$Colimiting = as.factor(L227.chem.spread$Colimiting)
+
+summary(L227.chem.spread$Nlimiting[L227.chem.spread$year < 1975])
+summary(L227.chem.spread$Plimiting[L227.chem.spread$year < 1975])
+summary(L227.chem.spread$Colimiting[L227.chem.spread$year < 1975])
+
+summary(L227.chem.spread$Nlimiting[L227.chem.spread$year > 1974 & L227.chem.spread$year < 1990])
+summary(L227.chem.spread$Plimiting[L227.chem.spread$year > 1974 & L227.chem.spread$year < 1990])
+summary(L227.chem.spread$Colimiting[L227.chem.spread$year > 1974 & L227.chem.spread$year < 1990])
+
+summary(L227.chem.spread$Nlimiting[L227.chem.spread$year > 1989])
+summary(L227.chem.spread$Plimiting[L227.chem.spread$year > 1989])
+summary(L227.chem.spread$Colimiting[L227.chem.spread$year > 1989])
+
+MyLake.chem.spread.summer <- 
+  MyLake.chem.spread.summer %>%
+  mutate(Nlimiting = ifelse(DIN < 80, 1, 0), 
+         Plimiting = ifelse(TDP < 3, 1, 0),
+         Colimiting = ifelse(Nlimiting == 1 & Plimiting == 1, 1, 0))
+
+MyLake.chem.spread.summer$Nlimiting = as.factor(MyLake.chem.spread.summer$Nlimiting)
+MyLake.chem.spread.summer$Plimiting = as.factor(MyLake.chem.spread.summer$Plimiting)
+MyLake.chem.spread.summer$Colimiting = as.factor(MyLake.chem.spread.summer$Colimiting)
+
+summary(MyLake.chem.spread.summer$Nlimiting)
+summary(MyLake.chem.spread.summer$Plimiting)
+summary(MyLake.chem.spread.summer$Colimiting)
+
+summary(MyLake.chem.spread.summer$Nlimiting[MyLake.chem.spread.summer$Year < 1975])
+summary(MyLake.chem.spread.summer$Plimiting[MyLake.chem.spread.summer$Year < 1975])
+summary(MyLake.chem.spread.summer$Colimiting[MyLake.chem.spread.summer$Year < 1975])
+
+summary(MyLake.chem.spread.summer$Nlimiting[MyLake.chem.spread.summer$Year > 1974 & 
+                                              MyLake.chem.spread.summer$Year < 1990])
+summary(MyLake.chem.spread.summer$Plimiting[MyLake.chem.spread.summer$Year > 1974 & 
+                                              MyLake.chem.spread.summer$Year < 1990])
+summary(MyLake.chem.spread.summer$Colimiting[MyLake.chem.spread.summer$Year > 1974 &
+                                               MyLake.chem.spread.summer$Year < 1990])
+
+summary(MyLake.chem.spread.summer$Nlimiting[MyLake.chem.spread.summer$Year > 1989])
+summary(MyLake.chem.spread.summer$Plimiting[MyLake.chem.spread.summer$Year > 1989])
+summary(MyLake.chem.spread.summer$Colimiting[MyLake.chem.spread.summer$Year > 1989])
+
+15/(15 + 1032)
+600/(600 + 2160)
+1331/(1331 + 3637)
+
+```
+
