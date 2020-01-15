@@ -13,7 +13,7 @@ max_generations = 24;
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
 m_start = [1990, 1, 1];
-m_stop = [1990, 6, 31];
+m_stop = [1990, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
@@ -32,20 +32,20 @@ Data = loadData(MyL_dates);
 
 % Example: (g_twty (parameter nr 50) is always given the same value as
 % g_twty2 (parameter nr 58) and so on ..)
-varyindexes = [10 47 49 50 53; %PAR_sat, w_chl, m_twty, g_twty, P_half
-               54 56 57 58 59 ]; %PAR_sat_2, w_chl2, m_twty2, g_twty2, P_half_2
+varyindexes = [10 47 49 50 53 54 57 59 60; %PAR_sat, w_chl, m_twty, g_twty, P_half, N_half, w_chl2, g_twty2, P_half_2
+               55 NaN 58 NaN NaN NaN NaN NaN NaN]; %PAR_sat_2, m_twty2
 
 % Setting up the min and max boundaries for each covarying set of parameters.
-minparam = [ 3e-6, 0.01, 0.01, 0.1, 0.001];
-maxparam = [ 3e-4, 0.5 , 0.1 , 2.0, 100];
+minparam = [ 3e-6, 0.01, 0.01, 0.1, 0.001, 0.001, 0.01, 0.1, 0.001];
+maxparam = [ 3e-4, 0.5 , 0.1 , 2.0, 10   , 10   , 0.5 , 2.0, 10   ];
 
 % The best initial guess for the values of each set of covarying parameters (can have
 % multiple rows for multiple initial guesses. (up to population_size rows)
-initial_guess = [2.23e-4, 0.1, 0.01, 0.6, 0.483];
+initial_guess = [2.23e-4, 0.1, 0.01, 0.6, 0.483, 1.8, 0.1, 0.6, 0.483];
 
 modeleval      = @MyLake_227_model_evaluation;
 errfun         = @error_function_P;
-filenameprefix = 'P'; % Prefix for the .mat file where the optimal parameters are saved in the end.
+filenameprefix = 'PhytoParams'; % Prefix for the .mat file where the optimal parameters are saved in the end.
 
 do_MyLake_optimization(m_start, m_stop, K_sediments, K_lake, Data, ...
     varyindexes, minparam, maxparam, initial_guess, modeleval, errfun,...
@@ -57,12 +57,12 @@ function Data = loadData(MyL_dates)
     rawcsvdata = csvread('Postproc_code/L227/OutputForOptimization.csv', 1, 1);
     rawdatadates = datenum(rawcsvdata(:,9:11));
     withinmodelrange = (rawdatadates >= MyL_dates(1)) & (rawdatadates <= MyL_dates(end));
-    rawPPdata = rawcsvdata(:,4);
-    rawPPdata(rawPPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
-    Data.PPintegratedepi = rawPPdata(withinmodelrange);
-    rawTDPdata = rawcsvdata(:,3);
-    rawTDPdata(rawTDPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
-    Data.TDPintegratedepi = rawTDPdata(withinmodelrange);
+    rawdiazoPPdata = rawcsvdata(:,14);
+    rawdiazoPPdata(rawdiazoPPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
+    Data.diazoPPintegratedepi = rawdiazoPPdata(withinmodelrange);
+    rawnondiazoPPdata = rawcsvdata(:,13);
+    rawnondiazoPPdata(rawnondiazoPPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
+    Data.nondiazoPPintegratedepi = rawnondiazoPPdata(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
     Data.date_mask = getmask(dateswithinrange, MyL_dates); % Used later to match model data to observed data by correct date.
 end
@@ -89,19 +89,19 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     epidepth(isnan(epidepth)) = 10;
     epidepthposition = 2*epidepth; %MyLake computes for every 0.5 m, so adding a factor of 2
 
-    TPP = MyLake_results.basin1.concentrations.Chl + MyLake_results.basin1.concentrations.C + MyLake_results.basin1.concentrations.PP;
-    TPPintegratedepi = zeros(1,length(TPP));
-    for (i=1:length(TPP))
-        TPPintegratedepi(i) = mean(TPP(1:epidepthposition(i), i));
+    diazoPP = MyLake_results.basin1.concentrations.C;
+    diazoPPintegratedepi = zeros(1,length(diazoPP));
+    for (i=1:length(diazoPP))
+        diazoPPintegratedepi(i) = mean(diazoPP(1:epidepthposition(i), i));
     end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
-    ModelResult.PPintegratedepi = transpose(TPPintegratedepi);
+    ModelResult.diazoPPintegratedepi = transpose(diazoPPintegratedepi);
    
-    TDP = MyLake_results.basin1.concentrations.P;
-    TDPintegratedepi = zeros(1,length(TDP));
-    for (i=1:length(TDP))
-        TDPintegratedepi(i) = mean(TDP(1:epidepthposition(i), i));
-    end %returns integrated epilimnion TDP measurement for each day (variable epilimnion depth)
-    ModelResult.TDPintegratedepi = transpose(TDPintegratedepi);
+    nondidazoPP = MyLake_results.basin1.concentrations.Chl;
+    nondidazoPPintegratedepi = zeros(1,length(nondidazoPP));
+    for (i=1:length(nondidazoPP))
+        nondidazoPPintegratedepi(i) = mean(nondidazoPP(1:epidepthposition(i), i));
+    end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
+    ModelResult.nondidazoPPintegratedepi = transpose(nondidazoPPintegratedepi);
 end
 
 % Error function. The error function takes a ModelResult
@@ -111,9 +111,9 @@ end
 % number err, which is smaller the better fit the model is to the data.
 function err = error_function_P(ModelResult, Data)
     
-    MatchedModelPP = ModelResult.PPintegratedepi(Data.date_mask);
-    MatchedModelTDP = ModelResult.TDPintegratedepi(Data.date_mask);
-    err = nansum (((MatchedModelPP - Data.PPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2));
+    MatchedModeldiazoPP = ModelResult.diazoPPintegratedepi(Data.date_mask);
+    MatchedModelnondidazoPP = ModelResult.nondidazoPPintegratedepi(Data.date_mask);
+    err = nansum (((MatchedModeldiazoPP - Data.diazoPPintegratedepi).^2) + ((MatchedModelnondidazoPP -  Data.nondiazoPPintegratedepi).^2));
 
 end
 
