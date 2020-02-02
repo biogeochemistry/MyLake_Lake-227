@@ -1,0 +1,75 @@
+---
+title: "L227 MyLake Phytoplankton Analysis"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+# Working directory should be source file location
+getwd()
+
+library(tidyverse)
+library(lubridate)
+
+theme_std <- function (base_size = 11, base_family = "") {
+  theme_grey(base_size = base_size, base_family = base_family) %+replace% 
+    theme(axis.ticks = element_line(colour = "black", size = 1), 
+          legend.key = element_rect(colour = "white"), 
+          panel.background = element_rect(fill = "white", colour = NA), 
+          panel.border = element_rect(fill = NA, colour = NA),
+          axis.line = element_line(size = 0.5, colour = "black"),
+          panel.grid.major = element_line(NA), 
+          panel.grid.minor = element_line(NA), 
+          strip.background = element_rect(fill = "grey80", colour = "grey50", size = 0.2),
+          axis.text  = element_text(size=rel(0.9)),
+          axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size=rel(1)),
+          axis.title.y = element_text(margin = unit(c(0, 3, 0, 0), "mm"),size=rel(1), angle = 90),
+          strip.text = element_text(size = rel(1.15), colour = "black", face = "bold"),
+          plot.margin=unit(c(10,10,10,10),"pt"))}
+theme_set(theme_std())
+
+# Observation file
+phyto.obs <- read.csv("OutputForOptimization_Phyto.csv")
+
+# Output file
+phyto.out <- read.csv("Output_IntegratedEpi_Phyto.csv")
+
+```
+
+## Wrangling
+```{r}
+# Observation file
+phyto.obs$date <- as.Date(phyto.obs$date, "%Y-%m-%d")
+
+phyto.obs <- phyto.obs %>%
+  filter(date > as.Date("1989-12-31") & date < as.Date("1995-01-01"))
+
+# Output file
+colnames(phyto.out) <- c("Year", "Month", "Day", "diazoPP", "nondiazoPP")
+phyto.out <- phyto.out %>%
+  unite(date, Year, Month, Day, sep = '-')
+phyto.out$date <- as.Date(phyto.out$date, "%Y-%m-%d")
+
+
+
+```
+
+## Visualizations
+```{r}
+PPmodelplot <- ggplot(phyto.out) +
+  #geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  #geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_line(data = phyto.out, aes(x = date, y = diazoPP, color = "out.diazo"), size = 0.5) +
+  geom_line(data = phyto.out, aes(x = date, y = nondiazoPP, color = "out.nondiazo"), size = 0.5) +
+  geom_point(data = phyto.obs, aes(x = date, y = diazoPP, color = "obs.diazo"), pch = 19, size = 0.75) +
+  geom_point(data = phyto.obs, aes(x = date, y = nondiazoPP, color = "obs.nondiazo"), pch = 19, size = 0.75) +
+  ylab(expression(PP ~ (mu*g / L))) +
+  xlab(" ") +
+  scale_colour_manual("", breaks = c("out.diazo", "out.nondiazo", "obs.diazo", "obs.nondiazo"), 
+                      values = c("#d14a42ff",  "#240c4cff", "#d14a42ff",  "#240c4cff")) +
+  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), 
+        legend.key.size = unit(0.1, "cm")) 
+print(PPmodelplot)
+```
+

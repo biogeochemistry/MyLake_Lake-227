@@ -12,8 +12,8 @@ population_size = 48;
 max_generations = 24;
 paralellize     = true; % Run many model evaluations in parallell (saves time if the computer has many cores).
 
-m_start = [1990, 1, 1];
-m_stop = [1990, 12, 31];
+m_start = [1975, 1, 1];
+m_stop = [1979, 12, 31];
 
 MyL_dates = datenum(m_start):datenum(m_stop);
 
@@ -54,14 +54,12 @@ do_MyLake_optimization(m_start, m_stop, K_sediments, K_lake, Data, ...
 %% Helper functions for project specific setup
 
 function Data = loadData(MyL_dates)
-    rawcsvdata = csvread('Postproc_code/L227/OutputForOptimization.csv', 1, 1);
-    rawdatadates = datenum(rawcsvdata(:,9:11));
+    rawcsvdata = csvread('Postproc_code/L227/OutputForOptimization_Phyto.csv', 1, 1);
+    rawdatadates = datenum(rawcsvdata(:,1:3));
     withinmodelrange = (rawdatadates >= MyL_dates(1)) & (rawdatadates <= MyL_dates(end));
-    rawdiazoPPdata = rawcsvdata(:,14);
-    rawdiazoPPdata(rawdiazoPPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
+    rawdiazoPPdata = rawcsvdata(:,5);
     Data.diazoPPintegratedepi = rawdiazoPPdata(withinmodelrange);
-    rawnondiazoPPdata = rawcsvdata(:,13);
-    rawnondiazoPPdata(rawnondiazoPPdata == 0) = NaN; %Unfortunately the readcsv function fills in 0s for missing fields. This fix only works if there are no legitimate 0s in the data.
+    rawnondiazoPPdata = rawcsvdata(:,4);
     Data.nondiazoPPintegratedepi = rawnondiazoPPdata(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
     Data.date_mask = getmask(dateswithinrange, MyL_dates); % Used later to match model data to observed data by correct date.
@@ -88,20 +86,21 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
     epidepth = floor(MyLake_results.basin1.MixStat(12,:)*2)/2;
     epidepth(isnan(epidepth)) = 10;
     epidepthposition = 2*epidepth; %MyLake computes for every 0.5 m, so adding a factor of 2
-
+    
     diazoPP = MyLake_results.basin1.concentrations.C;
     diazoPPintegratedepi = zeros(1,length(diazoPP));
     for (i=1:length(diazoPP))
         diazoPPintegratedepi(i) = mean(diazoPP(1:epidepthposition(i), i));
-    end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
+    end %returns integrated epilimnion diazoPP measurement for each day (variable epilimnion depth)
     ModelResult.diazoPPintegratedepi = transpose(diazoPPintegratedepi);
-   
-    nondidazoPP = MyLake_results.basin1.concentrations.Chl;
-    nondidazoPPintegratedepi = zeros(1,length(nondidazoPP));
-    for (i=1:length(nondidazoPP))
-        nondidazoPPintegratedepi(i) = mean(nondidazoPP(1:epidepthposition(i), i));
-    end %returns integrated epilimnion TPP measurement for each day (variable epilimnion depth)
-    ModelResult.nondidazoPPintegratedepi = transpose(nondidazoPPintegratedepi);
+    
+    nondiazoPP = MyLake_results.basin1.concentrations.Chl;
+    nondiazoPPintegratedepi = zeros(1,length(nondiazoPP));
+    for (i=1:length(nondiazoPP))
+        nondiazoPPintegratedepi(i) = mean(nondiazoPP(1:epidepthposition(i), i));
+    end %returns integrated epilimnion nondiazoPP measurement for each day (variable epilimnion depth)
+    ModelResult.nondiazoPPintegratedepi = transpose(nondiazoPPintegratedepi);  
+
 end
 
 % Error function. The error function takes a ModelResult
@@ -112,7 +111,7 @@ end
 function err = error_function_P(ModelResult, Data)
     
     MatchedModeldiazoPP = ModelResult.diazoPPintegratedepi(Data.date_mask);
-    MatchedModelnondidazoPP = ModelResult.nondidazoPPintegratedepi(Data.date_mask);
+    MatchedModelnondidazoPP = ModelResult.nondiazoPPintegratedepi(Data.date_mask);
     err = nansum (((MatchedModeldiazoPP - Data.diazoPPintegratedepi).^2) + ((MatchedModelnondidazoPP -  Data.nondiazoPPintegratedepi).^2));
 
 end
@@ -157,6 +156,7 @@ function err = MyLake_optimizer_single_run(m_start, m_stop, K_sediments, K_lake,
         end
     end
     
+    try    
         
     % Running the model
     ModelResult = modeleval(m_start, m_stop, K_sediments, K_lake);
@@ -164,6 +164,11 @@ function err = MyLake_optimizer_single_run(m_start, m_stop, K_sediments, K_lake,
     % Evaluating the error
     err = errfun(ModelResult, Data);
     
+    catch
+        
+    disp("model crash, recovering ...");
+    err = 9999999999;    % punished
+    end 
     
     % Debug output.
     nf = java.text.DecimalFormat;

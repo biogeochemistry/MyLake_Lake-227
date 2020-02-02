@@ -157,6 +157,7 @@ function err = MyLake_optimizer_single_run(m_start, m_stop, K_sediments, K_lake,
         end
     end
     
+    try
         
     % Running the model
     ModelResult = modeleval(m_start, m_stop, K_sediments, K_lake);
@@ -164,6 +165,11 @@ function err = MyLake_optimizer_single_run(m_start, m_stop, K_sediments, K_lake,
     % Evaluating the error
     err = errfun(ModelResult, Data);
     
+    catch
+        
+    disp("model crash, recovering ...");
+    err = 9999999999;    % punished
+    end 
     
     % Debug output.
     nf = java.text.DecimalFormat;

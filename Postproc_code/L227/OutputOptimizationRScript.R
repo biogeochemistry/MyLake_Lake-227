@@ -32,7 +32,19 @@ colnames(OutputForOptimization_Dates)[13] <- "phyto.date"
 OutputForOptimization_Dates$PropBiomass[OutputForOptimization_Dates$date < as.Date("1975-01-01")] <- 1
 
 OutputForOptimization_Dates <- OutputForOptimization_Dates %>%
-  mutate(diazoPP = Obs_PP * PropBiomass,
-         nondiazoPP = Obs_PP * (1-PropBiomass))
+  mutate(nondiazoPP = Obs_PP * PropBiomass,
+         diazoPP = Obs_PP * (1-PropBiomass)) %>%
+  select(-phyto.date)
+
+OutputForOptimization_Phyto <- OutputForOptimization_Dates %>%
+  select("date", "Year", "Month", "Day", "nondiazoPP", "diazoPP") %>%
+  na.omit() %>%
+  group_by(date) %>%
+  summarise(Year = mean(Year), 
+            Month = mean(Month), 
+            Day = mean(Day), 
+            nondiazoPP = mean(nondiazoPP), 
+            diazoPP = mean(diazoPP))
 
 write.csv(OutputForOptimization_Dates, file = "OutputForOptimization.csv", row.names = F, na = "")
+write.csv(OutputForOptimization_Phyto, file = "OutputForOptimization_Phyto.csv", row.names = F, na = "")
