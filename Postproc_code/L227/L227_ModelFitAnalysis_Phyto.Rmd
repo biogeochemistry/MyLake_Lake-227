@@ -43,7 +43,7 @@ phyto.out <- read.csv("Output_IntegratedEpi_Phyto.csv")
 phyto.obs$date <- as.Date(phyto.obs$date, "%Y-%m-%d")
 
 phyto.obs <- phyto.obs %>%
-  filter(date > as.Date("1989-12-31") & date < as.Date("1995-01-01"))
+  filter(date > as.Date("1974-12-31") & date < as.Date("1980-01-01"))
 
 # Output file
 colnames(phyto.out) <- c("Year", "Month", "Day", "diazoPP", "nondiazoPP")
@@ -51,7 +51,7 @@ phyto.out <- phyto.out %>%
   unite(date, Year, Month, Day, sep = '-')
 phyto.out$date <- as.Date(phyto.out$date, "%Y-%m-%d")
 
-
+phyto.match <- left_join(phyto.obs, phyto.out, by = "date")
 
 ```
 
@@ -71,5 +71,14 @@ PPmodelplot <- ggplot(phyto.out) +
   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), 
         legend.key.size = unit(0.1, "cm")) 
 print(PPmodelplot)
+
+PPfitplot <- ggplot(phyto.match) +
+  geom_point(aes(x = nondiazoPP.x, y = nondiazoPP.y), color = "#240c4cff") +
+  geom_point(aes(x = diazoPP.x, y = diazoPP.y), color = "#d14a42ff") +
+  ylab(expression(modeled ~ PP ~ (mu*g / L))) +
+  xlab(expression(observed ~ PP ~ (mu*g / L))) +
+  scale_colour_manual("", breaks = c("diazo", "nondiazo"), values = c("#d14a42ff",  "#240c4cff")) 
+print(PPfitplot)
+
 ```
 
