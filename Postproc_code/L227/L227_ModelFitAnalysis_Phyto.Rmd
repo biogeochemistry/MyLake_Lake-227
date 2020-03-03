@@ -11,6 +11,8 @@ getwd()
 
 library(tidyverse)
 library(lubridate)
+library(hydroGOF)
+
 
 theme_std <- function (base_size = 11, base_family = "") {
   theme_grey(base_size = base_size, base_family = base_family) %+replace% 
@@ -29,21 +31,24 @@ theme_std <- function (base_size = 11, base_family = "") {
           plot.margin=unit(c(10,10,10,10),"pt"))}
 theme_set(theme_std())
 
+
+
+```
+
+## Wrangling
+```{r}
+
 # Observation file
 phyto.obs <- read.csv("OutputForOptimization_Phyto.csv")
 
 # Output file
 phyto.out <- read.csv("Output_IntegratedEpi_Phyto.csv")
 
-```
-
-## Wrangling
-```{r}
 # Observation file
 phyto.obs$date <- as.Date(phyto.obs$date, "%Y-%m-%d")
 
 phyto.obs <- phyto.obs %>%
-  filter(date > as.Date("1974-12-31") & date < as.Date("1980-01-01"))
+  filter(date > as.Date("1969-06-26"))
 
 # Output file
 colnames(phyto.out) <- c("Year", "Month", "Day", "diazoPP", "nondiazoPP")
@@ -66,19 +71,73 @@ PPmodelplot <- ggplot(phyto.out) +
   geom_point(data = phyto.obs, aes(x = date, y = nondiazoPP, color = "obs.nondiazo"), pch = 19, size = 0.75) +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
+  ylim(0, 50) +
   scale_colour_manual("", breaks = c("out.diazo", "out.nondiazo", "obs.diazo", "obs.nondiazo"), 
                       values = c("#d14a42ff",  "#240c4cff", "#d14a42ff",  "#240c4cff")) +
-  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), 
+  theme(legend.position = "top", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), 
         legend.key.size = unit(0.1, "cm")) 
 print(PPmodelplot)
 
 PPfitplot <- ggplot(phyto.match) +
   geom_point(aes(x = nondiazoPP.x, y = nondiazoPP.y), color = "#240c4cff") +
   geom_point(aes(x = diazoPP.x, y = diazoPP.y), color = "#d14a42ff") +
+  geom_abline(slope = 1, intercept = 0) +
   ylab(expression(modeled ~ PP ~ (mu*g / L))) +
   xlab(expression(observed ~ PP ~ (mu*g / L))) +
   scale_colour_manual("", breaks = c("diazo", "nondiazo"), values = c("#d14a42ff",  "#240c4cff")) 
 print(PPfitplot)
+
+```
+
+## Fit tests
+```{r}
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x ~ phyto.match$nondiazoPP.y)
+summary(nondiazoPP.regression)$adj.r.squared
+mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y, phyto.match$nondiazoPP.x); NashSutcliffe.nondiazoPP
+
+diazoPP.regression <- lm(phyto.match$diazoPP.x ~ phyto.match$diazoPP.y)
+summary(diazoPP.regression)$adj.r.squared
+mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y, phyto.match$diazoPP.x); NashSutcliffe.diazoPP
+
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x[phyto.match$Year < 1975] ~ phyto.match$nondiazoPP.y[phyto.match$Year < 1975])
+summary(nondiazoPP.regression)$adj.r.squared
+mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x[phyto.match$Year < 1975]))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y[phyto.match$Year < 1975], phyto.match$nondiazoPP.x[phyto.match$Year < 1975]); NashSutcliffe.nondiazoPP
+
+diazoPP.regression <- lm(phyto.match$diazoPP.x[phyto.match$Year < 1975] ~ phyto.match$diazoPP.y[phyto.match$Year < 1975])
+summary(diazoPP.regression)$adj.r.squared
+mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year < 1975]))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year < 1975], phyto.match$diazoPP.x[phyto.match$Year < 1975]); NashSutcliffe.diazoPP
+
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990] ~ phyto.match$nondiazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990])
+summary(nondiazoPP.regression)$adj.r.squared
+mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990], phyto.match$nondiazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]); NashSutcliffe.nondiazoPP
+
+diazoPP.regression <- lm(phyto.match$diazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990] ~ phyto.match$diazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990])
+summary(diazoPP.regression)$adj.r.squared
+mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990], phyto.match$diazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]); NashSutcliffe.diazoPP
+
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x[phyto.match$Year > 1989] ~ phyto.match$nondiazoPP.y[phyto.match$Year > 1989])
+summary(nondiazoPP.regression)$adj.r.squared
+mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x[phyto.match$Year > 1989]))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y[phyto.match$Year > 1989], phyto.match$nondiazoPP.x[phyto.match$Year > 1989]); NashSutcliffe.nondiazoPP
+
+diazoPP.regression <- lm(phyto.match$diazoPP.x[phyto.match$Year > 1989] ~ phyto.match$diazoPP.y[phyto.match$Year > 1989])
+summary(diazoPP.regression)$adj.r.squared
+mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year > 1989]))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year > 1989], phyto.match$diazoPP.x[phyto.match$Year > 1989]); NashSutcliffe.diazoPP
 
 ```
 
