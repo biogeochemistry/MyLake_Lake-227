@@ -1,11 +1,11 @@
 #### Information ----
 
 #### Setup ----
+library(plyr)
 library(tidyverse)
 library(knitr)
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 library(magrittr)
-#library(plyr)
 library(hydroGOF)
 library(gridExtra)
 library(zoo)
@@ -789,9 +789,9 @@ colnames(obsinit) <- c("org.date","Year","Month","Day", "obs.TP","obs.chla","obs
 obsinit$obs.DOC <- obsinit$obs.DOC * 12 # concentrations are in umol/L and need to be in ug/L)
 obs_temp <- read.csv("Observed_Temperature.csv")
 obs_O2 <- read.csv("Observed_Oxygen.csv")
-mod <- read.csv("Output_IntegratedEpi.csv", header = F)
+mod <- read.csv("Output_IntegratedEpi_NandP.csv", header = F)
 colnames(mod) <- c("Year", "Month", "Day", "mod.TDP", "mod.PP", "mod.DOC")
-mod2 <- read.csv("Output_Depths.csv", header = F)
+mod2 <- read.csv("Output_Depths_NandP.csv", header = F)
 colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy6m", "mod.Oxy8m", "mod.Oxy10m", "mod.Fe4m", "mod.Fe6m", "mod.Fe8m", "mod.Fe10m")
 obs.ice <- read.csv("Lake_239_ice-on_ice-off.csv", header = T)
 out.ice <- read.csv("Output_Ice.csv", header = F)
@@ -1965,10 +1965,10 @@ TargetPlot2 <-
   ggplot(TargetDiagramData2, aes(x = Normalized.Unbiased.RMSD, y = Normalized.Bias, shape = Variable, color = Period, fill = Period)) + 
   geom_vline(xintercept = 0, lty = 5, size = 0.5) +
   geom_hline(yintercept = 0, lty = 5, size = 0.5) +
-  annotate("path", x=0+10*cos(seq(0,2*pi,length.out=100)), y=0+0.5*sin(seq(0,2*pi,length.out=100))) +
+  annotate("path", x=0+10*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   geom_point(size = 2.5) + 
-  xlim(-23, 23) +
-  ylim(-1, 1) +
+  #xlim(-23, 23) +
+  #ylim(-1, 1) +
   #scale_y_continuous(limits = c(-10, 10), breaks = c(-2, -1, 0, 1, 2)) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
   scale_shape_manual(values = c(22, 21, 24, 15, 19, 17)) + 

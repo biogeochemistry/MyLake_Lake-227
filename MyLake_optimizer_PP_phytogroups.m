@@ -57,9 +57,11 @@ function Data = loadData(MyL_dates)
     rawcsvdata = csvread('Postproc_code/L227/OutputForOptimization_Phyto.csv', 1, 1);
     rawdatadates = datenum(rawcsvdata(:,1:3));
     withinmodelrange = (rawdatadates >= MyL_dates(1)) & (rawdatadates <= MyL_dates(end));
-    rawdiazoPPdata = rawcsvdata(:,5);
+    rawTDPdata = rawcsvdata(:,4);
+    Data.TDPintegratedepi = rawTDPdata(withinmodelrange);
+    rawdiazoPPdata = rawcsvdata(:,6);
     Data.diazoPPintegratedepi = rawdiazoPPdata(withinmodelrange);
-    rawnondiazoPPdata = rawcsvdata(:,4);
+    rawnondiazoPPdata = rawcsvdata(:,5);
     Data.nondiazoPPintegratedepi = rawnondiazoPPdata(withinmodelrange);
     dateswithinrange = rawdatadates(withinmodelrange);
     Data.date_mask = getmask(dateswithinrange, MyL_dates); % Used later to match model data to observed data by correct date.
@@ -100,6 +102,13 @@ function ModelResult = MyLake_227_model_evaluation(m_start, m_stop, sediment_par
         nondiazoPPintegratedepi(i) = mean(nondiazoPP(1:epidepthposition(i), i));
     end %returns integrated epilimnion nondiazoPP measurement for each day (variable epilimnion depth)
     ModelResult.nondiazoPPintegratedepi = transpose(nondiazoPPintegratedepi);  
+    
+    TDP = MyLake_results.basin1.concentrations.P;
+    TDPintegratedepi = zeros(1,length(TDP));
+    for (i=1:length(TDP))
+        TDPintegratedepi(i) = mean(TDP(1:epidepthposition(i), i));
+    end %returns integrated epilimnion TDP measurement for each day (variable epilimnion depth)
+    ModelResult.TDPintegratedepi = transpose(TDPintegratedepi);
 
 end
 
@@ -112,7 +121,8 @@ function err = error_function_P(ModelResult, Data)
     
     MatchedModeldiazoPP = ModelResult.diazoPPintegratedepi(Data.date_mask);
     MatchedModelnondidazoPP = ModelResult.nondiazoPPintegratedepi(Data.date_mask);
-    err = nansum (((MatchedModeldiazoPP - Data.diazoPPintegratedepi).^2) + ((MatchedModelnondidazoPP -  Data.nondiazoPPintegratedepi).^2));
+    MatchedModelTDP = ModelResult.TDPintegratedepi(Data.date_mask);
+    err = nansum (((MatchedModeldiazoPP - Data.diazoPPintegratedepi).^2) + ((MatchedModelnondidazoPP -  Data.nondiazoPPintegratedepi).^2) + ((MatchedModelTDP - Data.TDPintegratedepi).^2));
 
 end
 

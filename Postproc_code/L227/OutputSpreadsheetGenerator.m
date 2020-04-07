@@ -44,7 +44,7 @@ DOCintegratedepi = zeros(1,length(DOC));
 DOCintegratedepi = transpose(DOCintegratedepi);
 
 
-filename='Postproc_code/L227/Output_IntegratedEpi_Period3_tempdetrended.csv';
+filename='Postproc_code/L227/Output_IntegratedEpi_NandP.csv';
 M = [dates(:,1:3), TDPintegratedepi, TPPintegratedepi, DOCintegratedepi];
 csvwrite(filename,M);
 
@@ -65,7 +65,7 @@ Fe6m = transpose(TFe(12,:)/1000);
 Fe8m = transpose(TFe(16,:)/1000);
 Fe10m = transpose(TFe(20,:)/1000);
 
-filename='Postproc_code/L227/Output_Depths_Period3_tempdetrended.csv';
+filename='Postproc_code/L227/Output_Depths_NandP.csv';
 M1 = [dates(:,1:3), Temp1m, Temp4m, Temp9m, Oxy2m, Oxy3m, Oxy4m, Oxy6m, Oxy8m, Oxy10m, Fe4m, Fe6m, Fe8m, Fe10m];
 csvwrite(filename,M1);
 

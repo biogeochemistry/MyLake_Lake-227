@@ -37,12 +37,13 @@ OutputForOptimization_Dates <- OutputForOptimization_Dates %>%
   select(-phyto.date)
 
 OutputForOptimization_Phyto <- OutputForOptimization_Dates %>%
-  select("date", "Year", "Month", "Day", "nondiazoPP", "diazoPP") %>%
+  select("date", "Year", "Month", "Day", "Obs_TDP", "nondiazoPP", "diazoPP") %>%
   na.omit() %>%
   group_by(date) %>%
-  summarise(Year = mean(Year), 
+  dplyr::summarise(Year = mean(Year), 
             Month = mean(Month), 
             Day = mean(Day), 
+            Obs_TDP = mean(Obs_TDP),
             nondiazoPP = mean(nondiazoPP), 
             diazoPP = mean(diazoPP))
 
