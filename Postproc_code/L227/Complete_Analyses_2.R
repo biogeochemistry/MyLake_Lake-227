@@ -795,15 +795,15 @@ mod2 <- read.csv("Output_Depths_NandP.csv", header = F)
 colnames(mod2) <- c("Year", "Month", "Day", "mod.Temp1m", "mod.Temp4m", "mod.Temp9m", "mod.Oxy2m", "mod.Oxy3m", "mod.Oxy4m", "mod.Oxy6m", "mod.Oxy8m", "mod.Oxy10m", "mod.Fe4m", "mod.Fe6m", "mod.Fe8m", "mod.Fe10m")
 obs.ice <- read.csv("Lake_239_ice-on_ice-off.csv", header = T)
 out.ice <- read.csv("Output_Ice.csv", header = F)
-mod.nofert <- read.csv("Output_IntegratedEpi_nofertilization.csv", header = F)
+mod.nofert <- read.csv("Output_IntegratedEpi_NandP_nofertilization.csv", header = F)
 colnames(mod.nofert) <- c("Year", "Month", "Day", "mod.TDP.nofert", "mod.PP.nofert", "mod.DOC.nofert")
-mod2.nofert <- read.csv("Output_Depths_nofertilization.csv", header = F)
+mod2.nofert <- read.csv("Output_Depths_NandP_nofertilization.csv", header = F)
 colnames(mod2.nofert) <- c("Year", "Month", "Day", "mod.Temp1m.nofert", "mod.Temp4m.nofert", "mod.Temp9m.nofert", "mod.Oxy2m.nofert", "mod.Oxy3m.nofert", "mod.Oxy4m.nofert", "mod.Oxy6m.nofert", "mod.Oxy8m.nofert", "mod.Oxy10m.nofert", "mod.Fe4m.nofert", "mod.Fe6m.nofert", "mod.Fe8m.nofert", "mod.Fe10m.nofert")
 out.ice.nofert <- read.csv("Output_Ice_Period1.csv", header = F)
 
-mod.noclimate <- read.csv("Output_IntegratedEpi_Period3_tempdetrended.csv", header = F)
+mod.noclimate <- read.csv("Output_IntegratedEpi_NandP_tempdetrended.csv", header = F)
 colnames(mod.noclimate) <- c("Year", "Month", "Day", "mod.TDP.noclimate", "mod.PP.noclimate", "mod.DOC.noclimate")
-mod2.noclimate <- read.csv("Output_Depths_Period3_tempdetrended.csv", header = F)
+mod2.noclimate <- read.csv("Output_Depths_NandP_tempdetrended.csv", header = F)
 colnames(mod2.noclimate) <- c("Year", "Month", "Day", "mod.Temp1m.noclimate", "mod.Temp4m.noclimate", "mod.Temp9m.noclimate", "mod.Oxy2m.noclimate", "mod.Oxy3m.noclimate", "mod.Oxy4m.noclimate", "mod.Oxy6m.noclimate", "mod.Oxy8m.noclimate", "mod.Oxy10m.noclimate", "mod.Fe4m.noclimate", "mod.Fe6m.noclimate", "mod.Fe8m.noclimate", "mod.Fe10m.noclimate")
 out.ice.noclimate <- read.csv("Output_Ice_Period3_tempdetrended.csv", header = F)
 
@@ -918,6 +918,30 @@ modeltemp.comparison <- modeltemp.comparison %>%
          Year = as.numeric(format(modeltemp.comparison$date, "%Y")), 
          Week = as.numeric(format(modeltemp.comparison$date, "%V")), 
          JulianDay = as.numeric(format(modeltemp.comparison$date, "%j")))
+
+# Add phytoplankton groups
+
+# Observation file
+phyto.obs <- read.csv("OutputForOptimization_Phyto.csv")
+
+# Output file
+phyto.out <- read.csv("Output_IntegratedEpi_Phyto.csv")
+
+# Observation file
+phyto.obs$date <- as.Date(phyto.obs$date, "%Y-%m-%d")
+
+phyto.obs <- phyto.obs %>%
+  filter(date > as.Date("1969-06-26"))
+
+# Output file
+colnames(phyto.out) <- c("Year", "Month", "Day", "diazoPP", "nondiazoPP")
+phyto.out <- phyto.out %>%
+  unite(date, Year, Month, Day, sep = '-')
+phyto.out$date <- as.Date(phyto.out$date, "%Y-%m-%d")
+
+phyto.match <- left_join(phyto.obs, phyto.out, by = "date")
+phyto.match <- filter(phyto.match, Year != 1969)
+
 
 #### Ice Fit metrics ====
 icebreakregression <- lm (match.ice$obs.daybreak ~ match.ice$out.daybreak)
@@ -1300,8 +1324,8 @@ PPresidualsplot <- ggplot(PPresiduals) +
   theme(legend.position = "none", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"))
 print(PPresidualsplot)
 
-mod.bestyear <- filter(mod, date > "1997-12-31" & date < "2003-01-01")
-mod.match.bestyear <- filter(mod.match, Year == 1998 | Year == 1999 | Year == 2000 | Year == 2001 | Year == 2002)
+mod.bestyear <- filter(mod, date > "2003-12-31" & date < "2009-01-01")
+mod.match.bestyear <- filter(mod.match, Year == 2004 | Year == 2005 | Year == 2006 | Year == 2007 | Year == 2008)
 
   PPmodelplot.bestyear <- ggplot() +
     geom_line(data = mod.bestyear, aes(x = date, y = mod.PP, col = "PP"), size = 0.25) +
@@ -1318,8 +1342,11 @@ print(PPmodelplot.bestyear)
 #ggsave("PPbestyear.pdf", PPmodelplot.bestyear, dpi = 300, width = 4.5, height = 3.25, units = "in")
 #### PP maximum concentration ----
 
+modelPP.comparison.Ponly <- modelPP.comparison %>%
+  filter(date > "1989-12-31")
+
 MaxModPP <- 
-  modelPP.comparison %>%
+  modelPP.comparison.Ponly %>%
   select(date, mod.PP, Month, Day, Year) %>%
   group_by(Year) %>%
   filter(mod.PP == max(mod.PP))
@@ -1327,7 +1354,7 @@ summary(MaxModPP$mod.PP)
 sd(MaxModPP$mod.PP)
 
 MaxModPP.nofert <- 
-  modelPP.comparison %>%
+  modelPP.comparison.Ponly %>%
   select(date, mod.PP.nofert, Month, Day, Year) %>%
   group_by(Year) %>%
   filter(mod.PP.nofert == max(mod.PP.nofert))
@@ -1335,7 +1362,7 @@ summary(MaxModPP.nofert$mod.PP.nofert)
 sd(MaxModPP.nofert$mod.PP.nofert)
 
 MaxModPP.noclimate <- 
-  modelPP.comparison %>%
+  modelPP.comparison.Ponly %>%
   select(date, mod.PP.noclimate, Month, Day, Year) %>%
   group_by(Year) %>%
   filter(mod.PP.noclimate == max(mod.PP.noclimate))
@@ -1350,6 +1377,80 @@ MaxPP$Scenario <- as.factor(MaxPP$Scenario)
 kruskal.test(MaxPP$MaxPP, MaxPP$Scenario)
 dunn.test(MaxPP$MaxPP, MaxPP$Scenario)
 
+#### PP for phytoplankton groups Fit Metrics ----
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x ~ phyto.match$nondiazoPP.y)
+summary(nondiazoPP.regression)$adj.r.squared
+mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y, phyto.match$nondiazoPP.x); NashSutcliffe.nondiazoPP
+
+diazoPP.regression <- lm(phyto.match$diazoPP.x ~ phyto.match$diazoPP.y)
+summary(diazoPP.regression)$adj.r.squared
+mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y, phyto.match$diazoPP.x); NashSutcliffe.diazoPP
+
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x[phyto.match$Year < 1975] ~ phyto.match$nondiazoPP.y[phyto.match$Year < 1975])
+summary(nondiazoPP.regression)$adj.r.squared
+mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x[phyto.match$Year < 1975]))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y[phyto.match$Year < 1975], phyto.match$nondiazoPP.x[phyto.match$Year < 1975]); NashSutcliffe.nondiazoPP
+
+diazoPP.regression <- lm(phyto.match$diazoPP.x[phyto.match$Year < 1975] ~ phyto.match$diazoPP.y[phyto.match$Year < 1975])
+summary(diazoPP.regression)$adj.r.squared
+mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year < 1975]))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year < 1975], phyto.match$diazoPP.x[phyto.match$Year < 1975]); NashSutcliffe.diazoPP
+
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990] ~ phyto.match$nondiazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990])
+summary(nondiazoPP.regression)$adj.r.squared
+mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990], phyto.match$nondiazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]); NashSutcliffe.nondiazoPP
+
+diazoPP.regression <- lm(phyto.match$diazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990] ~ phyto.match$diazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990])
+summary(diazoPP.regression)$adj.r.squared
+mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990], phyto.match$diazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]); NashSutcliffe.diazoPP
+
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x[phyto.match$Year > 1989] ~ phyto.match$nondiazoPP.y[phyto.match$Year > 1989])
+summary(nondiazoPP.regression)$adj.r.squared
+mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x[phyto.match$Year > 1989]))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y[phyto.match$Year > 1989], phyto.match$nondiazoPP.x[phyto.match$Year > 1989]); NashSutcliffe.nondiazoPP
+
+diazoPP.regression <- lm(phyto.match$diazoPP.x[phyto.match$Year > 1989] ~ phyto.match$diazoPP.y[phyto.match$Year > 1989])
+summary(diazoPP.regression)$adj.r.squared
+mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year > 1989]))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year > 1989], phyto.match$diazoPP.x[phyto.match$Year > 1989]); NashSutcliffe.diazoPP
+
+#### PP for phytoplankton groups plots ----
+PPmodelplot <- ggplot(phyto.out) +
+  #geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+  #geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+  geom_line(data = phyto.out, aes(x = date, y = diazoPP, color = "out.diazo"), size = 0.5) +
+  geom_line(data = phyto.out, aes(x = date, y = nondiazoPP, color = "out.nondiazo"), size = 0.5) +
+  geom_point(data = phyto.obs, aes(x = date, y = diazoPP, color = "obs.diazo"), pch = 19, size = 0.75) +
+  geom_point(data = phyto.obs, aes(x = date, y = nondiazoPP, color = "obs.nondiazo"), pch = 19, size = 0.75) +
+  ylab(expression(PP ~ (mu*g / L))) +
+  xlab(" ") +
+  ylim(0, 50) +
+  scale_colour_manual("", breaks = c("out.diazo", "out.nondiazo", "obs.diazo", "obs.nondiazo"), 
+                      values = c("#d14a42ff",  "#240c4cff", "#d14a42ff",  "#240c4cff")) +
+  theme(legend.position = "top", plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), 
+        legend.key.size = unit(0.1, "cm")) 
+print(PPmodelplot)
+
+PPfitplot <- ggplot(phyto.match) +
+  geom_point(aes(x = nondiazoPP.x, y = nondiazoPP.y), color = "#240c4cff") +
+  geom_point(aes(x = diazoPP.x, y = diazoPP.y), color = "#d14a42ff") +
+  geom_abline(slope = 1, intercept = 0) +
+  ylab(expression(modeled ~ PP ~ (mu*g / L))) +
+  xlab(expression(observed ~ PP ~ (mu*g / L))) +
+  scale_colour_manual("", breaks = c("diazo", "nondiazo"), values = c("#d14a42ff",  "#240c4cff")) 
+print(PPfitplot)
 #### TDP Fit Metrics ====
 TDP.regression.period1 <- lm(mod.match$obs.TDP[mod.match$Year < 1975] ~ mod.match$mod.TDP[mod.match$Year < 1975])
 summary(TDP.regression.period1)$adj.r.squared
@@ -1900,49 +2001,132 @@ unbiased.RMSD.PP.period3 <- sqrt(mean((model.residuals.PP.period3 - obs.residual
 normalized.bias.PP.period3 <- (model.mean.PP.period3 - obs.mean.PP.period3)/obs.sd.PP.period3
 normalized.unbiased.RMSD.PP.period3 <- ((model.sd.PP.period3 - obs.sd.PP.period3)/obs.sd.PP.period3) * unbiased.RMSD.PP.period3
 
+#### Diazo PP integrated epi ####
+diazoPP.match <- select(phyto.match, diazoPP.x, diazoPP.y, Year)
+diazoPP.match <- na.omit(diazoPP.match)
+
+model.mean.diazoPP.period1 <- mean(diazoPP.match$diazoPP.y[diazoPP.match$Year < 1975])
+obs.mean.diazoPP.period1 <- mean(diazoPP.match$diazoPP.x[diazoPP.match$Year < 1975])
+model.sd.diazoPP.period1 <- sd(diazoPP.match$diazoPP.y[diazoPP.match$Year < 1975])
+obs.sd.diazoPP.period1 <- sd(diazoPP.match$diazoPP.x[diazoPP.match$Year < 1975])
+model.residuals.diazoPP.period1 <- diazoPP.match$diazoPP.y[diazoPP.match$Year < 1975] - model.mean.diazoPP.period1
+obs.residuals.diazoPP.period1 <- diazoPP.match$diazoPP.x[diazoPP.match$Year < 1975] - obs.mean.diazoPP.period1
+unbiased.RMSD.diazoPP.period1 <- sqrt(mean((model.residuals.diazoPP.period1 - obs.residuals.diazoPP.period1)^2))
+normalized.bias.diazoPP.period1 <- (model.mean.diazoPP.period1 - obs.mean.diazoPP.period1)/obs.sd.diazoPP.period1
+normalized.unbiased.RMSD.diazoPP.period1 <- ((model.sd.diazoPP.period1 - obs.sd.diazoPP.period1)/obs.sd.diazoPP.period1) * unbiased.RMSD.diazoPP.period1
+
+model.mean.diazoPP.period2 <- mean(diazoPP.match$diazoPP.y[diazoPP.match$Year > 1974 & diazoPP.match$Year < 1990])
+obs.mean.diazoPP.period2 <- mean(diazoPP.match$diazoPP.x[diazoPP.match$Year > 1974 & diazoPP.match$Year < 1990])
+model.sd.diazoPP.period2 <- sd(diazoPP.match$diazoPP.y[diazoPP.match$Year > 1974 & diazoPP.match$Year < 1990])
+obs.sd.diazoPP.period2 <- sd(diazoPP.match$diazoPP.x[diazoPP.match$Year > 1974 & diazoPP.match$Year < 1990])
+model.residuals.diazoPP.period2 <- diazoPP.match$diazoPP.y[diazoPP.match$Year > 1974 & diazoPP.match$Year < 1990] - model.mean.diazoPP.period2
+obs.residuals.diazoPP.period2 <- diazoPP.match$diazoPP.x[diazoPP.match$Year > 1974 & diazoPP.match$Year < 1990] - obs.mean.diazoPP.period2
+unbiased.RMSD.diazoPP.period2 <- sqrt(mean((model.residuals.diazoPP.period2 - obs.residuals.diazoPP.period2)^2))
+normalized.bias.diazoPP.period2 <- (model.mean.diazoPP.period2 - obs.mean.diazoPP.period2)/obs.sd.diazoPP.period2
+normalized.unbiased.RMSD.diazoPP.period2 <- ((model.sd.diazoPP.period2 - obs.sd.diazoPP.period2)/obs.sd.diazoPP.period2) * unbiased.RMSD.diazoPP.period2
+
+model.mean.diazoPP.period3 <- mean(diazoPP.match$diazoPP.y[diazoPP.match$Year > 1989])
+obs.mean.diazoPP.period3 <- mean(diazoPP.match$diazoPP.x[diazoPP.match$Year > 1989])
+model.sd.diazoPP.period3 <- sd(diazoPP.match$diazoPP.y[diazoPP.match$Year > 1989])
+obs.sd.diazoPP.period3 <- sd(diazoPP.match$diazoPP.x[diazoPP.match$Year > 1989])
+model.residuals.diazoPP.period3 <- diazoPP.match$diazoPP.y[diazoPP.match$Year > 1989] - model.mean.diazoPP.period3
+obs.residuals.diazoPP.period3 <- diazoPP.match$diazoPP.x[diazoPP.match$Year > 1989] - obs.mean.diazoPP.period3
+unbiased.RMSD.diazoPP.period3 <- sqrt(mean((model.residuals.diazoPP.period3 - obs.residuals.diazoPP.period3)^2))
+normalized.bias.diazoPP.period3 <- (model.mean.diazoPP.period3 - obs.mean.diazoPP.period3)/obs.sd.diazoPP.period3
+normalized.unbiased.RMSD.diazoPP.period3 <- ((model.sd.diazoPP.period3 - obs.sd.diazoPP.period3)/obs.sd.diazoPP.period3) * unbiased.RMSD.diazoPP.period3
+
+#### Non-diazo PP integrated epi ####
+nondiazoPP.match <- select(phyto.match, nondiazoPP.x, nondiazoPP.y, Year)
+nondiazoPP.match <- na.omit(nondiazoPP.match)
+
+model.mean.nondiazoPP.period1 <- mean(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year < 1975])
+obs.mean.nondiazoPP.period1 <- mean(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year < 1975])
+model.sd.nondiazoPP.period1 <- sd(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year < 1975])
+obs.sd.nondiazoPP.period1 <- sd(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year < 1975])
+model.residuals.nondiazoPP.period1 <- nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year < 1975] - model.mean.nondiazoPP.period1
+obs.residuals.nondiazoPP.period1 <- nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year < 1975] - obs.mean.nondiazoPP.period1
+unbiased.RMSD.nondiazoPP.period1 <- sqrt(mean((model.residuals.nondiazoPP.period1 - obs.residuals.nondiazoPP.period1)^2))
+normalized.bias.nondiazoPP.period1 <- (model.mean.nondiazoPP.period1 - obs.mean.nondiazoPP.period1)/obs.sd.nondiazoPP.period1
+normalized.unbiased.RMSD.nondiazoPP.period1 <- ((model.sd.nondiazoPP.period1 - obs.sd.nondiazoPP.period1)/obs.sd.nondiazoPP.period1) * unbiased.RMSD.nondiazoPP.period1
+
+model.mean.nondiazoPP.period2 <- mean(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1974 & nondiazoPP.match$Year < 1990])
+obs.mean.nondiazoPP.period2 <- mean(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1974 & nondiazoPP.match$Year < 1990])
+model.sd.nondiazoPP.period2 <- sd(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1974 & nondiazoPP.match$Year < 1990])
+obs.sd.nondiazoPP.period2 <- sd(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1974 & nondiazoPP.match$Year < 1990])
+model.residuals.nondiazoPP.period2 <- nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1974 & nondiazoPP.match$Year < 1990] - model.mean.nondiazoPP.period2
+obs.residuals.nondiazoPP.period2 <- nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1974 & nondiazoPP.match$Year < 1990] - obs.mean.nondiazoPP.period2
+unbiased.RMSD.nondiazoPP.period2 <- sqrt(mean((model.residuals.nondiazoPP.period2 - obs.residuals.nondiazoPP.period2)^2))
+normalized.bias.nondiazoPP.period2 <- (model.mean.nondiazoPP.period2 - obs.mean.nondiazoPP.period2)/obs.sd.nondiazoPP.period2
+normalized.unbiased.RMSD.nondiazoPP.period2 <- ((model.sd.nondiazoPP.period2 - obs.sd.nondiazoPP.period2)/obs.sd.nondiazoPP.period2) * unbiased.RMSD.nondiazoPP.period2
+
+model.mean.nondiazoPP.period3 <- mean(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1989])
+obs.mean.nondiazoPP.period3 <- mean(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1989])
+model.sd.nondiazoPP.period3 <- sd(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1989])
+obs.sd.nondiazoPP.period3 <- sd(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1989])
+model.residuals.nondiazoPP.period3 <- nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1989] - model.mean.nondiazoPP.period3
+obs.residuals.nondiazoPP.period3 <- nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1989] - obs.mean.nondiazoPP.period3
+unbiased.RMSD.nondiazoPP.period3 <- sqrt(mean((model.residuals.nondiazoPP.period3 - obs.residuals.nondiazoPP.period3)^2))
+normalized.bias.nondiazoPP.period3 <- (model.mean.nondiazoPP.period3 - obs.mean.nondiazoPP.period3)/obs.sd.nondiazoPP.period3
+normalized.unbiased.RMSD.nondiazoPP.period3 <- ((model.sd.nondiazoPP.period3 - obs.sd.nondiazoPP.period3)/obs.sd.nondiazoPP.period3) * unbiased.RMSD.nondiazoPP.period3
+
 #### Combined dataframe ####
-TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP",
-                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP",
-                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP"), 
-                                Period = c("High N:P","High N:P", "High N:P", "High N:P", "High N:P", "High N:P", "High N:P", 
-                                           "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",
-                                           "P only", "P only", "P only", "P only", "P only", "P only", "P only"), 
+TargetDiagramData <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP", "Diazotroph PP", "Non-diazotroph PP",
+                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP", "Diazotroph PP", "Non-diazotroph PP",
+                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP", "Diazotroph PP", "Non-diazotroph PP"), 
+                                Period = c("High N:P","High N:P", "High N:P", "High N:P", "High N:P", "High N:P", "High N:P", "High N:P", "High N:P",
+                                           "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",
+                                           "P only", "P only", "P only", "P only", "P only", "P only", "P only", "P only", "P only"), 
                                 Normalized.Bias = c(normalized.bias.Temp1m.period1, normalized.bias.Temp4m.period1, normalized.bias.Temp9m.period1, 
                                                     normalized.bias.O24m.period1, normalized.bias.DOC.period1, normalized.bias.TDP.period1, normalized.bias.PP.period1,
+                                                    normalized.bias.diazoPP.period1, normalized.bias.nondiazoPP.period1,
                                                     normalized.bias.Temp1m.period2, normalized.bias.Temp4m.period2, normalized.bias.Temp9m.period2, 
                                                     normalized.bias.O24m.period2, normalized.bias.DOC.period2, normalized.bias.TDP.period2, normalized.bias.PP.period2,
+                                                    normalized.bias.diazoPP.period2, normalized.bias.nondiazoPP.period2,
                                                     normalized.bias.Temp1m.period3, normalized.bias.Temp4m.period3, normalized.bias.Temp9m.period3, 
-                                                    normalized.bias.O24m.period3, normalized.bias.DOC.period3, normalized.bias.TDP.period3, normalized.bias.PP.period3), 
+                                                    normalized.bias.O24m.period3, normalized.bias.DOC.period3, normalized.bias.TDP.period3, normalized.bias.PP.period3, 
+                                                    normalized.bias.diazoPP.period3, normalized.bias.nondiazoPP.period3), 
                                 Normalized.Unbiased.RMSD = c(normalized.unbiased.RMSD.Temp1m.period1, normalized.unbiased.RMSD.Temp4m.period1, normalized.unbiased.RMSD.Temp9m.period1,
-                                                             normalized.unbiased.RMSD.O24m.period1, normalized.unbiased.RMSD.DOC.period1, normalized.unbiased.RMSD.TDP.period1, normalized.unbiased.RMSD.PP.period1,
+                                                             normalized.unbiased.RMSD.O24m.period1, normalized.unbiased.RMSD.DOC.period1, normalized.unbiased.RMSD.TDP.period1, 
+                                                             normalized.unbiased.RMSD.PP.period1, normalized.unbiased.RMSD.diazoPP.period1, normalized.unbiased.RMSD.nondiazoPP.period1,
                                                              normalized.unbiased.RMSD.Temp1m.period2, normalized.unbiased.RMSD.Temp4m.period2, normalized.unbiased.RMSD.Temp9m.period2,
-                                                             normalized.unbiased.RMSD.O24m.period2, normalized.unbiased.RMSD.DOC.period2, normalized.unbiased.RMSD.TDP.period2, normalized.unbiased.RMSD.PP.period2,
+                                                             normalized.unbiased.RMSD.O24m.period2, normalized.unbiased.RMSD.DOC.period2, normalized.unbiased.RMSD.TDP.period2, 
+                                                             normalized.unbiased.RMSD.PP.period2, normalized.unbiased.RMSD.diazoPP.period2, normalized.unbiased.RMSD.nondiazoPP.period2,
                                                              normalized.unbiased.RMSD.Temp1m.period3, normalized.unbiased.RMSD.Temp4m.period3, normalized.unbiased.RMSD.Temp9m.period3,
-                                                             normalized.unbiased.RMSD.O24m.period3, normalized.unbiased.RMSD.DOC.period3, normalized.unbiased.RMSD.TDP.period3, normalized.unbiased.RMSD.PP.period3)) 
+                                                             normalized.unbiased.RMSD.O24m.period3, normalized.unbiased.RMSD.DOC.period3, normalized.unbiased.RMSD.TDP.period3, 
+                                                             normalized.unbiased.RMSD.PP.period3, normalized.unbiased.RMSD.diazoPP.period3, normalized.unbiased.RMSD.nondiazoPP.period3)) 
 
-TargetDiagramData$Variable <- factor(TargetDiagramData$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", "PP"))
+TargetDiagramData$Variable <- factor(TargetDiagramData$Variable, 
+                                     levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "DOC", "TDP", 
+                                                "PP", "Diazotroph PP", "Non-diazotroph PP"))
 
-TargetDiagramData2 <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m","TDP", "PP",
-                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m","TDP", "PP",
-                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m","TDP", "PP"), 
-                                Period = c("High N:P","High N:P", "High N:P", "High N:P", "High N:P", "High N:P",
-                                           "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P", "Low N:P", "Low N:P",
-                                           "P only", "P only", "P only", "P only", "P only","P only"), 
-                                Normalized.Bias = c(normalized.bias.Temp1m.period1, normalized.bias.Temp4m.period1, normalized.bias.Temp9m.period1,
-                                                    normalized.bias.O24m.period1, normalized.bias.TDP.period1, normalized.bias.PP.period1,
-                                                    normalized.bias.Temp1m.period2, normalized.bias.Temp4m.period2, normalized.bias.Temp9m.period2,  
-                                                    normalized.bias.O24m.period2, normalized.bias.TDP.period2,normalized.bias.PP.period2,
+TargetDiagramData2 <- data.frame(Variable = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP", "Diazotroph PP", "Non-diazotroph PP",
+                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP", "Diazotroph PP", "Non-diazotroph PP",
+                                             "Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP", "Diazotroph PP", "Non-diazotroph PP"), 
+                                Period = c("High N:P","High N:P", "High N:P", "High N:P", "High N:P", "High N:P", "High N:P", "High N:P", 
+                                           "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  "Low N:P",  
+                                           "P only", "P only", "P only", "P only", "P only", "P only", "P only", "P only"), 
+                                Normalized.Bias = c(normalized.bias.Temp1m.period1, normalized.bias.Temp4m.period1, normalized.bias.Temp9m.period1, 
+                                                    normalized.bias.O24m.period1,  normalized.bias.TDP.period1, normalized.bias.PP.period1,
+                                                    normalized.bias.diazoPP.period1, normalized.bias.nondiazoPP.period1,
+                                                    normalized.bias.Temp1m.period2, normalized.bias.Temp4m.period2, normalized.bias.Temp9m.period2, 
+                                                    normalized.bias.O24m.period2, normalized.bias.TDP.period2, normalized.bias.PP.period2,
+                                                    normalized.bias.diazoPP.period2, normalized.bias.nondiazoPP.period2,
                                                     normalized.bias.Temp1m.period3, normalized.bias.Temp4m.period3, normalized.bias.Temp9m.period3, 
-                                                    normalized.bias.O24m.period3, normalized.bias.TDP.period3, normalized.bias.PP.period3), 
+                                                    normalized.bias.O24m.period3, normalized.bias.TDP.period3, normalized.bias.PP.period3, 
+                                                    normalized.bias.diazoPP.period3, normalized.bias.nondiazoPP.period3), 
                                 Normalized.Unbiased.RMSD = c(normalized.unbiased.RMSD.Temp1m.period1, normalized.unbiased.RMSD.Temp4m.period1, normalized.unbiased.RMSD.Temp9m.period1,
-                                                             normalized.unbiased.RMSD.O24m.period1, normalized.unbiased.RMSD.TDP.period1, normalized.unbiased.RMSD.PP.period1,
+                                                             normalized.unbiased.RMSD.O24m.period1, normalized.unbiased.RMSD.TDP.period1, 
+                                                             normalized.unbiased.RMSD.PP.period1, normalized.unbiased.RMSD.diazoPP.period1, normalized.unbiased.RMSD.nondiazoPP.period1,
                                                              normalized.unbiased.RMSD.Temp1m.period2, normalized.unbiased.RMSD.Temp4m.period2, normalized.unbiased.RMSD.Temp9m.period2,
-                                                             normalized.unbiased.RMSD.O24m.period2, normalized.unbiased.RMSD.TDP.period2, normalized.unbiased.RMSD.PP.period2,
+                                                             normalized.unbiased.RMSD.O24m.period2, normalized.unbiased.RMSD.TDP.period2, 
+                                                             normalized.unbiased.RMSD.PP.period2, normalized.unbiased.RMSD.diazoPP.period2, normalized.unbiased.RMSD.nondiazoPP.period2,
                                                              normalized.unbiased.RMSD.Temp1m.period3, normalized.unbiased.RMSD.Temp4m.period3, normalized.unbiased.RMSD.Temp9m.period3,
-                                                             normalized.unbiased.RMSD.O24m.period3, normalized.unbiased.RMSD.TDP.period3, normalized.unbiased.RMSD.PP.period3)) 
+                                                             normalized.unbiased.RMSD.O24m.period3, normalized.unbiased.RMSD.TDP.period3, 
+                                                             normalized.unbiased.RMSD.PP.period3, normalized.unbiased.RMSD.diazoPP.period3, normalized.unbiased.RMSD.nondiazoPP.period3)) 
 
-TargetDiagramData$Variable <- factor(TargetDiagramData$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP"))
-TargetDiagramData2$Variable <- factor(TargetDiagramData2$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP"))
+TargetDiagramData$Variable <- factor(TargetDiagramData$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP", "Diazotroph PP", "Non-diazotroph PP"))
+TargetDiagramData2$Variable <- factor(TargetDiagramData2$Variable, levels = c("Temp 1 m ", "Temp 4 m", "Temp 9 m", "DO 4 m", "TDP", "PP", "Diazotroph PP", "Non-diazotroph PP"))
+TargetDiagramData2 <- filter(TargetDiagramData2, Variable != "Diazotroph PP" | Period != "High N:P")
 
 #### Target Plot ####
 TargetPlot <- 
@@ -1967,11 +2151,8 @@ TargetPlot2 <-
   geom_hline(yintercept = 0, lty = 5, size = 0.5) +
   annotate("path", x=0+10*cos(seq(0,2*pi,length.out=100)), y=0+1*sin(seq(0,2*pi,length.out=100))) +
   geom_point(size = 2.5) + 
-  #xlim(-23, 23) +
-  #ylim(-1, 1) +
-  #scale_y_continuous(limits = c(-10, 10), breaks = c(-2, -1, 0, 1, 2)) +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  scale_shape_manual(values = c(22, 21, 24, 15, 19, 17)) + 
+  scale_shape_manual(values = c(22, 24, 21, 15, 17, 19, 18, 20)) + 
   scale_fill_manual(values = c("white", "white", "white")) +
   ylab(expression(paste(B, "*"))) +
   #ylab(expression(Normalized ~ Bias)) +
@@ -1980,4 +2161,4 @@ TargetPlot2 <-
   theme(legend.title = element_blank(), legend.position = "right", legend.key.height = unit(0.4, "cm"))
 print(TargetPlot2)
 
-#ggsave("Target.jpg", TargetPlot2, dpi = 300, width = 4.5, height = 3, units = "in")
+ggsave("Target.jpg", TargetPlot2, dpi = 300, width = 6, height = 3, units = "in")

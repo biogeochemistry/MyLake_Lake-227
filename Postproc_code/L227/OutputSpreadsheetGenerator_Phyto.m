@@ -22,7 +22,7 @@ nondiazoPPintegratedepi = zeros(1,length(nondiazoPP));
 nondiazoPPintegratedepi = transpose(nondiazoPPintegratedepi);
 
 
-filename='Postproc_code/L227/Output_IntegratedEpi_Phyto.csv';
+filename='Postproc_code/L227/Output_IntegratedEpi_Phyto_1969.csv';
 M = [dates(:,1:3), diazoPPintegratedepi, nondiazoPPintegratedepi];
 csvwrite(filename,M);
 
