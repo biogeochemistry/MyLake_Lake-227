@@ -58,6 +58,13 @@ phyto.out$date <- as.Date(phyto.out$date, "%Y-%m-%d")
 
 phyto.match <- left_join(phyto.obs, phyto.out, by = "date")
 
+phyto.match <- phyto.match %>%
+  mutate(diazoprop.obs = diazoPP.x/(diazoPP.x + nondiazoPP.x),
+         nondiazoprop.obs = nondiazoPP.x/(diazoPP.x + nondiazoPP.x),
+         diazoprop.mod = diazoPP.y/(diazoPP.y + nondiazoPP.y),
+         nondiazoprop.mod = nondiazoPP.y/(diazoPP.y + nondiazoPP.y),
+         Period = ifelse(Year < 1975, "High N:P", ifelse(Year > 1989, "P only", "Low N:P")))
+
 ```
 
 ## Visualizations
@@ -86,6 +93,18 @@ PPfitplot <- ggplot(phyto.match) +
   xlab(expression(observed ~ PP ~ (mu*g / L))) +
   scale_colour_manual("", breaks = c("diazo", "nondiazo"), values = c("#d14a42ff",  "#240c4cff")) 
 print(PPfitplot)
+
+diazopropplot <- ggplot(phyto.match, 
+                        aes(x = diazoprop.obs, y = diazoprop.mod, color = Period)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0)
+print(diazopropplot)
+
+nondiazopropplot <- ggplot(phyto.match, 
+                        aes(x = nondiazoprop.obs, y = nondiazoprop.mod, color = Month)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0)
+print(nondiazopropplot)
 
 ```
 
