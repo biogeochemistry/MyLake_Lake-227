@@ -273,6 +273,7 @@ TNtoTPplot <-
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(data = TNtoTPearly, aes(x = Datelake, y = TNtoTP), size = 0.5, color = "#f99d15ff") + #significant positive slope
   geom_point(data = TNtoTPlate, aes(x = Datelake, y = TNtoTP), size = 0.5, color = "gray40") + #non-significant slope
+  geom_abline()
   ylim(0,200) +
   ylab(expression(TN:TP)) +
   xlab(" ") +
@@ -1127,31 +1128,31 @@ rmse.PP.period3/sd(na.omit(mod.match$obs.PP[mod.match$Year > 1989]))
 NashSutcliffe.PP.period3 <-NSE(mod.match$mod.PP[mod.match$Year > 1989], mod.match$obs.PP[mod.match$Year > 1989]); NashSutcliffe.PP.period3
 
 #### PP Plot ====
+# PPmodelplot <- ggplot(mod) +
+#   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
+#   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
+#   #geom_line(data = PropPP, aes(x = date, y = PropPPFert, color = "% PP from fertilization"), size = 0.25) +
+#   geom_line(data = mod, aes(x = date, y = mod.PP, color = "Modeled"), size = 0.5) +
+#   geom_point(data = mod.match, aes(x = date, y = obs.PP, color = "Observed"), pch = 19, size = 0.75) +
+#   #geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
+#   # annotate("text", x = as.Date("1968-01-01"), y = 100, label = "a") +
+#   ylab(expression(PP ~ (mu*g / L))) +
+#   xlab(" ") +
+#   ylim(c(0, 100)) +
+#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff",  "#240c4cff")) +
+#   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
+# print(PPmodelplot)
+
 PPmodelplot <- ggplot(mod) +
   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-  #geom_line(data = PropPP, aes(x = date, y = PropPPFert, color = "% PP from fertilization"), size = 0.25) +
-  geom_line(data = mod, aes(x = date, y = mod.PP, color = "Modeled"), size = 0.5) +
-  geom_point(data = mod.match, aes(x = date, y = obs.PP, color = "Observed"), pch = 19, size = 0.75) +
-  #geom_area(data = mod.nofert, aes(x = date, y = mod.PP.nofert), size = 0.25, fill ="#d14a42ff") +
-  # annotate("text", x = as.Date("1968-01-01"), y = 100, label = "a") +
+  geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.25) +
+  geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 0.5) +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab(" ") +
-  ylim(c(0, 100)) +
-  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff",  "#240c4cff")) +
-  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm")) 
+  scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
+  theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm"))
 print(PPmodelplot)
-
-#PPmodelplot <- ggplot(mod) +
-#   geom_rect(xmin = -Inf, xmax = as.numeric(as.Date("1975-01-01")), ymin = -Inf, ymax = Inf, fill = "gray90") +
-#   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
-#   geom_line(data = mod, aes(x = date, y = mod.PP, col = "Modeled"), size = 0.25) +
-#   geom_point(data = mod.match, aes(x = date, y = obs.PP, col = "Observed"), pch = 19, size = 0.5) +
-#   ylab(expression(PP ~ (mu*g / L))) +
-#   xlab(" ") +
-#   scale_colour_manual("", breaks = c("Observed", "Modeled"), values = c("#d14a42ff", "#240c4cff")) +
-#   theme(legend.position = "top", axis.text.x = element_blank(), plot.margin=unit(c(0, 0.1, -0.25, 0), "cm"), legend.key.size = unit(0.1, "cm"))
-# print(PPmodelplot)
 
 #ggsave("PP.jpg", PPmodelplot, dpi = 300)
 #### Cumulative PP Fit Metrics ====
@@ -1339,7 +1340,7 @@ mod.match.bestyear <- filter(mod.match, Year == 2004 | Year == 2005 | Year == 20
     theme(legend.position = "top") 
 print(PPmodelplot.bestyear)
 
-#ggsave("PPbestyear.pdf", PPmodelplot.bestyear, dpi = 300, width = 4.5, height = 3.25, units = "in")
+#ggsave("PPbestyear.", PPmodelplot.bestyear, dpi = 300, width = 4.5, height = 3.25, units = "in")
 #### PP maximum concentration ----
 
 modelPP.comparison.Ponly <- modelPP.comparison %>%
@@ -1567,15 +1568,15 @@ modelphysicsfitplot <- rbind(icedateplot2, tempplot2, size = "first")
 modelphysicsfitplot$widths <- unit.pmax(icedateplot2$widths, tempplot2$widths)
 grid.newpage()
 grid.draw(modelphysicsfitplot)
-#ggsave("modelphysicsfitplot.jpg", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
+#ggsave("modelphysicsfitplot.pdf", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
 
 PPmodelplot2 <- ggplotGrob(PPmodelplot)
 PPcumulativeplot2 <- ggplotGrob(PPcumulativeplot)
 PPresidualsplot2 <- ggplotGrob(PPresidualsplot)
 modelPPfitplot2 <- rbind(PPcumulativeplot2, PPresidualsplot2, size = "first")
-#modelPPfitplot$widths <- unit.pmax(PPmodelplot2$widths, PPcumulativeplot2$widths, PPresidualsplot2$widths)
-#grid.newpage()
-#grid.draw(modelPPfitplot)
+# modelPPfitplot$widths <- unit.pmax(PPmodelplot2$widths, PPcumulativeplot2$widths, PPresidualsplot2$widths)
+# grid.newpage()
+# grid.draw(modelPPfitplot)
 
 modelPPfitplot <- plot_grid(PPmodelplot2, modelPPfitplot2, align = "v", nrow = 2, rel_heights = c(1/2, 1/2))
 print(modelPPfitplot)
@@ -1592,7 +1593,7 @@ modelfitplot2 <- rbind(TDPplot2, O2plot2, DOCplot2, size = "first")
 modelfitplot2$widths <- unit.pmax(O2plot2$widths, DOCplot2$widths, TDPplot2$widths)
 grid.newpage()
 grid.draw(modelfitplot2)
-ggsave("modelfitplot2.pdf", modelfitplot2, dpi = 300, width = 3.25, height = 4, units = "in")
+#ggsave("modelfitplot2.pdf", modelfitplot2, dpi = 300, width = 3.25, height = 4, units = "in")
 
 
 #### Model comparisons for PP, temp, ice ----
@@ -1636,14 +1637,16 @@ print(tempcomparisonboxplot)
 
 tempcomparisonviolinplot <- ggplot(modeltemp.comparison) +
   geom_hline(yintercept = 0, lty = 2, size = 0.5) +
-  geom_violin(aes(x = as.factor(Month), y = Temp1m.difference, group = Month), 
+  geom_violin(aes(x = as.factor(Month), y = Temp1m.difference, group = Month),
                fill = "#d14a42ff", draw_quantiles = c(0.5), width = 1.1) +
+  # geom_boxplot(aes(x = as.factor(Month), y = Temp1m.difference), 
+  #              fill = "#d14a42ff") +
   ylab(expression("Water Temperature Difference " (degree*C))) +
   xlab("Month") +
   scale_y_continuous(breaks = c(-0.5, 0, 0.5, 1, 1.5))
 print(tempcomparisonviolinplot)
 
-ggsave("tempcomparisonviolinplot.jpg", tempcomparisonviolinplot, dpi = 300, width = 6.5, height = 3, units = "in")
+#ggsave("tempcomparisonviolinplot.pdf", tempcomparisonviolinplot, dpi = 300, width = 6.5, height = 3, units = "in")
 
 
 tempcomparisondotplot <- ggplot(modeltemp.comparison, aes(x = Month, y = Temp1m.difference)) +
@@ -1656,7 +1659,7 @@ tempcomparisondotplot <- ggplot(modeltemp.comparison, aes(x = Month, y = Temp1m.
   scale_y_continuous(breaks = c(-0.5, 0, 0.5, 1, 1.5)) +
   scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))
 print(tempcomparisondotplot)
-ggsave("tempcomparisondotplot.jpg", tempcomparisondotplot, dpi = 300, width = 6.5, height = 3, units = "in")
+#ggsave("tempcomparisondotplot.jpg", tempcomparisondotplot, dpi = 300, width = 6.5, height = 3, units = "in")
 
 tempcomparisonbytime <- ggplot(modeltemp.comparison, aes(x = date, y = Temp1m.difference)) +
   geom_line(aes(color = Month), size = 0.5) +
@@ -1719,12 +1722,12 @@ print(PPcomparisonboxplot2)
 
 grid.arrange(PPcomparisonplot, PPcomparisonboxplot)  
 grid.arrange(PPcomparisonplot, PPcomparisondotplot)
-modelPPcomparisonplot <- plot_grid(PPcomparisonplot, PPcomparisonboxplot2,  PPcomparisonboxplot, align = "v", nrow = 3, rel_heights = c(1, 0.6, 0.6))
+modelPPcomparisonplot <- plot_grid(PPcomparisonplot, PPcomparisonboxplot, align = "v", nrow = 2, rel_heights = c(1, 0.6))
 print(modelPPcomparisonplot)
 modelPPcomparisonplot2 <- plot_grid(PPcomparisonplot, PPcomparisondotplot, nrow = 2, rel_heights = c(1, 0.6))
 print(modelPPcomparisonplot2)
-ggsave("modelPPcomparisonplot.pdf", modelPPcomparisonplot, dpi = 300, width = 6.5, height = 4, units = "in")
-ggsave("modelPPcomparisonplot2.jpg", modelPPcomparisonplot2, dpi = 300, width = 6.5, height = 4, units = "in")
+#ggsave("modelPPcomparisonplot.pdf", modelPPcomparisonplot, dpi = 300, width = 6.5, height = 4, units = "in")
+#ggsave("modelPPcomparisonplot2.jpg", modelPPcomparisonplot2, dpi = 300, width = 6.5, height = 4, units = "in")
 
 
 # TDPcomparisonplot <- ggplot(modelPP.comparison) +
@@ -2161,4 +2164,4 @@ TargetPlot2 <-
   theme(legend.title = element_blank(), legend.position = "right", legend.key.height = unit(0.4, "cm"))
 print(TargetPlot2)
 
-ggsave("Target.jpg", TargetPlot2, dpi = 300, width = 6, height = 3, units = "in")
+#ggsave("Target.pdf", TargetPlot2, dpi = 300, width = 6, height = 3, units = "in")

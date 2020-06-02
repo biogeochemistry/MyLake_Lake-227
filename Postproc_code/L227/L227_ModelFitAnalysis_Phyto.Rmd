@@ -55,7 +55,36 @@ colnames(phyto.out) <- c("Year", "Month", "Day", "diazoPP", "nondiazoPP")
 phyto.out <- phyto.out %>%
   unite(date, Year, Month, Day, sep = '-')
 phyto.out$date <- as.Date(phyto.out$date, "%Y-%m-%d")
+phyto.out <- phyto.out %>%
+  mutate(DOY = yday(date))
 
+phyto.out.summary <- phyto.out %>%
+  mutate(Year = year(date), 
+         Period = ifelse(Year < 1975, "High N:P", ifelse(Year > 1989, "P only", "Low N:P")), 
+         diazoprop = diazoPP/(diazoPP + nondiazoPP)) %>%
+  filter(DOY > 105 & DOY < 305 & Year > 1969) %>%
+  group_by(Period, DOY) %>%
+  summarise(n = sum(complete.cases(diazoprop)),
+            diazo.mean = mean(diazoprop), 
+            diazo.sd = sd(diazoprop), 
+            margin = qnorm(0.975) * diazo.sd/sqrt(n), 
+            upperCI = diazo.mean + margin,
+            lowerCI = diazo.mean - margin)
+
+phyto.obs.summary <- phyto.obs %>%
+  mutate(week = week(date),
+         Period = ifelse(Year < 1975, "High N:P", ifelse(Year > 1989, "P only", "Low N:P")), 
+         diazoprop = diazoPP/(diazoPP + nondiazoPP)) %>%
+  group_by(Period, week) %>%
+  summarise(n = sum(complete.cases(diazoprop)),
+            diazo.mean = mean(diazoprop), 
+            diazo.sd = sd(diazoprop), 
+            margin = qnorm(0.975) * diazo.sd/sqrt(n), 
+            upperCI = diazo.mean + margin,
+            lowerCI = diazo.mean - margin)
+
+
+# Join files
 phyto.match <- left_join(phyto.obs, phyto.out, by = "date")
 
 phyto.match <- phyto.match %>%
@@ -105,6 +134,20 @@ nondiazopropplot <- ggplot(phyto.match,
   geom_point() +
   geom_abline(slope = 1, intercept = 0)
 print(nondiazopropplot)
+
+
+ggplot(phyto.out.summary, aes(x = DOY, y = diazo.mean)) +
+  geom_line(aes(color = Period)) +
+  geom_ribbon(aes(ymin = lowerCI, ymax = upperCI, fill = Period), alpha = 0.2) +
+  scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
+  scale_fill_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff"))
+
+ggplot(phyto.obs.summary, aes(x = week, y = diazo.mean)) +
+  geom_line(aes(color = Period)) +
+  geom_ribbon(aes(ymin = lowerCI, ymax = upperCI, fill = Period), alpha = 0.2) +
+  #geom_line(data = phyto.out.summary, aes(x = week, y = diazo.mean, color = Period), lty = 2) +
+  scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
+  scale_fill_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff"))
 
 ```
 
