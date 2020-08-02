@@ -901,13 +901,13 @@ modelPP.comparison <- modelPP.comparison %>%
          Year = as.numeric(format(modelPP.comparison$date, "%Y")), 
          Week = as.numeric(format(modelPP.comparison$date, "%V")), 
          JulianDay = as.numeric(format(modelPP.comparison$date, "%j")))
-modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month < 5] <- NA
-modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month > 10] <- NA
-modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month == 5 & modelPP.comparison$Day < 16] <- NA
-modelPP.comparison$PropPPFert[modelPP.comparison$Month < 5] <- NA
-modelPP.comparison$PropPPFert[modelPP.comparison$Month > 10] <- NA
-modelPP.comparison$PropPPFert[modelPP.comparison$Month == 5 & modelPP.comparison$Day < 16] <- NA
-modelPP.comparison$PropPPFert[modelPP.comparison$PropPPFert < 0]  <- 0
+# modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month < 5] <- NA
+# modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month > 10] <- NA
+# modelPP.comparison$mod.PP.minus.mod.PP.noclimate[modelPP.comparison$Month == 5 & modelPP.comparison$Day < 16] <- NA
+# modelPP.comparison$PropPPFert[modelPP.comparison$Month < 5] <- NA
+# modelPP.comparison$PropPPFert[modelPP.comparison$Month > 10] <- NA
+# modelPP.comparison$PropPPFert[modelPP.comparison$Month == 5 & modelPP.comparison$Day < 16] <- NA
+# modelPP.comparison$PropPPFert[modelPP.comparison$PropPPFert < 0]  <- 0
 
 modeltemp.comparison <- right_join(mod2[,1:4], mod2.noclimate[,1:4], by = "date")
 modeltemp.comparison <- left_join(modeltemp.comparison, mod2.nofert[,1:4], by = "date")
@@ -918,7 +918,8 @@ modeltemp.comparison <- modeltemp.comparison %>%
          Day = as.numeric(format(modeltemp.comparison$date, "%d")), 
          Year = as.numeric(format(modeltemp.comparison$date, "%Y")), 
          Week = as.numeric(format(modeltemp.comparison$date, "%V")), 
-         JulianDay = as.numeric(format(modeltemp.comparison$date, "%j")))
+         JulianDay = as.numeric(format(modeltemp.comparison$date, "%j"))) %>%
+  filter(Year > 1989)
 
 # Add phytoplankton groups
 
@@ -1342,6 +1343,38 @@ print(PPmodelplot.bestyear)
 
 #ggsave("PPbestyear.", PPmodelplot.bestyear, dpi = 300, width = 4.5, height = 3.25, units = "in")
 #### PP maximum concentration ----
+MaxModeledPP <- 
+  mod %>%
+  select(date, mod.PP) %>%
+  mutate(Year = year(date), 
+         DOY = yday(date)) %>%
+  group_by(Year) %>%
+  filter(mod.PP == max(mod.PP))
+
+MaxObservedPP <-
+  obs %>%
+  select(date, obs.PP, Year) %>%
+  drop_na() %>%
+  mutate(DOY = yday(date)) %>%
+  group_by(Year) %>%
+  filter(obs.PP == max(obs.PP))
+
+MaxPP <- MaxObservedPP %>%
+  full_join(., MaxModeledPP, by = "Year") %>%
+  mutate(DOY.difference = DOY.x - DOY.y,
+         Period = ifelse(Year < 1975, "High N:P", 
+                         ifelse(Year > 1989, "P-only", "Low N:P")))
+
+
+ggplot(MaxPP, aes(x = obs.PP, y = mod.PP, color = Period)) +
+  geom_point() +
+  scale_color_viridis_d(option = "inferno", end = 0.9, direction= -1) +
+  geom_abline(intercept = 0, slope = 1)
+
+ggplot(MaxPP, aes(x = DOY.x, y = DOY.y, color = Year)) +
+  geom_point() +
+  scale_color_viridis_c(option = "inferno") +
+  geom_abline(intercept = 0, slope = 1)
 
 modelPP.comparison.Ponly <- modelPP.comparison %>%
   filter(date > "1989-12-31")
@@ -1597,11 +1630,11 @@ grid.draw(modelfitplot2)
 
 
 #### Model comparisons for PP, temp, ice ----
-wilcox.test(modelPP.comparison$mod.PP, modelPP.comparison$mod.PP.noclimate)
-wilcox.test(modelPP.comparison$mod.PP, modelPP.comparison$mod.PP.nofert)
-sum(modelPP.comparison$mod.PP.minus.mod.PP.noclimate > 0, na.rm = TRUE)/sum(!is.na(modelPP.comparison$mod.PP.minus.mod.PP.noclimate))
-summary(modelPP.comparison$mod.PP.minus.mod.PP.noclimate)
-sd(!is.na(modelPP.comparison$mod.PP.minus.mod.PP.noclimate))
+wilcox.test(modelPP.comparison.Ponly$mod.PP, modelPP.comparison.Ponly$mod.PP.noclimate)
+wilcox.test(modelPP.comparison.Ponly$mod.PP, modelPP.comparison.Ponly$mod.PP.nofert)
+sum(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate > 0, na.rm = TRUE)/sum(!is.na(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate))
+summary(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate)
+sd(!is.na(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate))
 
 modeltemp.summaries <- 
   modeltemp.comparison %>%
@@ -1611,8 +1644,16 @@ modeltemp.summaries <-
             mean.diff.4m = mean(Temp4m.difference), 
             sd.diff.4m = sd(Temp4m.difference))
 
+modeltemp.summaries.monthly <- 
+  modeltemp.comparison %>%
+  group_by(Month, Year) %>%
+  summarise(mean.diff.1m = mean(Temp1m.difference), 
+            sd.diff.1m = sd(Temp1m.difference), 
+            mean.diff.4m = mean(Temp4m.difference), 
+            sd.diff.4m = sd(Temp4m.difference))
+
 modelPP.summaries <-
-  modelPP.comparison %>%
+  modelPP.comparison.Ponly %>%
   group_by(Month) %>%
   summarize(mean = mean(mod.PP.minus.mod.PP.noclimate, na.rm = TRUE), 
             sd = sd(mod.PP.minus.mod.PP.noclimate, na.rm = TRUE))
@@ -1628,12 +1669,15 @@ tempcomparisonplot <- ggplot(modeltemp.comparison) +
   ylab(expression("Water Temperature " (degree*C)))
 print(tempcomparisonplot)
 
-tempcomparisonboxplot <- ggplot(modeltemp.comparison) +
-  geom_hline(yintercept = 0, lty = 2, size = 0.5) +
-  geom_boxplot(aes(x = as.factor(Month), y = Temp1m.difference, group = Month), 
+tempcomparisonboxplot <- ggplot(modeltemp.summaries.monthly) +
+  geom_boxplot(aes(x = as.factor(Month), y = mean.diff.1m, group = Month), 
                fill = "#d14a42ff") +
-  ylab(expression(Temperature))
+  geom_hline(yintercept = 0, lty = 2, size = 0.5) +
+  labs(y= expression("Water Temperature " (degree*C)), x = "Month")
 print(tempcomparisonboxplot)
+
+# ggsave("./Figures_Revision/tempcomparison.boxplot.pdf", tempcomparisonboxplot, dpi = 300, width = 6.5, height = 3, units = "in")
+
 
 tempcomparisonviolinplot <- ggplot(modeltemp.comparison) +
   geom_hline(yintercept = 0, lty = 2, size = 0.5) +
@@ -1646,7 +1690,7 @@ tempcomparisonviolinplot <- ggplot(modeltemp.comparison) +
   scale_y_continuous(breaks = c(-0.5, 0, 0.5, 1, 1.5))
 print(tempcomparisonviolinplot)
 
-#ggsave("tempcomparisonviolinplot.pdf", tempcomparisonviolinplot, dpi = 300, width = 6.5, height = 3, units = "in")
+# ggsave("./Figures_Revision/tempcomparisonviolinplot.pdf", tempcomparisonviolinplot, dpi = 300, width = 6.5, height = 3, units = "in")
 
 
 tempcomparisondotplot <- ggplot(modeltemp.comparison, aes(x = Month, y = Temp1m.difference)) +
@@ -1669,14 +1713,14 @@ print(tempcomparisonbytime)
 
 TempPlots <- grid.arrange(tempcomparisonplot, tempcomparisonviolinplot)
   
-PPcomparisonplot <- ggplot(modelPP.comparison) +
+PPcomparisonplot <- ggplot(modelPP.comparison.Ponly) +
   geom_line(aes(x = date, y = mod.PP, color = "Climate Change + Fertilization"), size = 0.5) +
   geom_line(aes(x = date, y = mod.PP.noclimate, color = "Fertilization Only"), size = 0.5) +
   geom_line(aes(x = date, y = mod.PP.nofert, color = "Climate Change Only"), size = 0.5) +
   ylab(expression(PP ~ (mu*g / L))) +
   xlab("Year") +
-  #scale_x_continuous(breaks = as.Date(c("1990-01-01", "1995-01-01", "2000-01-01", "2005-01-01", "2010-01-01", "2015-01-01"),
-  #                                    origin = "1970-01-01")) +
+  # scale_x_continuous(breaks = as.Date(c("1990-01-01", "1995-01-01", "2000-01-01", "2005-01-01", "2010-01-01", "2015-01-01"),
+  #                                    origin = as.Date("1970-01-01"))) +
   scale_color_manual("", breaks = c("Climate Change + Fertilization", "Climate Change Only", "Fertilization Only"), 
                       values = c("#d14a42ff", "#f99d15ff", "#240c4cff")) +
   theme(legend.position = "top",  legend.key.size = unit(0.3, "cm"), axis.title.x=element_blank()) 
@@ -1705,12 +1749,11 @@ PPcomparisondotplot <- ggplot(modelPP.comparison, aes(x = Year, y = mod.PP.minus
   theme(legend.title = element_blank())
 print(PPcomparisondotplot)
 
-PPcomparisonboxplot <- ggplot(modelPP.comparison) +
+PPcomparisonboxplot <- ggplot(modelPP.comparison.Ponly) +
   geom_hline(yintercept = 0, lty = 2, size = 0.8) +
-  geom_boxplot(aes(x = Week, y = mod.PP.minus.mod.PP.noclimate, group = Week), 
+  geom_boxplot(aes(x = as.factor(Month), y = mod.PP.minus.mod.PP.noclimate), 
                fill = "#d14a42ff") +
-  ylab(expression(PP ~ difference ~ (mu*g / L))) +
-  xlim(c(19.5, 44.5))
+  labs(y = expression(PP ~ difference ~ (mu*g / L)), x = "Month") 
 print(PPcomparisonboxplot)
 
 PPcomparisonboxplot2 <- ggplot(modelPP.comparison) +
@@ -1726,7 +1769,7 @@ modelPPcomparisonplot <- plot_grid(PPcomparisonplot, PPcomparisonboxplot, align 
 print(modelPPcomparisonplot)
 modelPPcomparisonplot2 <- plot_grid(PPcomparisonplot, PPcomparisondotplot, nrow = 2, rel_heights = c(1, 0.6))
 print(modelPPcomparisonplot2)
-#ggsave("modelPPcomparisonplot.pdf", modelPPcomparisonplot, dpi = 300, width = 6.5, height = 4, units = "in")
+ggsave("modelPPcomparisonplot.jpg", modelPPcomparisonplot, dpi = 300, width = 6.5, height = 4, units = "in")
 #ggsave("modelPPcomparisonplot2.jpg", modelPPcomparisonplot2, dpi = 300, width = 6.5, height = 4, units = "in")
 
 

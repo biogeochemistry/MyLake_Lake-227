@@ -59,11 +59,12 @@ phyto.out <- phyto.out %>%
   mutate(DOY = yday(date))
 
 phyto.out.summary <- phyto.out %>%
-  mutate(Year = year(date), 
+  mutate(Year = year(date),
+         week = week(date),
          Period = ifelse(Year < 1975, "High N:P", ifelse(Year > 1989, "P only", "Low N:P")), 
          diazoprop = diazoPP/(diazoPP + nondiazoPP)) %>%
   filter(DOY > 105 & DOY < 305 & Year > 1969) %>%
-  group_by(Period, DOY) %>%
+  group_by(Period, week) %>%
   summarise(n = sum(complete.cases(diazoprop)),
             diazo.mean = mean(diazoprop), 
             diazo.sd = sd(diazoprop), 
@@ -135,19 +136,29 @@ nondiazopropplot <- ggplot(phyto.match,
   geom_abline(slope = 1, intercept = 0)
 print(nondiazopropplot)
 
-
-ggplot(phyto.out.summary, aes(x = DOY, y = diazo.mean)) +
+diazoprop.out.plot <-
+ggplot(subset(phyto.out.summary, week >19), aes(x = week, y = diazo.mean)) +
   geom_line(aes(color = Period)) +
   geom_ribbon(aes(ymin = lowerCI, ymax = upperCI, fill = Period), alpha = 0.2) +
+  labs(y = "Proportion diazotroph", x = "") +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  scale_fill_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff"))
+  scale_fill_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
+  theme(legend.position = "top", axis.text.x = element_blank())
 
+diazoprop.obs.plot <-
 ggplot(phyto.obs.summary, aes(x = week, y = diazo.mean)) +
   geom_line(aes(color = Period)) +
   geom_ribbon(aes(ymin = lowerCI, ymax = upperCI, fill = Period), alpha = 0.2) +
-  #geom_line(data = phyto.out.summary, aes(x = week, y = diazo.mean, color = Period), lty = 2) +
+  labs(y = "Proportion diazotroph") +
   scale_color_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
-  scale_fill_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff"))
+  scale_fill_manual(values = c("#f99d15ff", "#d14a42ff", "#240c4cff")) +
+  theme(legend.position = "none")
+
+diazoprop.plot <-
+plot_grid(diazoprop.out.plot, diazoprop.obs.plot, nrow = 2)
+
+# ggsave("./Figures_Revision/Diazoprop.jpg", diazoprop.plot, dpi = 300, 
+#        width = 4, height = 6, units = "in")
 
 ```
 
