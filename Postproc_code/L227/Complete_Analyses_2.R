@@ -273,7 +273,6 @@ TNtoTPplot <-
   geom_rect(xmin = as.numeric(as.Date("1990-01-01")), xmax = Inf, ymin = -Inf, ymax = Inf, fill = "gray90") +
   geom_point(data = TNtoTPearly, aes(x = Datelake, y = TNtoTP), size = 0.5, color = "#f99d15ff") + #significant positive slope
   geom_point(data = TNtoTPlate, aes(x = Datelake, y = TNtoTP), size = 0.5, color = "gray40") + #non-significant slope
-  geom_abline()
   ylim(0,200) +
   ylab(expression(TN:TP)) +
   xlab(" ") +
@@ -1601,7 +1600,7 @@ modelphysicsfitplot <- rbind(icedateplot2, tempplot2, size = "first")
 modelphysicsfitplot$widths <- unit.pmax(icedateplot2$widths, tempplot2$widths)
 grid.newpage()
 grid.draw(modelphysicsfitplot)
-#ggsave("modelphysicsfitplot.pdf", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
+ggsave("./Figures_Revision/modelphysicsfitplot.pdf", modelphysicsfitplot, dpi = 300, width = 6.5, height = 4, units = "in")
 
 PPmodelplot2 <- ggplotGrob(PPmodelplot)
 PPcumulativeplot2 <- ggplotGrob(PPcumulativeplot)
@@ -1633,8 +1632,9 @@ grid.draw(modelfitplot2)
 wilcox.test(modelPP.comparison.Ponly$mod.PP, modelPP.comparison.Ponly$mod.PP.noclimate)
 wilcox.test(modelPP.comparison.Ponly$mod.PP, modelPP.comparison.Ponly$mod.PP.nofert)
 sum(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate > 0, na.rm = TRUE)/sum(!is.na(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate))
-summary(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate)
-sd(!is.na(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate))
+summary(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate[modelPP.comparison.Ponly$Month %in% c(6:9)])
+sd(modelPP.comparison.Ponly$mod.PP.minus.mod.PP.noclimate[modelPP.comparison.Ponly$Month %in% c(6:9)])
+
 
 modeltemp.summaries <- 
   modeltemp.comparison %>%
@@ -1769,7 +1769,7 @@ modelPPcomparisonplot <- plot_grid(PPcomparisonplot, PPcomparisonboxplot, align 
 print(modelPPcomparisonplot)
 modelPPcomparisonplot2 <- plot_grid(PPcomparisonplot, PPcomparisondotplot, nrow = 2, rel_heights = c(1, 0.6))
 print(modelPPcomparisonplot2)
-ggsave("modelPPcomparisonplot.jpg", modelPPcomparisonplot, dpi = 300, width = 6.5, height = 4, units = "in")
+#ggsave("modelPPcomparisonplot.jpg", modelPPcomparisonplot, dpi = 300, width = 6.5, height = 4, units = "in")
 #ggsave("modelPPcomparisonplot2.jpg", modelPPcomparisonplot2, dpi = 300, width = 6.5, height = 4, units = "in")
 
 
