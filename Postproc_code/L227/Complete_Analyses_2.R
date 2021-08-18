@@ -865,7 +865,7 @@ match.ice$obs.daybreak <- as.numeric(as.character(match.ice$obs.daybreak))
 match.ice$out.daybreak <- as.numeric(as.character(match.ice$out.daybreak))
 match.ice$obs.dayfreeze <- as.numeric(as.character(match.ice$obs.dayfreeze))
 match.ice$out.dayfreeze <- as.numeric(as.character(match.ice$out.dayfreeze))
-match.ice$Year <- as.numeric(match.ice$Year)
+match.ice$Year <- as.numeric(as.character(match.ice$Year))
 match.ice$obs.daybreak[1] <- NA
 mod$mod.DOC <- mod$mod.DOC/1000 #convert DOC to mg/L instead of ug/L
 mod.match$obs.DOC <- mod.match$obs.DOC/1000 #convert DOC to mg/L instead of ug/L
@@ -981,17 +981,17 @@ msefreeze.period2 <- mean(residuals(icefreezeregression.period2)^2); rmsefreeze.
 rmsefreeze.period2/sd(na.omit(match.ice$obs.dayfreeze[match.ice$Year > 1974 & match.ice$Year < 1990]))
 NashSutcliffe.icefreeze.period2 <- NSE(match.ice$out.dayfreeze[match.ice$Year > 1974 & match.ice$Year < 1990], match.ice$obs.dayfreeze[match.ice$Year > 1974 & match.ice$Year < 1990]); NashSutcliffe.icefreeze.period2
 
-icebreakregression.period3 <- lm (match.ice$obs.daybreak[match.ice$Year > 1989] ~ match.ice$out.daybreak[match.ice$Year > 1989])
+icebreakregression.period3 <- lm (match.ice$obs.daybreak[match.ice$Year > 1994] ~ match.ice$out.daybreak[match.ice$Year > 1994])
 summary(icebreakregression.period3)$adj.r.squared
 msebreak.period3 <- mean(residuals(icebreakregression.period3)^2); rmsebreak.period3 <- sqrt(msebreak.period3); rmsebreak.period3
-rmsebreak.period3/sd(na.omit(match.ice$obs.daybreak[match.ice$Year > 1989]))
-NashSutcliffe.icebreak.period3 <- NSE(match.ice$out.daybreak[match.ice$Year > 1989], match.ice$obs.daybreak[match.ice$Year > 1989]); NashSutcliffe.icebreak.period3
+rmsebreak.period3/sd(na.omit(match.ice$obs.daybreak[match.ice$Year > 1994]))
+NashSutcliffe.icebreak.period3 <- NSE(match.ice$out.daybreak[match.ice$Year > 1994], match.ice$obs.daybreak[match.ice$Year > 1994]); NashSutcliffe.icebreak.period3
 
-icefreezeregression.period3 <- lm (match.ice$obs.dayfreeze[match.ice$Year > 1989] ~ match.ice$out.dayfreeze[match.ice$Year > 1989])
+icefreezeregression.period3 <- lm (match.ice$obs.dayfreeze[match.ice$Year > 1994] ~ match.ice$out.dayfreeze[match.ice$Year > 1994])
 summary(icefreezeregression.period3)$adj.r.squared
 msefreeze.period3 <- mean(residuals(icefreezeregression.period3)^2); rmsefreeze.period3 <- sqrt(msefreeze.period3); rmsefreeze.period3
-rmsefreeze.period3/sd(na.omit(match.ice$obs.dayfreeze[match.ice$Year > 1989]))
-NashSutcliffe.icefreeze.period3 <- NSE(match.ice$out.dayfreeze[match.ice$Year > 1989], match.ice$obs.dayfreeze[match.ice$Year > 1989]); NashSutcliffe.icefreeze.period3
+rmsefreeze.period3/sd(na.omit(match.ice$obs.dayfreeze[match.ice$Year > 1994]))
+NashSutcliffe.icefreeze.period3 <- NSE(match.ice$out.dayfreeze[match.ice$Year > 1994], match.ice$obs.dayfreeze[match.ice$Year > 1994]); NashSutcliffe.icefreeze.period3
 
 #### Ice Plot ====
 icedateplot <- 
@@ -1073,23 +1073,23 @@ mse.temp9m.period2 <- mean(residuals(temp9m.regression.period2)^2); rmse.temp9m.
 rmse.temp9m.period2/sd(na.omit(mod2.match$obs.Temp9m[mod2.match$Year > 1974 & mod2.match$Year < 1990]))
 NashSutcliffe.temp9m.period2 <- NSE(mod2.match$mod.Temp9m[mod2.match$Year > 1974 & mod2.match$Year < 1990], mod2.match$obs.Temp9m[mod2.match$Year > 1974 & mod2.match$Year < 1990]); NashSutcliffe.temp9m.period2
 
-temp1m.regression.period3 <- lm(mod2.match$obs.Temp1m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp1m[mod2.match$Year > 1989])
+temp1m.regression.period3 <- lm(mod2.match$obs.Temp1m[mod2.match$Year > 1994] ~ mod2.match$mod.Temp1m[mod2.match$Year > 1994])
 summary(temp1m.regression.period3)$adj.r.squared
 mse.temp1m.period3 <- mean(residuals(temp1m.regression.period3)^2); rmse.temp1m.period3 <- sqrt(mse.temp1m.period3); rmse.temp1m.period3
-rmse.temp1m.period3/sd(na.omit(mod2.match$obs.Temp1m[mod2.match$Year > 1989]))
-NashSutcliffe.temp1m.period3 <- NSE(mod2.match$mod.Temp1m[mod2.match$Year > 1989], mod2.match$obs.Temp1m[mod2.match$Year > 1989]); NashSutcliffe.temp1m.period3
+rmse.temp1m.period3/sd(na.omit(mod2.match$obs.Temp1m[mod2.match$Year > 1994]))
+NashSutcliffe.temp1m.period3 <- NSE(mod2.match$mod.Temp1m[mod2.match$Year > 1994], mod2.match$obs.Temp1m[mod2.match$Year > 1994]); NashSutcliffe.temp1m.period3
 
-temp4m.regression.period3 <- lm(mod2.match$obs.Temp4m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp4m[mod2.match$Year > 1989])
+temp4m.regression.period3 <- lm(mod2.match$obs.Temp4m[mod2.match$Year > 1994] ~ mod2.match$mod.Temp4m[mod2.match$Year > 1994])
 summary(temp4m.regression.period3)$adj.r.squared
 mse.temp4m.period3 <- mean(residuals(temp4m.regression.period3)^2); rmse.temp4m.period3 <- sqrt(mse.temp4m.period3); rmse.temp4m.period3
-rmse.temp4m.period3/sd(na.omit(mod2.match$obs.Temp4m[mod2.match$Year > 1989]))
-NashSutcliffe.temp4m.period3 <- NSE(mod2.match$mod.Temp4m[mod2.match$Year > 1989], mod2.match$obs.Temp4m[mod2.match$Year > 1989]); NashSutcliffe.temp4m.period3
+rmse.temp4m.period3/sd(na.omit(mod2.match$obs.Temp4m[mod2.match$Year > 1994]))
+NashSutcliffe.temp4m.period3 <- NSE(mod2.match$mod.Temp4m[mod2.match$Year > 1994], mod2.match$obs.Temp4m[mod2.match$Year > 1994]); NashSutcliffe.temp4m.period3
 
-temp9m.regression.period3 <- lm(mod2.match$obs.Temp9m[mod2.match$Year > 1989] ~ mod2.match$mod.Temp9m[mod2.match$Year > 1989])
+temp9m.regression.period3 <- lm(mod2.match$obs.Temp9m[mod2.match$Year > 1994] ~ mod2.match$mod.Temp9m[mod2.match$Year > 1994])
 summary(temp9m.regression.period3)$adj.r.squared
 mse.temp9m.period3 <- mean(residuals(temp9m.regression.period3)^2); rmse.temp9m.period3 <- sqrt(mse.temp9m.period3); rmse.temp9m.period3
-rmse.temp9m.period3/sd(na.omit(mod2.match$obs.Temp9m[mod2.match$Year > 1989]))
-NashSutcliffe.temp9m.period3 <- NSE(mod2.match$mod.Temp9m[mod2.match$Year > 1989], mod2.match$obs.Temp9m[mod2.match$Year > 1989]); NashSutcliffe.temp9m.period3
+rmse.temp9m.period3/sd(na.omit(mod2.match$obs.Temp9m[mod2.match$Year > 1994]))
+NashSutcliffe.temp9m.period3 <- NSE(mod2.match$mod.Temp9m[mod2.match$Year > 1994], mod2.match$obs.Temp9m[mod2.match$Year > 1994]); NashSutcliffe.temp9m.period3
 
 #### Temperature Plot ====
 tempplot <- ggplot(mod2) +
@@ -1121,11 +1121,11 @@ mse.PP.period2 <- mean(residuals(PP.regression.period2)^2); rmse.PP.period2 <- s
 rmse.PP.period2/sd(na.omit(mod.match$obs.PP[mod.match$Year > 1974 & mod.match$Year < 1990]))
 NashSutcliffe.PP.period2 <-NSE(mod.match$mod.PP[mod.match$Year > 1974 & mod.match$Year < 1990], mod.match$obs.PP[mod.match$Year > 1974 & mod.match$Year < 1990]); NashSutcliffe.PP.period2
 
-PP.regression.period3 <- lm(mod.match$obs.PP[mod.match$Year > 1989] ~ mod.match$mod.PP[mod.match$Year > 1989])
+PP.regression.period3 <- lm(mod.match$obs.PP[mod.match$Year > 1994] ~ mod.match$mod.PP[mod.match$Year > 1994])
 summary(PP.regression.period3)$adj.r.squared
 mse.PP.period3 <- mean(residuals(PP.regression.period3)^2); rmse.PP.period3 <- sqrt(mse.PP.period3); rmse.PP.period3
-rmse.PP.period3/sd(na.omit(mod.match$obs.PP[mod.match$Year > 1989]))
-NashSutcliffe.PP.period3 <-NSE(mod.match$mod.PP[mod.match$Year > 1989], mod.match$obs.PP[mod.match$Year > 1989]); NashSutcliffe.PP.period3
+rmse.PP.period3/sd(na.omit(mod.match$obs.PP[mod.match$Year > 1994]))
+NashSutcliffe.PP.period3 <-NSE(mod.match$mod.PP[mod.match$Year > 1994], mod.match$obs.PP[mod.match$Year > 1994]); NashSutcliffe.PP.period3
 
 #### PP Plot ====
 # PPmodelplot <- ggplot(mod) +
@@ -1186,8 +1186,8 @@ sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year < 1
 summary(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1974 & end.of.season.cumulative$Year < 1990])
 sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1974 & end.of.season.cumulative$Year < 1990])
 
-summary(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1989])
-sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1989])
+summary(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1994])
+sd(end.of.season.cumulative$mod.divided.obs.PP[end.of.season.cumulative$Year > 1994])
 
 end.of.season.cumulative <- mutate(end.of.season.cumulative, Period = NA)
 end.of.season.cumulative$Period[1:5] <- "High N:P"
@@ -1236,13 +1236,13 @@ sd(PPresiduals$residuals.PP[PPresiduals$Year < 1975])
 summary(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
 sd(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
 
-summary(PPresiduals$residuals.PP[PPresiduals$Year > 1989])
-sd(PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+summary(PPresiduals$residuals.PP[PPresiduals$Year > 1994])
+sd(PPresiduals$residuals.PP[PPresiduals$Year > 1994])
 
 PPresiduals <- mutate(PPresiduals, abs.residual = abs(PPresiduals$residuals.PP))
 shapiro.test(PPresiduals$abs.residual[PPresiduals$Year < 1975])
 shapiro.test(PPresiduals$abs.residual[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
-shapiro.test(PPresiduals$abs.residual[PPresiduals$Year > 1989])
+shapiro.test(PPresiduals$abs.residual[PPresiduals$Year > 1994])
 
 PPresiduals <- mutate(PPresiduals, Period = NA)
 PPresiduals$Period[1:79] <- "1"
@@ -1260,12 +1260,12 @@ fligner.test(PPresiduals$abs.residual, PPresiduals$Period)
 # Fligner-Killeen:med chi-squared = 8.8113, df = 2, p-value = 0.01221
 
 wilcox.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
-wilcox.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
-wilcox.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1989])
+wilcox.test(PPresiduals$residuals.PP[PPresiduals$Year < 1975], PPresiduals$residuals.PP[PPresiduals$Year > 1994])
+wilcox.test(PPresiduals$residuals.PP[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$residuals.PP[PPresiduals$Year > 1994])
 
 wilcox.test(PPresiduals$abs.residual[PPresiduals$Year < 1975], PPresiduals$abs.residual[PPresiduals$Year > 1974 & PPresiduals$Year < 1990])
-wilcox.test(PPresiduals$abs.residual[PPresiduals$Year < 1975], PPresiduals$abs.residual[PPresiduals$Year > 1989])
-wilcox.test(PPresiduals$abs.residual[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$abs.residual[PPresiduals$Year > 1989])
+wilcox.test(PPresiduals$abs.residual[PPresiduals$Year < 1975], PPresiduals$abs.residual[PPresiduals$Year > 1994])
+wilcox.test(PPresiduals$abs.residual[PPresiduals$Year > 1974 & PPresiduals$Year < 1990], PPresiduals$abs.residual[PPresiduals$Year > 1994])
 
 # PP residuals are significantly lower in period 3 than in period 1 or 2.
 # PP residuals do not differ significantly in periods 1 and 2.
@@ -1362,7 +1362,8 @@ MaxPP <- MaxObservedPP %>%
   full_join(., MaxModeledPP, by = "Year") %>%
   mutate(DOY.difference = DOY.x - DOY.y,
          Period = ifelse(Year < 1975, "High N:P", 
-                         ifelse(Year > 1989, "P-only", "Low N:P")))
+                         ifelse(Year >1974 & Year < 1990, "Low N:P",
+                         ifelse(Year > 1994, "P-only", NA))))
 
 
 ggplot(MaxPP, aes(x = obs.PP, y = mod.PP, color = Period)) +
@@ -1447,17 +1448,17 @@ mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.d
 rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]))
 NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year > 1974 & phyto.match$Year < 1990], phyto.match$diazoPP.x[phyto.match$Year > 1974 & phyto.match$Year < 1990]); NashSutcliffe.diazoPP
 
-nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x[phyto.match$Year > 1989] ~ phyto.match$nondiazoPP.y[phyto.match$Year > 1989])
+nondiazoPP.regression <- lm(phyto.match$nondiazoPP.x[phyto.match$Year > 1994] ~ phyto.match$nondiazoPP.y[phyto.match$Year > 1994])
 summary(nondiazoPP.regression)$adj.r.squared
 mse.nondiazoPP <- mean(residuals(nondiazoPP.regression)^2); rmse.nondiazoPP <- sqrt(mse.nondiazoPP); rmse.nondiazoPP
-rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x[phyto.match$Year > 1989]))
-NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y[phyto.match$Year > 1989], phyto.match$nondiazoPP.x[phyto.match$Year > 1989]); NashSutcliffe.nondiazoPP
+rmse.nondiazoPP/sd(na.omit(phyto.match$nondiazoPP.x[phyto.match$Year > 1994]))
+NashSutcliffe.nondiazoPP <- NSE(phyto.match$nondiazoPP.y[phyto.match$Year > 1994], phyto.match$nondiazoPP.x[phyto.match$Year > 1994]); NashSutcliffe.nondiazoPP
 
-diazoPP.regression <- lm(phyto.match$diazoPP.x[phyto.match$Year > 1989] ~ phyto.match$diazoPP.y[phyto.match$Year > 1989])
+diazoPP.regression <- lm(phyto.match$diazoPP.x[phyto.match$Year > 1994] ~ phyto.match$diazoPP.y[phyto.match$Year > 1994])
 summary(diazoPP.regression)$adj.r.squared
 mse.diazoPP <- mean(residuals(diazoPP.regression)^2); rmse.diazoPP <- sqrt(mse.diazoPP); rmse.diazoPP
-rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year > 1989]))
-NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year > 1989], phyto.match$diazoPP.x[phyto.match$Year > 1989]); NashSutcliffe.diazoPP
+rmse.diazoPP/sd(na.omit(phyto.match$diazoPP.x[phyto.match$Year > 1994]))
+NashSutcliffe.diazoPP <- NSE(phyto.match$diazoPP.y[phyto.match$Year > 1994], phyto.match$diazoPP.x[phyto.match$Year > 1994]); NashSutcliffe.diazoPP
 
 #### PP for phytoplankton groups plots ----
 PPmodelplot <- ggplot(phyto.out) +
@@ -1497,11 +1498,11 @@ mse.TDP.period2 <- mean(residuals(TDP.regression.period2)^2); rmse.TDP.period2 <
 rmse.TDP.period2/sd(na.omit(mod.match$obs.TDP[mod.match$Year > 1974 & mod.match$Year < 1990]))
 NashSutcliffe.TDP.period2 <-NSE(mod.match$mod.TDP[mod.match$Year > 1974 & mod.match$Year < 1990], mod.match$obs.TDP[mod.match$Year > 1974 & mod.match$Year < 1990]); NashSutcliffe.TDP.period2
 
-TDP.regression.period3 <- lm(mod.match$obs.TDP[mod.match$Year > 1989] ~ mod.match$mod.TDP[mod.match$Year > 1989])
+TDP.regression.period3 <- lm(mod.match$obs.TDP[mod.match$Year > 1994] ~ mod.match$mod.TDP[mod.match$Year > 1994])
 summary(TDP.regression.period3)$adj.r.squared
 mse.TDP.period3 <- mean(residuals(TDP.regression.period3)^2); rmse.TDP.period3 <- sqrt(mse.TDP.period3); rmse.TDP.period3
-rmse.TDP.period3/sd(na.omit(mod.match$obs.TDP[mod.match$Year > 1989]))
-NashSutcliffe.TDP.period3 <-NSE(mod.match$mod.TDP[mod.match$Year > 1989], mod.match$obs.TDP[mod.match$Year > 1989]); NashSutcliffe.TDP.period3
+rmse.TDP.period3/sd(na.omit(mod.match$obs.TDP[mod.match$Year > 1994]))
+NashSutcliffe.TDP.period3 <-NSE(mod.match$mod.TDP[mod.match$Year > 1994], mod.match$obs.TDP[mod.match$Year > 1994]); NashSutcliffe.TDP.period3
 
 #### TDP Plot ====
 TDPplot <- ggplot(mod) +
@@ -1528,11 +1529,11 @@ mse.O2.period2 <- mean(residuals(O2.regression.period2)^2); rmse.O2.period2 <- s
 rmse.O2.period2/sd(na.omit(mod3.match$obs.O2.4m[mod3.match$Year > 1974 & mod3.match$Year < 1990]))
 NashSutcliffe.O24m.period2 <- NSE(mod3.match$mod.Oxy4m[mod3.match$Year > 1974 & mod3.match$Year < 1990], mod3.match$obs.O2.4m[mod3.match$Year > 1974 & mod3.match$Year < 1990]); NashSutcliffe.O24m.period2
 
-O2.regression.period3 <- lm(mod3.match$obs.O2.4m[mod3.match$Year > 1989] ~ mod3.match$mod.Oxy4m[mod3.match$Year > 1989])
+O2.regression.period3 <- lm(mod3.match$obs.O2.4m[mod3.match$Year > 1994] ~ mod3.match$mod.Oxy4m[mod3.match$Year > 1994])
 summary(O2.regression.period3)$adj.r.squared
 mse.O2.period3 <- mean(residuals(O2.regression.period3)^2); rmse.O2.period3 <- sqrt(mse.O2.period3); rmse.O2.period3
-rmse.O2.period3/sd(na.omit(mod3.match$obs.O2.4m[mod3.match$Year > 1989]))
-NashSutcliffe.O24m.period3 <- NSE(mod3.match$mod.Oxy4m[mod3.match$Year > 1989], mod3.match$obs.O2.4m[mod3.match$Year > 1989]); NashSutcliffe.O24m.period3 
+rmse.O2.period3/sd(na.omit(mod3.match$obs.O2.4m[mod3.match$Year > 1994]))
+NashSutcliffe.O24m.period3 <- NSE(mod3.match$mod.Oxy4m[mod3.match$Year > 1994], mod3.match$obs.O2.4m[mod3.match$Year > 1994]); NashSutcliffe.O24m.period3 
 
 #### O2 Plot ====
 O2plot <- ggplot(mod2) +
@@ -1559,11 +1560,11 @@ mse.DOC.period2 <- mean(residuals(DOC.regression.period2)^2); rmse.DOC.period2 <
 rmse.DOC.period2/sd(na.omit(mod.match$obs.DOC[mod.match$Year > 1974 & mod.match$Year < 1990]))
 NashSutcliffe.DOC.period2 <-NSE(mod.match$mod.DOC[mod.match$Year > 1974 & mod.match$Year < 1990], mod.match$obs.DOC[mod.match$Year > 1974 & mod.match$Year < 1990]); NashSutcliffe.DOC.period2
 
-DOC.regression.period3 <- lm(mod.match$obs.DOC[mod.match$Year > 1989] ~ mod.match$mod.DOC[mod.match$Year > 1989])
+DOC.regression.period3 <- lm(mod.match$obs.DOC[mod.match$Year > 1994] ~ mod.match$mod.DOC[mod.match$Year > 1994])
 summary(DOC.regression.period3)$adj.r.squared
 mse.DOC.period3 <- mean(residuals(DOC.regression.period3)^2); rmse.DOC.period3 <- sqrt(mse.DOC.period3); rmse.DOC.period3
-rmse.DOC.period3/sd(na.omit(mod.match$obs.DOC[mod.match$Year > 1989]))
-NashSutcliffe.DOC.period3 <-NSE(mod.match$mod.DOC[mod.match$Year > 1989], mod.match$obs.DOC[mod.match$Year > 1989]); NashSutcliffe.DOC.period3
+rmse.DOC.period3/sd(na.omit(mod.match$obs.DOC[mod.match$Year > 1994]))
+NashSutcliffe.DOC.period3 <-NSE(mod.match$mod.DOC[mod.match$Year > 1994], mod.match$obs.DOC[mod.match$Year > 1994]); NashSutcliffe.DOC.period3
 
 #### DOC Plot ====
 DOCplot <- ggplot(mod) +
@@ -1836,12 +1837,12 @@ unbiased.RMSD.Temp1m.period2 <- sqrt(mean((model.residuals.Temp1m.period2 - obs.
 normalized.bias.Temp1m.period2 <- (model.mean.Temp1m.period2 - obs.mean.Temp1m.period2)/obs.sd.Temp1m.period2
 normalized.unbiased.RMSD.Temp1m.period2 <- ((model.sd.Temp1m.period2 - obs.sd.Temp1m.period2)/obs.sd.Temp1m.period2) * unbiased.RMSD.Temp1m.period2
 
-model.mean.Temp1m.period3 <- mean(mod2.match$mod.Temp1m[mod2.match$Year > 1989])
-obs.mean.Temp1m.period3 <- mean(mod2.match$obs.Temp1m[mod2.match$Year > 1989])
-model.sd.Temp1m.period3 <- sd(mod2.match$mod.Temp1m[mod2.match$Year > 1989])
-obs.sd.Temp1m.period3 <- sd(mod2.match$obs.Temp1m[mod2.match$Year > 1989])
-model.residuals.Temp1m.period3 <- mod2.match$mod.Temp1m[mod2.match$Year > 1989] - model.mean.Temp1m.period3
-obs.residuals.Temp1m.period3 <- mod2.match$obs.Temp1m[mod2.match$Year > 1989] - obs.mean.Temp1m.period3
+model.mean.Temp1m.period3 <- mean(mod2.match$mod.Temp1m[mod2.match$Year > 1994])
+obs.mean.Temp1m.period3 <- mean(mod2.match$obs.Temp1m[mod2.match$Year > 1994])
+model.sd.Temp1m.period3 <- sd(mod2.match$mod.Temp1m[mod2.match$Year > 1994])
+obs.sd.Temp1m.period3 <- sd(mod2.match$obs.Temp1m[mod2.match$Year > 1994])
+model.residuals.Temp1m.period3 <- mod2.match$mod.Temp1m[mod2.match$Year > 1994] - model.mean.Temp1m.period3
+obs.residuals.Temp1m.period3 <- mod2.match$obs.Temp1m[mod2.match$Year > 1994] - obs.mean.Temp1m.period3
 unbiased.RMSD.Temp1m.period3 <- sqrt(mean((model.residuals.Temp1m.period3 - obs.residuals.Temp1m.period3)^2))
 normalized.bias.Temp1m.period3 <- (model.mean.Temp1m.period3 - obs.mean.Temp1m.period3)/obs.sd.Temp1m.period3
 normalized.unbiased.RMSD.Temp1m.period3 <- ((model.sd.Temp1m.period3 - obs.sd.Temp1m.period3)/obs.sd.Temp1m.period3) * unbiased.RMSD.Temp1m.period3
@@ -1867,12 +1868,12 @@ unbiased.RMSD.Temp4m.period2 <- sqrt(mean((model.residuals.Temp4m.period2 - obs.
 normalized.bias.Temp4m.period2 <- (model.mean.Temp4m.period2 - obs.mean.Temp4m.period2)/obs.sd.Temp4m.period2
 normalized.unbiased.RMSD.Temp4m.period2 <- ((model.sd.Temp4m.period2 - obs.sd.Temp4m.period2)/obs.sd.Temp4m.period2) * unbiased.RMSD.Temp4m.period2
 
-model.mean.Temp4m.period3 <- mean(mod2.match$mod.Temp4m[mod2.match$Year > 1989])
-obs.mean.Temp4m.period3 <- mean(mod2.match$obs.Temp4m[mod2.match$Year > 1989])
-model.sd.Temp4m.period3 <- sd(mod2.match$mod.Temp4m[mod2.match$Year > 1989])
-obs.sd.Temp4m.period3 <- sd(mod2.match$obs.Temp4m[mod2.match$Year > 1989])
-model.residuals.Temp4m.period3 <- mod2.match$mod.Temp4m[mod2.match$Year > 1989] - model.mean.Temp4m.period3
-obs.residuals.Temp4m.period3 <- mod2.match$obs.Temp4m[mod2.match$Year > 1989] - obs.mean.Temp4m.period3
+model.mean.Temp4m.period3 <- mean(mod2.match$mod.Temp4m[mod2.match$Year > 1994])
+obs.mean.Temp4m.period3 <- mean(mod2.match$obs.Temp4m[mod2.match$Year > 1994])
+model.sd.Temp4m.period3 <- sd(mod2.match$mod.Temp4m[mod2.match$Year > 1994])
+obs.sd.Temp4m.period3 <- sd(mod2.match$obs.Temp4m[mod2.match$Year > 1994])
+model.residuals.Temp4m.period3 <- mod2.match$mod.Temp4m[mod2.match$Year > 1994] - model.mean.Temp4m.period3
+obs.residuals.Temp4m.period3 <- mod2.match$obs.Temp4m[mod2.match$Year > 1994] - obs.mean.Temp4m.period3
 unbiased.RMSD.Temp4m.period3 <- sqrt(mean((model.residuals.Temp4m.period3 - obs.residuals.Temp4m.period3)^2))
 normalized.bias.Temp4m.period3 <- (model.mean.Temp4m.period3 - obs.mean.Temp4m.period3)/obs.sd.Temp4m.period3
 normalized.unbiased.RMSD.Temp4m.period3 <- ((model.sd.Temp4m.period3 - obs.sd.Temp4m.period3)/obs.sd.Temp4m.period3) * unbiased.RMSD.Temp4m.period3
@@ -1901,12 +1902,12 @@ unbiased.RMSD.Temp9m.period2 <- sqrt(mean((model.residuals.Temp9m.period2 - obs.
 normalized.bias.Temp9m.period2 <- (model.mean.Temp9m.period2 - obs.mean.Temp9m.period2)/obs.sd.Temp9m.period2
 normalized.unbiased.RMSD.Temp9m.period2 <- ((model.sd.Temp9m.period2 - obs.sd.Temp9m.period2)/obs.sd.Temp9m.period2) * unbiased.RMSD.Temp9m.period2
 
-model.mean.Temp9m.period3 <- mean(Temp9m.match$mod.Temp9m[Temp9m.match$Year > 1989])
-obs.mean.Temp9m.period3 <- mean(Temp9m.match$obs.Temp9m[Temp9m.match$Year > 1989])
-model.sd.Temp9m.period3 <- sd(Temp9m.match$mod.Temp9m[Temp9m.match$Year > 1989])
-obs.sd.Temp9m.period3 <- sd(Temp9m.match$obs.Temp9m[Temp9m.match$Year > 1989])
-model.residuals.Temp9m.period3 <- Temp9m.match$mod.Temp9m[Temp9m.match$Year > 1989] - model.mean.Temp9m.period3
-obs.residuals.Temp9m.period3 <- Temp9m.match$obs.Temp9m[Temp9m.match$Year > 1989] - obs.mean.Temp9m.period3
+model.mean.Temp9m.period3 <- mean(Temp9m.match$mod.Temp9m[Temp9m.match$Year > 1994])
+obs.mean.Temp9m.period3 <- mean(Temp9m.match$obs.Temp9m[Temp9m.match$Year > 1994])
+model.sd.Temp9m.period3 <- sd(Temp9m.match$mod.Temp9m[Temp9m.match$Year > 1994])
+obs.sd.Temp9m.period3 <- sd(Temp9m.match$obs.Temp9m[Temp9m.match$Year > 1994])
+model.residuals.Temp9m.period3 <- Temp9m.match$mod.Temp9m[Temp9m.match$Year > 1994] - model.mean.Temp9m.period3
+obs.residuals.Temp9m.period3 <- Temp9m.match$obs.Temp9m[Temp9m.match$Year > 1994] - obs.mean.Temp9m.period3
 unbiased.RMSD.Temp9m.period3 <- sqrt(mean((model.residuals.Temp9m.period3 - obs.residuals.Temp9m.period3)^2))
 normalized.bias.Temp9m.period3 <- (model.mean.Temp9m.period3 - obs.mean.Temp9m.period3)/obs.sd.Temp9m.period3
 normalized.unbiased.RMSD.Temp9m.period3 <- ((model.sd.Temp9m.period3 - obs.sd.Temp9m.period3)/obs.sd.Temp9m.period3) * unbiased.RMSD.Temp9m.period3
@@ -1935,12 +1936,12 @@ unbiased.RMSD.O24m.period2 <- sqrt(mean((model.residuals.O24m.period2  - obs.res
 normalized.bias.O24m.period2 <- (model.mean.O24m.period2 - obs.mean.O24m.period2)/obs.sd.O24m.period2
 normalized.unbiased.RMSD.O24m.period2 <- ((model.sd.O24m.period2 - obs.sd.O24m.period2)/obs.sd.O24m.period2) * unbiased.RMSD.O24m.period2
 
-model.mean.O24m.period3 <- mean(mod3.match$mod.Oxy4m[mod3.match$Year > 1989])
-obs.mean.O24m.period3 <- mean(mod3.match$obs.O2.4m[mod3.match$Year > 1989])
-model.sd.O24m.period3 <- sd(mod3.match$mod.Oxy4m[mod3.match$Year > 1989])
-obs.sd.O24m.period3 <- sd(mod3.match$obs.O2.4m[mod3.match$Year > 1989])
-model.residuals.O24m.period3 <- mod3.match$mod.Oxy4m[mod3.match$Year > 1989] - model.mean.O24m.period3
-obs.residuals.O24m.period3 <- mod3.match$obs.O2.4m[mod3.match$Year > 1989] - obs.mean.O24m.period3
+model.mean.O24m.period3 <- mean(mod3.match$mod.Oxy4m[mod3.match$Year > 1994])
+obs.mean.O24m.period3 <- mean(mod3.match$obs.O2.4m[mod3.match$Year > 1994])
+model.sd.O24m.period3 <- sd(mod3.match$mod.Oxy4m[mod3.match$Year > 1994])
+obs.sd.O24m.period3 <- sd(mod3.match$obs.O2.4m[mod3.match$Year > 1994])
+model.residuals.O24m.period3 <- mod3.match$mod.Oxy4m[mod3.match$Year > 1994] - model.mean.O24m.period3
+obs.residuals.O24m.period3 <- mod3.match$obs.O2.4m[mod3.match$Year > 1994] - obs.mean.O24m.period3
 unbiased.RMSD.O24m.period3 <- sqrt(mean((model.residuals.O24m.period3  - obs.residuals.O24m.period3)^2))
 normalized.bias.O24m.period3 <- (model.mean.O24m.period3 - obs.mean.O24m.period3)/obs.sd.O24m.period3
 normalized.unbiased.RMSD.O24m.period3 <- ((model.sd.O24m.period3 - obs.sd.O24m.period3)/obs.sd.O24m.period3) * unbiased.RMSD.O24m.period3
@@ -1969,12 +1970,12 @@ unbiased.RMSD.DOC.period2 <- sqrt(mean((model.residuals.DOC.period2 - obs.residu
 normalized.bias.DOC.period2 <- (model.mean.DOC.period2 - obs.mean.DOC.period2)/obs.sd.DOC.period2
 normalized.unbiased.RMSD.DOC.period2 <- ((model.sd.DOC.period2 - obs.sd.DOC.period2)/obs.sd.DOC.period2) * unbiased.RMSD.DOC.period2
 
-model.mean.DOC.period3 <- mean(DOC.match$mod.DOC[DOC.match$Year > 1989])
-obs.mean.DOC.period3 <- mean(DOC.match$obs.DOC[DOC.match$Year > 1989])
-model.sd.DOC.period3 <- sd(DOC.match$mod.DOC[DOC.match$Year > 1989])
-obs.sd.DOC.period3 <- sd(DOC.match$obs.DOC[DOC.match$Year > 1989])
-model.residuals.DOC.period3 <- DOC.match$mod.DOC[DOC.match$Year > 1989] - model.mean.DOC.period3
-obs.residuals.DOC.period3 <- DOC.match$obs.DOC[DOC.match$Year > 1989] - obs.mean.DOC.period3
+model.mean.DOC.period3 <- mean(DOC.match$mod.DOC[DOC.match$Year > 1994])
+obs.mean.DOC.period3 <- mean(DOC.match$obs.DOC[DOC.match$Year > 1994])
+model.sd.DOC.period3 <- sd(DOC.match$mod.DOC[DOC.match$Year > 1994])
+obs.sd.DOC.period3 <- sd(DOC.match$obs.DOC[DOC.match$Year > 1994])
+model.residuals.DOC.period3 <- DOC.match$mod.DOC[DOC.match$Year > 1994] - model.mean.DOC.period3
+obs.residuals.DOC.period3 <- DOC.match$obs.DOC[DOC.match$Year > 1994] - obs.mean.DOC.period3
 unbiased.RMSD.DOC.period3 <- sqrt(mean((model.residuals.DOC.period3 - obs.residuals.DOC.period3)^2))
 normalized.bias.DOC.period3 <- (model.mean.DOC.period3 - obs.mean.DOC.period3)/obs.sd.DOC.period3
 normalized.unbiased.RMSD.DOC.period3 <- ((model.sd.DOC.period3 - obs.sd.DOC.period3)/obs.sd.DOC.period3) * unbiased.RMSD.DOC.period3
@@ -2003,12 +2004,12 @@ unbiased.RMSD.TDP.period2 <- sqrt(mean((model.residuals.TDP.period2 - obs.residu
 normalized.bias.TDP.period2 <- (model.mean.TDP.period2 - obs.mean.TDP.period2)/obs.sd.TDP.period2
 normalized.unbiased.RMSD.TDP.period2 <- ((model.sd.TDP.period2 - obs.sd.TDP.period2)/obs.sd.TDP.period2) * unbiased.RMSD.TDP.period2
 
-model.mean.TDP.period3 <- mean(TDP.match$mod.TDP[TDP.match$Year > 1989])
-obs.mean.TDP.period3 <- mean(TDP.match$obs.TDP[TDP.match$Year > 1989])
-model.sd.TDP.period3 <- sd(TDP.match$mod.TDP[TDP.match$Year > 1989])
-obs.sd.TDP.period3 <- sd(TDP.match$obs.TDP[TDP.match$Year > 1989])
-model.residuals.TDP.period3 <- TDP.match$mod.TDP[TDP.match$Year > 1989] - model.mean.TDP.period3
-obs.residuals.TDP.period3 <- TDP.match$obs.TDP[TDP.match$Year > 1989] - obs.mean.TDP.period3
+model.mean.TDP.period3 <- mean(TDP.match$mod.TDP[TDP.match$Year > 1994])
+obs.mean.TDP.period3 <- mean(TDP.match$obs.TDP[TDP.match$Year > 1994])
+model.sd.TDP.period3 <- sd(TDP.match$mod.TDP[TDP.match$Year > 1994])
+obs.sd.TDP.period3 <- sd(TDP.match$obs.TDP[TDP.match$Year > 1994])
+model.residuals.TDP.period3 <- TDP.match$mod.TDP[TDP.match$Year > 1994] - model.mean.TDP.period3
+obs.residuals.TDP.period3 <- TDP.match$obs.TDP[TDP.match$Year > 1994] - obs.mean.TDP.period3
 unbiased.RMSD.TDP.period3 <- sqrt(mean((model.residuals.TDP.period3 - obs.residuals.TDP.period3)^2))
 normalized.bias.TDP.period3 <- (model.mean.TDP.period3 - obs.mean.TDP.period3)/obs.sd.TDP.period3
 normalized.unbiased.RMSD.TDP.period3 <- ((model.sd.TDP.period3 - obs.sd.TDP.period3)/obs.sd.TDP.period3) * unbiased.RMSD.TDP.period3
@@ -2037,12 +2038,12 @@ unbiased.RMSD.PP.period2 <- sqrt(mean((model.residuals.PP.period2 - obs.residual
 normalized.bias.PP.period2 <- (model.mean.PP.period2 - obs.mean.PP.period2)/obs.sd.PP.period2
 normalized.unbiased.RMSD.PP.period2 <- ((model.sd.PP.period2 - obs.sd.PP.period2)/obs.sd.PP.period2) * unbiased.RMSD.PP.period2
 
-model.mean.PP.period3 <- mean(PP.match$mod.PP[PP.match$Year > 1989])
-obs.mean.PP.period3 <- mean(PP.match$obs.PP[PP.match$Year > 1989])
-model.sd.PP.period3 <- sd(PP.match$mod.PP[PP.match$Year > 1989])
-obs.sd.PP.period3 <- sd(PP.match$obs.PP[PP.match$Year > 1989])
-model.residuals.PP.period3 <- PP.match$mod.PP[PP.match$Year > 1989] - model.mean.PP.period3
-obs.residuals.PP.period3 <- PP.match$obs.PP[PP.match$Year > 1989] - obs.mean.PP.period3
+model.mean.PP.period3 <- mean(PP.match$mod.PP[PP.match$Year > 1994])
+obs.mean.PP.period3 <- mean(PP.match$obs.PP[PP.match$Year > 1994])
+model.sd.PP.period3 <- sd(PP.match$mod.PP[PP.match$Year > 1994])
+obs.sd.PP.period3 <- sd(PP.match$obs.PP[PP.match$Year > 1994])
+model.residuals.PP.period3 <- PP.match$mod.PP[PP.match$Year > 1994] - model.mean.PP.period3
+obs.residuals.PP.period3 <- PP.match$obs.PP[PP.match$Year > 1994] - obs.mean.PP.period3
 unbiased.RMSD.PP.period3 <- sqrt(mean((model.residuals.PP.period3 - obs.residuals.PP.period3)^2))
 normalized.bias.PP.period3 <- (model.mean.PP.period3 - obs.mean.PP.period3)/obs.sd.PP.period3
 normalized.unbiased.RMSD.PP.period3 <- ((model.sd.PP.period3 - obs.sd.PP.period3)/obs.sd.PP.period3) * unbiased.RMSD.PP.period3
@@ -2071,12 +2072,12 @@ unbiased.RMSD.diazoPP.period2 <- sqrt(mean((model.residuals.diazoPP.period2 - ob
 normalized.bias.diazoPP.period2 <- (model.mean.diazoPP.period2 - obs.mean.diazoPP.period2)/obs.sd.diazoPP.period2
 normalized.unbiased.RMSD.diazoPP.period2 <- ((model.sd.diazoPP.period2 - obs.sd.diazoPP.period2)/obs.sd.diazoPP.period2) * unbiased.RMSD.diazoPP.period2
 
-model.mean.diazoPP.period3 <- mean(diazoPP.match$diazoPP.y[diazoPP.match$Year > 1989])
-obs.mean.diazoPP.period3 <- mean(diazoPP.match$diazoPP.x[diazoPP.match$Year > 1989])
-model.sd.diazoPP.period3 <- sd(diazoPP.match$diazoPP.y[diazoPP.match$Year > 1989])
-obs.sd.diazoPP.period3 <- sd(diazoPP.match$diazoPP.x[diazoPP.match$Year > 1989])
-model.residuals.diazoPP.period3 <- diazoPP.match$diazoPP.y[diazoPP.match$Year > 1989] - model.mean.diazoPP.period3
-obs.residuals.diazoPP.period3 <- diazoPP.match$diazoPP.x[diazoPP.match$Year > 1989] - obs.mean.diazoPP.period3
+model.mean.diazoPP.period3 <- mean(diazoPP.match$diazoPP.y[diazoPP.match$Year > 1994])
+obs.mean.diazoPP.period3 <- mean(diazoPP.match$diazoPP.x[diazoPP.match$Year > 1994])
+model.sd.diazoPP.period3 <- sd(diazoPP.match$diazoPP.y[diazoPP.match$Year > 1994])
+obs.sd.diazoPP.period3 <- sd(diazoPP.match$diazoPP.x[diazoPP.match$Year > 1994])
+model.residuals.diazoPP.period3 <- diazoPP.match$diazoPP.y[diazoPP.match$Year > 1994] - model.mean.diazoPP.period3
+obs.residuals.diazoPP.period3 <- diazoPP.match$diazoPP.x[diazoPP.match$Year > 1994] - obs.mean.diazoPP.period3
 unbiased.RMSD.diazoPP.period3 <- sqrt(mean((model.residuals.diazoPP.period3 - obs.residuals.diazoPP.period3)^2))
 normalized.bias.diazoPP.period3 <- (model.mean.diazoPP.period3 - obs.mean.diazoPP.period3)/obs.sd.diazoPP.period3
 normalized.unbiased.RMSD.diazoPP.period3 <- ((model.sd.diazoPP.period3 - obs.sd.diazoPP.period3)/obs.sd.diazoPP.period3) * unbiased.RMSD.diazoPP.period3
@@ -2105,12 +2106,12 @@ unbiased.RMSD.nondiazoPP.period2 <- sqrt(mean((model.residuals.nondiazoPP.period
 normalized.bias.nondiazoPP.period2 <- (model.mean.nondiazoPP.period2 - obs.mean.nondiazoPP.period2)/obs.sd.nondiazoPP.period2
 normalized.unbiased.RMSD.nondiazoPP.period2 <- ((model.sd.nondiazoPP.period2 - obs.sd.nondiazoPP.period2)/obs.sd.nondiazoPP.period2) * unbiased.RMSD.nondiazoPP.period2
 
-model.mean.nondiazoPP.period3 <- mean(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1989])
-obs.mean.nondiazoPP.period3 <- mean(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1989])
-model.sd.nondiazoPP.period3 <- sd(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1989])
-obs.sd.nondiazoPP.period3 <- sd(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1989])
-model.residuals.nondiazoPP.period3 <- nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1989] - model.mean.nondiazoPP.period3
-obs.residuals.nondiazoPP.period3 <- nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1989] - obs.mean.nondiazoPP.period3
+model.mean.nondiazoPP.period3 <- mean(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1994])
+obs.mean.nondiazoPP.period3 <- mean(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1994])
+model.sd.nondiazoPP.period3 <- sd(nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1994])
+obs.sd.nondiazoPP.period3 <- sd(nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1994])
+model.residuals.nondiazoPP.period3 <- nondiazoPP.match$nondiazoPP.y[nondiazoPP.match$Year > 1994] - model.mean.nondiazoPP.period3
+obs.residuals.nondiazoPP.period3 <- nondiazoPP.match$nondiazoPP.x[nondiazoPP.match$Year > 1994] - obs.mean.nondiazoPP.period3
 unbiased.RMSD.nondiazoPP.period3 <- sqrt(mean((model.residuals.nondiazoPP.period3 - obs.residuals.nondiazoPP.period3)^2))
 normalized.bias.nondiazoPP.period3 <- (model.mean.nondiazoPP.period3 - obs.mean.nondiazoPP.period3)/obs.sd.nondiazoPP.period3
 normalized.unbiased.RMSD.nondiazoPP.period3 <- ((model.sd.nondiazoPP.period3 - obs.sd.nondiazoPP.period3)/obs.sd.nondiazoPP.period3) * unbiased.RMSD.nondiazoPP.period3
